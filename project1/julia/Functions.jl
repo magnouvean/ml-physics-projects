@@ -13,6 +13,6 @@ function frankefunction(x, y)
 end
 
 mse(y, ŷ) = mean((y - ŷ) .^ 2)
-r2score(y, ŷ) = 1 - (mean((y - ŷ) .^ 2)) / (mean((y - mean(y)) .^ 2))
+r2score(y, ŷ) = 1 - (mean((y - ŷ) .^ 2)) / (mean((y .- mean(y)) .^ 2))
 
 end

@@ -5,14 +5,15 @@ include("./Functions.jl")
 using Statistics
 using Random: seed!, shuffle
 using ScikitLearn.CrossValidation: train_test_split
+using Distributions
 
-# Our datapoints
-n = 2000
+# Setting the seed for train test splitting and random x1/x2
+seed!(1234)
+
+# Our datapoints (these are set randonmly instead of using a range in order for us to get full rank of the matrix)
+n = 1000
 x1 = rand(n)
 x2 = rand(n)
-
-# Setting the seed for train test splitting
-seed!(1234)
 
 order = 5
 # 5 (5th order x1-s) + 5 (5th order x2-s) + 10 (intercations between x1-s and x2-s)
@@ -39,5 +40,8 @@ for i in 1:size(X, 2)
     X_test[:, i] = (X_test[:, i] .- μ̂)
 end
 
+# Add response with noise
+y_train_with_noise = y_train + rand(Normal(0, 1), length(y_train))
+y_test_with_noise = y_test + rand(Normal(0, 1), length(y_test))
 
 end
