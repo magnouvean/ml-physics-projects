@@ -1,12 +1,10 @@
 using ScikitLearn
-using MLJLinearModels
 using Plots
 
 include("./Data.jl")
 include("./Functions.jl")
-include("./Ridge.jl")
-using .Data
-using .Functions: mse, r2score
+using .Data: generatedata, λs
+using .Functions: showinfo, plotinfo, mse, r2score
 
 @sk_import linear_model:Lasso
 
@@ -29,9 +27,14 @@ function calculate_mse_r2_lasso(λs, X_train, X_test, y_train, y_test)
     return mse_train, mse_test, r2_train, r2_test
 end
 
+println("Without noise")
+X_train, X_test, y_train, y_test = generatedata(5)
 mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_lasso(λs, X_train, X_test, y_train, y_test)
-
 showinfo(λs, mse_train, mse_test, r2_train, r2_test)
+plotinfo(λs, mse_train, mse_test, r2_train, r2_test)
 
-plot([λs, λs], [mse_train, mse_test], label=["train", "test"])
-plot([λs, λs], [r2_train, r2_test], label=["train", "test"])
+println("With noise")
+X_train, X_test, y_train, y_test = generatedata(5, false, true)
+mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_lasso(λs, X_train, X_test, y_train, y_test)
+showinfo(λs, mse_train, mse_test, r2_train, r2_test)
+plotinfo(λs, mse_train, mse_test, r2_train, r2_test)

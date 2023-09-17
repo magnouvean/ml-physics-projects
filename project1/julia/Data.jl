@@ -7,41 +7,78 @@ using Random: seed!, shuffle
 using ScikitLearn.CrossValidation: train_test_split
 using Distributions
 
-# Setting the seed for train test splitting and random x1/x2
-seed!(1234)
+# Some ridge/lasso type penalties commonly used by this projects
+λs = 10.0 .^ range(-10, 2, length=101)
 
-# Our datapoints (these are set randonmly instead of using a range in order for us to get full rank of the matrix)
-n = 1000
-x1 = rand(n)
-x2 = rand(n)
-
-order = 5
-# 5 (5th order x1-s) + 5 (5th order x2-s) + 10 (intercations between x1-s and x2-s)
-X = zeros((length(x1), 2 * order + (order - 1)^2))
-for i in 1:order
-    X[:, i] = x1 .^ i
-    X[:, order+i] = x2 .^ i
-end
-
-for i in 1:(order-1)
-    for j in 1:(order-1)
-        X[:, 1+order+i*(order-1)+j] = (x1 .^ i) .* (x2 .^ j)
+# Does a simple form on standard scaling by subtracting the mean of each column
+# from each item in the column (i.e. it ensures all the columns will have mean
+# 0). Here μ̂_matrix is the matrix we should calculate the column means from.
+function standardscale(X, μ̂_matrix)
+    X_copy = copy(X)
+    # Standard scale
+    for i in 1:size(X, 2)
+        μ̂ = mean(μ̂_matrix[:, i])
+        X_copy[:, i] .-= μ̂
     end
+
+    return X_copy
 end
 
-y = Functions.frankefunction(x1, x2)
+# Generate a design matrix consisting of random x-s (two explanatory variables)
+# with a polynomial of a given order (we will use order 5 for our analysis
+# mainly). Additionally includes options for adding intercept column, noise,
+# number of observations and random seed.
+function generatedata(order::Int64, split=true, include_intercept=false, add_noise=false, noise_factor=0.1, n=1000, custom_seed=1234)
+    # Setting the seed for train test splitting and random x1/x2
+    seed!(custom_seed)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y)
+    # Generating x-s
+    x1 = rand(n)
+    x2 = rand(n)
 
-# Standard scale
-for i in 1:size(X, 2)
-    μ̂ = mean(X_train[:, i])
-    X_train[:, i] = (X_train[:, i] .- μ̂)
-    X_test[:, i] = (X_test[:, i] .- μ̂)
+    # Creating the design matrix
+    X = zeros((length(x1), 2 * order + (order - 1)^2))
+    for i in 1:order
+        X[:, i] = x1 .^ i
+        X[:, order+i] = x2 .^ i
+    end
+    for i in 1:(order-1)
+        for j in 1:(order-1)
+            X[:, 1+order+i*(order-1)+j] = (x1 .^ i) .* (x2 .^ j)
+        end
+    end
+
+    # Creating the response
+    y = Functions.frankefunction(x1, x2)
+
+    if !split
+        return standardscale(X, X), y
+    end
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+    # Scaling X_train/X_test
+    # Here we create a copy of the X_train matrix as we want to use the
+    # column-means of this to scale both the X_train and X_test columns.
+    X_train_original = copy(X_train)
+    X_train = standardscale(X_train, X_train_original)
+    # We use the column means from the original X_train to subtract from the
+    # columns in X_test.
+    X_test = standardscale(X_test, X_train_original)
+
+    if add_noise
+        # Add response with noise
+        y_train += rand(Normal(0, noise_factor), length(y_train))
+        y_test += rand(Normal(0, noise_factor), length(y_test))
+    end
+
+    if include_intercept
+        X_train = [ones(size(X_train, 1)) X_train]
+        X_test = [ones(size(X_test, 1)) X_test]
+    end
+
+    return X_train, X_test, y_train, y_test
 end
 
-# Add response with noise
-y_train_with_noise = y_train + rand(Normal(0, 1), length(y_train))
-y_test_with_noise = y_test + rand(Normal(0, 1), length(y_test))
 
 end
