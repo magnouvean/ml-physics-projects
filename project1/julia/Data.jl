@@ -4,7 +4,6 @@ include("./Functions.jl")
 
 using Statistics
 using Random: seed!, shuffle
-using ScikitLearn.CrossValidation: train_test_split
 using Distributions
 
 # Some ridge/lasso type penalties commonly used by this projects
@@ -51,11 +50,19 @@ function generatedata(order::Int64, split=true, include_intercept=false, add_noi
     # Creating the response
     y = Functions.frankefunction(x1, x2)
 
-    if !split
-        return standardscale(X, X), y
-    end
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y)
+    # Shuffle before train-test splitting
+    shuffleindices = shuffle(1:size(X, 1))
+    Xs = X[shuffleindices, :]
+    ys = y[shuffleindices]
+
+    # Train-test splitting
+    if !split
+        return standardscale(Xs, Xs), ys
+    end
+    indextosplitat = convert(Int, floor(size(Xs, 1) * 0.8))
+    X_train, X_test = Xs[1:indextosplitat, :], Xs[(indextosplitat+1):size(Xs, 1), :]
+    y_train, y_test = ys[1:indextosplitat, :], ys[(indextosplitat+1):size(ys, 1), :]
 
     # Scaling X_train/X_test
     # Here we create a copy of the X_train matrix as we want to use the

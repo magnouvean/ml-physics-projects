@@ -8,8 +8,7 @@ include("./Functions.jl")
 using .Data: generatedata
 using .Functions: mse, r2score
 
-function bootstrapbiasvariance(n=1000, B=2)
-    orders = collect(2:10)
+function bootstrapbiasvariance(orders, n=1000, B=10)
     train_mses = zeros(length(orders))
     test_mses = zeros(length(orders))
     for (i, order) in enumerate(orders)
@@ -37,5 +36,5 @@ function bootstrapbiasvariance(n=1000, B=2)
     return train_mses, test_mses
 end
 
-train_mses, test_mses = bootstrapbiasvariance()
+train_mses, test_mses = bootstrapbiasvariance(collect(2:10))
 plot([train_mses, test_mses], label=["train" "test"])
