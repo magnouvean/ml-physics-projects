@@ -87,5 +87,4 @@ function generatedata(order::Int64, split=true, include_intercept=false, add_noi
     return X_train, X_test, y_train, y_test
 end
 
-
 end

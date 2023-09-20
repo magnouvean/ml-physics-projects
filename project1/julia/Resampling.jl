@@ -1,4 +1,5 @@
 using StatsBase: sample
+using LinearAlgebra
 using Statistics
 using Plots
 
@@ -8,7 +9,7 @@ include("./Functions.jl")
 using .Data: generatedata
 using .Functions: mse, r2score
 
-function bootstrapbiasvariance(orders, n=1000, B=10)
+function bootstrapbiasvariance(orders, n=1000, B=50)
     train_mses = zeros(length(orders))
     test_mses = zeros(length(orders))
     for (i, order) in enumerate(orders)
@@ -22,7 +23,7 @@ function bootstrapbiasvariance(orders, n=1000, B=10)
             X_train_bootstrap = X_train[bootstrapsampleindices, :]
             y_train_bootstrap = y_train[bootstrapsampleindices]
 
-            β̂ = inv(X_train_bootstrap' * X_train_bootstrap) * X_train_bootstrap' * y_train_bootstrap
+            β̂ = pinv(X_train_bootstrap' * X_train_bootstrap) * X_train_bootstrap' * y_train_bootstrap
             ŷ_train_bootstrap = X_train_bootstrap * β̂
             ŷ_test = X_test * β̂
             mse_train[j] = mse(y_train_bootstrap, ŷ_train_bootstrap)

@@ -15,7 +15,7 @@ function calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
     r2_test = zeros(length(λs))
 
     for (i, λ) in enumerate(λs)
-        β̂ = inv(X_train' * X_train + λ * I) * X_train' * y_train
+        β̂ = pinv(X_train' * X_train + λ * I) * X_train' * y_train
         # We need to re-add the intercept, which we can calculate from the other
         # parameters and the design matrix, see:
         # https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/week36.html
@@ -42,7 +42,7 @@ showinfo(λs, mse_train, mse_test, r2_train, r2_test)
 plotinfo(λs, mse_train, mse_test, r2_train, r2_test)
 
 # With noise
-X_train, X_test, y_train, y_test = generatedata(5, false, true)
+X_train, X_test, y_train, y_test = generatedata(5, true, false, true)
 mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
 showinfo(λs, mse_train, mse_test, r2_train, r2_test)
 plotinfo(λs, mse_train, mse_test, r2_train, r2_test)

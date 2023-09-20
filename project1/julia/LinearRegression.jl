@@ -9,7 +9,7 @@ using .Data: generatedata
 using .Functions: mse, r2score
 
 function linearregression(X_train, X_test, y_train, y_test)
-    β̂ = inv(X_train' * X_train) * X_train' * y_train
+    β̂ = pinv(X_train' * X_train) * X_train' * y_train
     ŷ_train = X_train * β̂
     ŷ_test = X_test * β̂
     println(mse(y_train, ŷ_train))
