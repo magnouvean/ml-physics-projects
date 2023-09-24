@@ -7,7 +7,7 @@ using Random: seed!, shuffle
 using Distributions
 
 # Some ridge/lasso type penalties commonly used by this projects
-λs = 10.0 .^ range(-10, 2, length=101)
+λs = 10.0 .^ range(-12, 2, length=101)
 
 # Does a simple form on standard scaling by subtracting the mean of each column
 # from each item in the column (i.e. it ensures all the columns will have mean
@@ -27,7 +27,7 @@ end
 # with a polynomial of a given order (we will use order 5 for our analysis
 # mainly). Additionally includes options for adding intercept column, noise,
 # number of observations and random seed.
-function generatedata(order::Int64, split=true, include_intercept=false, add_noise=false, noise_factor=0.1, n=1000, custom_seed=1234)
+function generatedata(order::Int64; split=true, include_intercept=false, add_noise=false, noise_σ=0.1, n=200, custom_seed=1000)
     # Setting the seed for train test splitting and random x1/x2
     seed!(custom_seed)
 
@@ -75,8 +75,8 @@ function generatedata(order::Int64, split=true, include_intercept=false, add_noi
 
     if add_noise
         # Add response with noise
-        y_train += rand(Normal(0, noise_factor), length(y_train))
-        y_test += rand(Normal(0, noise_factor), length(y_test))
+        y_train += rand(Normal(0, noise_σ), length(y_train))
+        y_test += rand(Normal(0, noise_σ), length(y_test))
     end
 
     if include_intercept

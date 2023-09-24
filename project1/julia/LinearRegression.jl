@@ -19,9 +19,9 @@ function linearregression(X_train, X_test, y_train, y_test)
 end
 
 println("Without noise")
-X_train, X_test, y_train, y_test = generatedata(5, true, true)
+X_train, X_test, y_train, y_test = generatedata(5, include_intercept=true)
 linearregression(X_train, X_test, y_train, y_test)
 
 println("With noise")
-X_train, X_test, y_train, y_test = generatedata(5, true, true, true)
+X_train, X_test, y_train, y_test = generatedata(5, include_intercept=true, add_noise=true)
 linearregression(X_train, X_test, y_train, y_test)

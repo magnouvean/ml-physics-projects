@@ -25,9 +25,20 @@ function showinfo(λs, mse_train, mse_test, r2_train, r2_test)
     println("Best λ (R^2, test): $(λs[argmax(r2_test)]), R^2: $(maximum(r2_test))")
 end
 
-function plotinfo(λs, mse_train, mse_test, r2_train, r2_test)
-    plot([log10.(λs), log10.(λs)], [mse_train, mse_test], label=["train" "test"])
-    plot([log10.(λs), log10.(λs)], [r2_train, r2_test], label=["train" "test"])
+function plotinfo(λs, mse_train, mse_test, r2_train, r2_test, filename)
+    figuresdirectory = dirname(@__DIR__) * "/figures/"
+    plot([log10.(λs), log10.(λs)],
+        [mse_train, mse_test],
+        label=["train" "test"],
+        xlabel="log10(λ)",
+        ylabel="MSE")
+    savefig(figuresdirectory * filename * "_mse.png")
+    plot([log10.(λs), log10.(λs)],
+        [r2_train, r2_test],
+        label=["train" "test"],
+        xlabel="log10(λ)",
+        ylabel="R^2")
+    savefig(figuresdirectory * filename * "_r2.png")
 end
 
 end

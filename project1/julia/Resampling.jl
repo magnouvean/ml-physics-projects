@@ -9,11 +9,11 @@ include("./Functions.jl")
 using .Data: generatedata
 using .Functions: mse, r2score
 
-function bootstrapbiasvariance(orders, n=1000, B=50)
+function bootstrapbiasvariance(orders, n, B=50)
     train_mses = zeros(length(orders))
     test_mses = zeros(length(orders))
     for (i, order) in enumerate(orders)
-        X_train, X_test, y_train, y_test = generatedata(order, true, true, true, 0.1, n)
+        X_train, X_test, y_train, y_test = generatedata(order, include_intercept=true, add_noise=true, n=n)
 
         mse_train = zeros(B)
         mse_test = zeros(B)
@@ -37,5 +37,16 @@ function bootstrapbiasvariance(orders, n=1000, B=50)
     return train_mses, test_mses
 end
 
-train_mses, test_mses = bootstrapbiasvariance(collect(2:10))
-plot([train_mses, test_mses], label=["train" "test"])
+# Here we use 1000 observations (in contrast to the 200 which has been used in
+# the other parts of our report) as we use up to 12th order polynomials, which
+# means we get 1+12+12+11^2=146 features, and with train/test-splitting we end
+# up with almost a many features as observations, and we get a pretty much
+# singular matrix (which the pinv seems to have problems computing the inverse
+# for). To solve this problem we simply add more observations.
+train_mses, test_mses = bootstrapbiasvariance(collect(2:14), 1000)
+plot([collect(2:14), collect(2:14)],
+    [train_mses, test_mses],
+    label=["train" "test"],
+    xlabel="order",
+    ylabel="Bootstrap MSE")
+savefig(dirname(@__DIR__) * "/figures/bootstrapbiasvariance.png")

@@ -35,14 +35,14 @@ function calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
     return mse_train, mse_test, r2_train, r2_test
 end
 
-# Without noise
+println("Without noise")
 X_train, X_test, y_train, y_test = generatedata(5)
 mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
 showinfo(λs, mse_train, mse_test, r2_train, r2_test)
-plotinfo(λs, mse_train, mse_test, r2_train, r2_test)
+plotinfo(λs, mse_train, mse_test, r2_train, r2_test, "ridge_without_noise")
 
-# With noise
-X_train, X_test, y_train, y_test = generatedata(5, true, false, true)
+println("With noise")
+X_train, X_test, y_train, y_test = generatedata(5, add_noise=true)
 mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
 showinfo(λs, mse_train, mse_test, r2_train, r2_test)
-plotinfo(λs, mse_train, mse_test, r2_train, r2_test)
+plotinfo(λs, mse_train, mse_test, r2_train, r2_test, "ridge_with_noise")
