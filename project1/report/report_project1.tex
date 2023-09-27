@@ -1,0 +1,83 @@
+\documentclass{article}
+\author{Magnus Bergkvam}
+\title{Project 1 \\ FYS-STK3155}
+
+\begin{document}
+\maketitle
+
+\section{Abstract}
+We have in this project fitted various models on data from the franke-function
+(both with and without noise) and real-world geographical data. In both cases we
+have used polynomial features of mainly order 5 as features.  The models we
+looked at was ridge, lasso and ordinary least squares.  For both the
+mean-squared-error and the R\^2 score we saw that for the franke-function
+without noise the ordinary least squares performed the best on new data, but
+when we added noise-terms the lasso/ridge performed better.  Throughout the
+project we have clearly seen that less complex models often perform better when
+we have some added noise (at least in the case when we have somewhat limited
+data), but that this is not the case when there is no noise (or a very high
+signal to noise-ratio).
+
+\section{Introduction}
+While linear regression often is seen as a rather simple machine-learning method
+in itself we do still have less complex models than this again. Choosing the
+right model complexity is an important part in getting the best possible model
+performance. Especially with cases where our data is limited, or we have a low
+signal-to-noise ratio it can be beneficial to use simpler models like for
+example linear regression \cite{}. However, when can it become beneficial to
+choose even less complex models than this again? This is mainly what this
+project is about. We will mainly base this project around the franke-function,
+which is a 2-dimensional function which somewhat resembles a landscape. We will
+also explore much of the same on some real-world geographical data as well. For
+the franke-function we will be generating two vectors of random points in
+$\left[ 0, 1 \right]$, and use polynomial features with interactions of order
+$5$ for our data, for all our models. Since a central part of the project is
+about determining the performance of different metrics of our models it becomes
+important to assure these metrics are reliable, and not just very specific to
+our data or model. In order to help us with this we will use two well-known
+methods, namely bootstrapping and cross-validation. \\
+
+We now get into a short description of the models we have used.
+
+\section{Methods}
+\subsection{Data/Data scaling}
+The data and design matrix used thorughout the project is mostly the same for
+the different models. The main data we have used here is the franke-function
+where the explanatory variables are the two inputs to the franke-function drawn
+randomly from $\left[ 0, 1 \right]$ and response as the franke-function of
+these. When we added noise we have drawn this from the normal distribution with
+mean $0$ and standard-deviance $0.1$ in order to not have too low of a
+signal-to-noise-ratio (the franke-function takes quite low values). For the
+geographical data we load the data in from a tif file of geographical data, but
+the setup of the design matrix is exactly the same, with the difference being
+that the $x$'s $y$'s and response draw directly from the tif-file. The design
+matrix is largely the same for the different models with some minor differences.
+For the $5$ th order polynomials we have included in the first column the
+first-order values of the $x$, the second column the second-order values of $x$,
+and so on. The sixth to $10$ th column then is the first to fifth order terms of
+$y$ and then we take $4 \cdot 4 = 16$ columns for interaction terms between the
+two variables. A difference here is that for ordinary least squares we have
+added an intercept by setting the first column to consist of only $1$.
+Throughout the whole of this project we have scaled the features of the matrix,
+simply by centering (in other words subtracting the column mean). Another thing
+used throughout the project (except when doing cross-validation) is
+train-test-splitting. We then split our data into a train set consisting of
+$80\%$ of the datapoints, and $20\%$ of the data for testing. I have written a
+function which takes hand of most of the data for various tasks called
+\textit{generatedata}. The function has the following signature:
+
+\subsection{Ordinary least squares}
+We have two vectors $x$ and $y$ $200$ responses each. We create a design-matrix
+$X$ based on polynomial features of different orders up to order $5$ with
+interaction terms. As said we here add the first column to add a intercept. Then
+to find the $\hat{\beta}_{ols} = (X^T_{train} X_{train})^{-1} X^T_{train}
+y_{train}$. We then can make predictions for the training-set by:
+$$\hat{y}_{train} = X_{train} \hat{\beta}_{ols}$$
+and for the traning set:
+$$\hat{y}_{test} = X_{test} \hat{\beta}_{ols}$$
+
+\subsection{Bootstrap}
+
+\subsection{Cross-validation}
+
+\end{document}
