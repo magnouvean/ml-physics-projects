@@ -1,44 +1,55 @@
 \documentclass{article}
 \author{Magnus Bergkvam}
 \title{Project 1 \\ FYS-STK3155}
+\usepackage{url}
 
 \begin{document}
 \maketitle
 \bibliographystyle{unsrt}
 
 \section{Abstract}
-We have in this project fitted various models on data from the franke-function
-(both with and without noise) and real-world geographical data. In both cases we
-have used polynomial features of mainly order 5 as features.  The models we
-looked at was ridge, lasso and ordinary least squares.  For both the
-mean-squared-error and the R\^2 score we saw that for the franke-function
-without noise the ordinary least squares performed the best on new data, but
-when we added noise-terms the lasso/ridge performed better.  Throughout the
-project we have clearly seen that less complex models often perform better when
-we have some added noise (at least in the case when we have somewhat limited
-data), but that this is not the case when there is no noise (or a very high
-signal to noise-ratio).
+We have in this project fitted various models on data generated from the
+franke-function, a function which somewhat resembles a landscape, and real-world
+geographical data. In both cases we have used polynomial features of
+order 5 and fitted models to this franke-function both with and without added
+noise.  The models we looked at was ridge, lasso and ordinary least squares.
+For both the mean-squared-error and the $R^2$ score we saw that for the
+franke-function without noise the ordinary least squares performed the best on
+new data, but when we added noise-terms the lasso/ridge performed better.
+Throughout the project we have clearly seen that less complex models often
+perform better when we have some added noise (at least in the case when we have
+somewhat limited data), but that this is not the case when there is no noise (or
+a very high signal to noise-ratio). We have also explored how this result is
+tied to the bias-variance tradeoff, and manifested the importance this has for
+choosing the best model.
 
 \section{Introduction}
-While linear regression often is seen as a rather simple machine-learning method
-in itself we do still have less complex models than this again. Choosing the
-right model complexity is an important part in getting the best possible model
-performance. Especially with cases where our data is limited, or we have a low
-signal-to-noise ratio it can be beneficial to use simpler models like for
-example linear regression \cite{hastie2009elements}. However, when can it become beneficial to
-choose even less complex models than this again? This is mainly what this
-project is about. We will mainly base this project around the franke-function,
-which is a 2-dimensional function which somewhat resembles a landscape. We will
-also explore much of the same on some real-world geographical data as well. For
-the franke-function we will be generating two vectors of random points in
-$\left[ 0, 1 \right]$, and use polynomial features with interactions of order
-$5$ for our data, for all our models. Since a central part of the project is
-about determining the performance of different metrics of our models it becomes
-important to assure these metrics are reliable, and not just very specific to
-our data or model. In order to help us with this we will use two well-known
-methods, namely bootstrapping and cross-validation. \\
+Linear regression often is seen as a rather simple machine-learning method in
+itself, but we do have less complex models than this again. Choosing the right
+model complexity is well known as being an important part in getting the best
+possible models for prediction, and in a lot of applications linear regression
+offers just the right amount of complexity needed. Especially with cases where
+our data is limited, or we have a low signal-to-noise ratio, linear regression
+often performs very well \cite{hastie2009elements}. \\
 
-We now get into a short description of the models we have used.
+However, when can it become beneficial to choose even less complex models than
+this again? This is mainly what this project is about. We will mainly base this
+project around the franke-function, which is a 2-dimensional function which
+somewhat resembles a landscape \cite{franke2ddesc}. On the franke-function we
+will fit ordinary least squares linear regression with polynomial features up to
+order $5$ (with interactions), and then compare these results (using mainly the
+mean squared error and $R^2$ metrics) to ridge and lasso regression on the
+same data. We will also explore the performances of these models on some
+real-world geographical data as well. For the franke-function we will be
+generating two vectors of random points in $\left[ 0, 1 \right]$, and use
+polynomial features with interactions of order $5$ for our data, for all our
+models. We will also try to tie the results we get to the well-known
+bias-variance tradeoff in machine learning, and on our way there explore various
+resampling techniques for getting better estimates for model performances.
+\\
+
+We now get into a description of the models we have used, before we present the
+results and finally conclude what we have found out.
 
 \section{Methods}
 \subsection{Data/Data scaling}
@@ -72,7 +83,7 @@ We have two vectors $x$ and $y$ $200$ responses each. We create a design-matrix
 $X$ based on polynomial features of different orders up to order $5$ with
 interaction terms. As said we here add the first column to add a intercept. Then
 to find the $\hat{\beta}_{ols} = (X^T_{train} X_{train})^{-1} X^T_{train}
-y_{train}$. We then can make predictions for the training-set by:
+    y_{train}$. We then can make predictions for the training-set by:
 $$\hat{y}_{train} = X_{train} \hat{\beta}_{ols}$$
 and for the traning set:
 $$\hat{y}_{test} = X_{test} \hat{\beta}_{ols}$$
