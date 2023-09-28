@@ -4,6 +4,7 @@
 
 \begin{document}
 \maketitle
+\bibliographystyle{unsrt}
 
 \section{Abstract}
 We have in this project fitted various models on data from the franke-function
@@ -24,7 +25,7 @@ in itself we do still have less complex models than this again. Choosing the
 right model complexity is an important part in getting the best possible model
 performance. Especially with cases where our data is limited, or we have a low
 signal-to-noise ratio it can be beneficial to use simpler models like for
-example linear regression \cite{}. However, when can it become beneficial to
+example linear regression \cite{hastie2009elements}. However, when can it become beneficial to
 choose even less complex models than this again? This is mainly what this
 project is about. We will mainly base this project around the franke-function,
 which is a 2-dimensional function which somewhat resembles a landscape. We will
@@ -79,5 +80,7 @@ $$\hat{y}_{test} = X_{test} \hat{\beta}_{ols}$$
 \subsection{Bootstrap}
 
 \subsection{Cross-validation}
+
+\bibliography{./sources.bib}
 
 \end{document}
