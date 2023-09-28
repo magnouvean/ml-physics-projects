@@ -7,30 +7,9 @@ include("./Data.jl")
 include("./Functions.jl")
 
 using .Data: generatedata
-using .Functions: mse, r2score
+using .Functions: mse, r2score, kfold, calculateridgeintercept
 
 @sk_import linear_model:Lasso
-
-# A somewhat simple way to split indices up into nfolds as good as possible equal pieces.
-function kfold(nfolds, length)
-    sizeperfold = floor(length / nfolds)
-    rest = length % nfolds
-    kfoldindices = Array{Array{Int,1}}(undef, nfolds)
-    foldend = 0
-    for i in 1:nfolds
-        foldstart = foldend + 1
-        # If we are one of "rest" last folds we get an extra item, meaning the
-        # rest is spread over the "rest" last folds.
-        foldend = if nfolds - i < rest
-            foldstart + sizeperfold
-        else
-            foldstart + sizeperfold - 1
-        end
-        kfoldindices[i] = collect(foldstart:foldend)
-    end
-    return kfoldindices
-end
-
 
 # We here have chosen a default value of λ to be 10^-5 because this performed
 # the best on Lasso, so we may as well reuse this here as we need to specify
@@ -73,11 +52,12 @@ function crossvalbiasvariance(orders, n, nfolds, λ=10^(-5))
 
             # Fit/predict ridge regression
             β̂_ridge = pinv(X_train' * X_train + λ * I) * X_train' * y_train
-            ŷ_train_ridge = X_train * β̂_ridge
-            ŷ_test_ridge = X_test * β̂_ridge
+            β̂_0 = calculateridgeintercept(X_train, y_train, β̂_ridge)
+            ŷ_train_ridge = X_train * β̂_ridge .+ β̂_0
+            ŷ_test_ridge = X_test * β̂_ridge .+ β̂_0
 
             # Fit/predict lasso regression
-            model_lasso = fit!(Lasso(alpha=λ, random_state=1234), X_train, y_train)
+            model_lasso = fit!(Lasso(alpha=λ, random_state=1234, max_iter=5000), X_train, y_train)
             ŷ_train_lasso = predict(model_lasso, X_train)
             ŷ_test_lasso = predict(model_lasso, X_test)
 

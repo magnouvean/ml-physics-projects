@@ -41,4 +41,30 @@ function plotinfo(λs, mse_train, mse_test, r2_train, r2_test, filename)
     savefig(figuresdirectory * filename * "_r2.png")
 end
 
+function calculateridgeintercept(X_train, y_train, β̂)
+    n = size(X_train, 1)
+    p = size(X_train, 2)
+    return mean(y_train) - 1 / n * sum([sum([X_train[i, j] * β̂[j] for j in 1:p]) for i in 1:n])
+end
+
+# A somewhat simple way to split indices up into nfolds as good as possible equal pieces.
+function kfold(nfolds, length)
+    sizeperfold = floor(length / nfolds)
+    rest = length % nfolds
+    kfoldindices = Array{Array{Int,1}}(undef, nfolds)
+    foldend = 0
+    for i in 1:nfolds
+        foldstart = foldend + 1
+        # If we are one of "rest" last folds we get an extra item, meaning the
+        # rest is spread over the "rest" last folds.
+        foldend = if nfolds - i < rest
+            foldstart + sizeperfold
+        else
+            foldstart + sizeperfold - 1
+        end
+        kfoldindices[i] = collect(foldstart:foldend)
+    end
+    return kfoldindices
+end
+
 end

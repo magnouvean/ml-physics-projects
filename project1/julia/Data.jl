@@ -12,15 +12,39 @@ using Distributions
 # Does a simple form on standard scaling by subtracting the mean of each column
 # from each item in the column (i.e. it ensures all the columns will have mean
 # 0). Here μ̂_matrix is the matrix we should calculate the column means from.
-function standardscale(X, μ̂_matrix)
+function standardscale(X, μ̂_matrix; divide_by_sd=true)
     X_copy = copy(X)
     # Standard scale
     for i in 1:size(X, 2)
         μ̂ = mean(μ̂_matrix[:, i])
         X_copy[:, i] .-= μ̂
+        if divide_by_sd
+            X_copy[:, i] ./= std(μ̂_matrix[:, i])
+        end
     end
 
     return X_copy
+end
+
+# Generate a matrix with features as polynomial terms with interactions
+function generatedesignmatrix(x1, x2, order)
+    X = zeros((length(x1), 2 * order + (order - 1)^2))
+    for i in 1:order
+        X[:, i] = x1 .^ i
+        X[:, order+i] = x2 .^ i
+    end
+    for i in 1:(order-1)
+        for j in 1:(order-1)
+            X[:, 1+order+i*(order-1)+j] = (x1 .^ i) .* (x2 .^ j)
+        end
+    end
+
+    return X
+end
+
+function shufflematrices(X, y)
+    shuffleindices = shuffle(1:size(X, 1))
+    return X[shuffleindices, :], y[shuffleindices]
 end
 
 # Generate a design matrix consisting of random x-s (two explanatory variables)
@@ -36,25 +60,14 @@ function generatedata(order::Int64; split=true, include_intercept=false, add_noi
     x2 = rand(n)
 
     # Creating the design matrix
-    X = zeros((length(x1), 2 * order + (order - 1)^2))
-    for i in 1:order
-        X[:, i] = x1 .^ i
-        X[:, order+i] = x2 .^ i
-    end
-    for i in 1:(order-1)
-        for j in 1:(order-1)
-            X[:, 1+order+i*(order-1)+j] = (x1 .^ i) .* (x2 .^ j)
-        end
-    end
+    X = generatedesignmatrix(x1, x2, order)
 
     # Creating the response
     y = Functions.frankefunction(x1, x2)
 
 
     # Shuffle before train-test splitting
-    shuffleindices = shuffle(1:size(X, 1))
-    Xs = X[shuffleindices, :]
-    ys = y[shuffleindices]
+    Xs, ys = shufflematrices(X, y)
 
     # Train-test splitting
     if !split

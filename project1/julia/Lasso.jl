@@ -15,7 +15,7 @@ function calculate_mse_r2_lasso(λs, X_train, X_test, y_train, y_test)
     r2_test = zeros(length(λs))
 
     for (i, λ) in enumerate(λs)
-        model = fit!(Lasso(alpha=λ, random_state=1234), X_train, y_train)
+        model = fit!(Lasso(alpha=λ, random_state=1234, max_iter=5000), X_train, y_train)
         ŷ_train = predict(model, X_train)
         ŷ_test = predict(model, X_test)
         mse_train[i] = mse(y_train, ŷ_train)

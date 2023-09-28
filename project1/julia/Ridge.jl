@@ -6,7 +6,7 @@ include("./Data.jl")
 include("./Functions.jl")
 
 using .Data: λs, generatedata
-using .Functions: showinfo, plotinfo, mse, r2score
+using .Functions: showinfo, plotinfo, mse, r2score, calculateridgeintercept
 
 function calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
     mse_train = zeros(length(λs))
@@ -19,9 +19,7 @@ function calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
         # We need to re-add the intercept, which we can calculate from the other
         # parameters and the design matrix, see:
         # https://compphysics.github.io/MachineLearning/doc/LectureNotes/_build/html/week36.html
-        n = size(X_train, 1)
-        p = size(X_train, 2)
-        β̂_0 = mean(y_train) - 1 / n * sum([sum([X_train[i, j] * β̂[j] for j in 1:p]) for i in 1:n])
+        β̂_0 = calculateridgeintercept(X_train, y_train, β̂)
         ŷ_train = X_train * β̂ .+ β̂_0
         ŷ_test = X_test * β̂ .+ β̂_0
 
