@@ -2,6 +2,56 @@
 \author{Magnus Bergkvam}
 \title{Project 1 \\ FYS-STK3155}
 \usepackage{url}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{../figures/}}
+
+% Julia code configuration
+\usepackage[usenames,dvipsnames]{color} % more flexible names for syntax highlighting colors
+\usepackage{listings}
+\lstdefinelanguage{julia}
+{
+  keywordsprefix=\@,
+  morekeywords={
+    exit,whos,edit,load,is,isa,isequal,typeof,tuple,ntuple,uid,hash,finalizer,convert,promote,
+    subtype,typemin,typemax,realmin,realmax,sizeof,eps,promote_type,method_exists,applicable,
+    invoke,dlopen,dlsym,system,error,throw,assert,new,Inf,Nan,pi,im,begin,while,for,in,return,
+    break,continue,macro,quote,let,if,elseif,else,try,catch,end,bitstype,ccall,do,using,module,
+    import,export,importall,baremodule,immutable,local,global,const,Bool,Int,Int8,Int16,Int32,
+    Int64,Uint,Uint8,Uint16,Uint32,Uint64,Float32,Float64,Complex64,Complex128,Any,Nothing,None,
+    function,type,typealias,abstract
+  },
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]" 
+}
+\lstset{
+basicstyle=\ttfamily, 
+columns=fullflexible, % make sure to use fixed-width font, CM typewriter is NOT fixed width
+numbers=left, 
+numberstyle=\small\ttfamily\color{Gray},
+stepnumber=1,              
+numbersep=10pt, 
+numberfirstline=true, 
+numberblanklines=true, 
+tabsize=4,
+lineskip=-1.5pt,
+extendedchars=true,
+breaklines=true,        
+keywordstyle=\color{Blue}\bfseries,
+identifierstyle=, % using emph or index keywords
+commentstyle=\sffamily\color{OliveGreen},
+stringstyle=\color{Maroon},
+showstringspaces=false,
+showtabs=false,
+upquote=false,
+texcl=true % interpet comments as LaTeX
+}
+\lstset{
+literate={σ}{{$\sigma$}}1
+}
+% End julia code
 
 \begin{document}
 \maketitle
@@ -30,7 +80,7 @@ model complexity is well known as being an important part in getting the best
 possible models for prediction, and in a lot of applications linear regression
 offers just the right amount of complexity needed. Especially with cases where
 our data is limited, or we have a low signal-to-noise ratio, linear regression
-often performs very well \cite{hastie2009elements}. \\
+often performs very well \cite[p.~43]{hastie2009elements}. \\
 
 However, when can it become beneficial to choose even less complex models than
 this again? This is mainly what this project is about. We will mainly base this
@@ -52,31 +102,184 @@ We now get into a description of the models we have used, before we present the
 results and finally conclude what we have found out.
 
 \section{Methods}
+\subsection{The franke function}
+The franke-function is a function of two variables with the following definition:
+\begin{align*}
+    f(x,y) & = \frac{3}{4}\exp{\left(-\frac{(9x-2)^2}{4} - \frac{(9y-2)^2}{4}\right)}+\frac{3}{4}\exp{\left(-\frac{(9x+1)^2}{49}- \frac{(9y+1)}{10}\right)} \\
+           & +\frac{1}{2}\exp{\left(-\frac{(9x-7)^2}{4} - \frac{(9y-3)^2}{4}\right)} -\frac{1}{5}\exp{\left(-(9x-4)^2 - (9y-7)^2\right) }
+\end{align*}
+We will use this function to generate a response from two explanatory variables
+$x1$ and $x2$ both of which will be drawn randomly from $\left[ 0, 1 \right]$.
+To get a visual picture of how this response looks, given some $x1$ and $x2$
+values on $\left[ 0, 1 \right]$ we have the following plot \cite[figures,
+    frankefunction.png]{githubrepoproject1}:
+
+\includegraphics[scale=0.5]{frankefunction}
+
+As we can see this does somewhat resemble a terrain. We will generate this data
+both with and without noise.  In the case of without noise we will simply get
+the following response:
+$$\mathbf{y} = f(\mathbf{x1}, \mathbf{x2})$$
+(Here where $f$ is applied element-wise to $\mathbf{x1}$ and $\mathbf{x2}$).
+With noise we simply get:
+$$\mathbf{y} = f(\mathbf{x1}, \mathbf{x2}) + \mathbf{\epsilon}$$
+Where in this case $\epsilon_i \sim N(0, \sigma^2)$. We will use $\sigma = 0.1$
+throughout all of our calculations (but this is easily adjustable in the code).
+
+\subsection{Geographical data}
+As mentioned, another source for data which was used for analysis of the
+different models is some real-world geographical data. The data is stored as a
+tiff image file and consists simply of a set of numerical values in a square
+grid, where the numerical value indicates the height of the terrain in some way.
+The data is gathered from \url{https://earthexplorer.usgs.gov/}, and we have
+here downloaded a region around \textit{Møsvatn Austfjell} in Norway. This data
+includes a lot of datapoints ($3601\times 1801 = 6485401$ to be exact), which is
+a lot of data, in fact quite a lot more than we need. Trying to fit a lot of
+different models to such a big amount of data will often take a lot of memory
+and processing power, so for this sake I have limited the data to look at only
+the first $400\times 500 = 20000$ observations, which should be more than enough
+for our case. When reading the tiff-file we only get a matrix of values out, but
+we will look at this as an image, and then use the position of the response as
+explanatory variables for our model. In other words, if say the fifth pixel in
+the fourth row has the value $10^{-5}$, the response will obviously be
+$10^{-5}$, while the two explanatory varaibles will have values $5$ and $4$.
+This way we will be able to gather data which closely resembles that of the
+franke-function. We will use the same techniques to setup design a matrix and
+response, as we did with the franke-function.
+
 \subsection{Data/Data scaling}
-The data and design matrix used thorughout the project is mostly the same for
-the different models. The main data we have used here is the franke-function
-where the explanatory variables are the two inputs to the franke-function drawn
-randomly from $\left[ 0, 1 \right]$ and response as the franke-function of
-these. When we added noise we have drawn this from the normal distribution with
-mean $0$ and standard-deviance $0.1$ in order to not have too low of a
-signal-to-noise-ratio (the franke-function takes quite low values). For the
-geographical data we load the data in from a tif file of geographical data, but
-the setup of the design matrix is exactly the same, with the difference being
-that the $x$'s $y$'s and response draw directly from the tif-file. The design
-matrix is largely the same for the different models with some minor differences.
-For the $5$ th order polynomials we have included in the first column the
-first-order values of the $x$, the second column the second-order values of $x$,
-and so on. The sixth to $10$ th column then is the first to fifth order terms of
-$y$ and then we take $4 \cdot 4 = 16$ columns for interaction terms between the
-two variables. A difference here is that for ordinary least squares we have
-added an intercept by setting the first column to consist of only $1$.
-Throughout the whole of this project we have scaled the features of the matrix,
-simply by centering (in other words subtracting the column mean). Another thing
-used throughout the project (except when doing cross-validation) is
-train-test-splitting. We then split our data into a train set consisting of
-$80\%$ of the datapoints, and $20\%$ of the data for testing. I have written a
-function which takes hand of most of the data for various tasks called
-\textit{generatedata}. The function has the following signature:
+The data and design matrix used throughout the project is mostly the same for
+the different models, at least in the case of model evaluation for the
+franke-function. The data we have used here is simply a collection of two
+randomly generated datapoint-vectors $x1$ and $x2$, each of size $200$, and the
+response is simply the value of the franke-function evaluated at some point
+(plus some added noise in some cases). When we added noise we have drawn this
+from the normal distribution with mean $0$ and standard-deviance $0.1$ in order
+to not have too low of a signal-to-noise-ratio (the franke-function gives quite
+low values). For the geographical data we load the data in from a tif file of
+geographical data, but the setup of the design matrix is exactly the same, with
+the difference being that the $x1$'s $x2$'s and response have been drawn directly from the
+tif-file. The design matrix is largely the same for the different models with
+some minor differences.  For the $5$ th order polynomials we have included in
+the first column the first-order values of the $x$, the second column the
+second-order values of $x$, and so on. The sixth to $10$ th column then is the
+first to fifth order terms of $y$ and then we take $4 \cdot 4 = 16$ columns for
+interaction terms between the two variables. A difference here is that for
+ordinary least squares we have added an intercept by setting the first column to
+consist of only $1$.
+\\
+Throughout the whole of this project we have scaled the
+features of the matrix, simply by centering the mean around $0$ and scaling by
+the standard deviance. In the case of ordinary least squared regression this
+scaling is not very important for model performance, as the model will be able
+to scale the $\beta$'s correspondingly for different scaled data, but in the
+case of ridge/lasso which both include a penalty term (see the ridge/lasso
+sections), it becomes important to scale the data so that the scale of the data
+doesn't affect how much we penalize the parameters (I will go into more detail
+on this in the ridge/lasso sections).
+\\
+A last thing of note we have used throughout the project is train-test-splitting
+(except when doing cross-validation). We then split our data into a train set
+consisting of $80\%$ of the datapoints, and $20\%$ of the data for testing.
+This lets us evaluate how well our model performs on "new" data, i.e. data the
+model has not been trained on from the dataset. The reason this is important is
+in order for us to recognize overfitted models, which often become the case when
+we have a higher model complexity \cite[s.~7.2]{hastie2009elements}. In such
+cases we could have a model that predicts the training data very well, but
+generalizes very poorly to new data.  For the franke-function I have written a
+function \textit{generatedata} which takes hand of all of the mentioned above
+(here I am using Julia). It is a bit long, but well worth inclusion here as it
+is central to all of the programs that use the franke-function:
+\begin{lstlisting}[language=julia]
+# Generate a design matrix consisting of random x-s (two explanatory variables)
+# with a polynomial of a given order (we will use order 5 for our analysis
+# mainly). Additionally includes options for adding intercept column, noise,
+# number of observations and random seed.
+function generatedata(order::Int64; split=true, include_intercept=false, add_noise=false, noise_σ=0.1, n=200, custom_seed=1000)
+    # Setting the seed for train test splitting and random x1/x2
+    seed!(custom_seed)
+
+    # Generating x-s
+    x1 = rand(n)
+    x2 = rand(n)
+
+    # Creating the design matrix
+    X = generatedesignmatrix(x1, x2, order)
+
+    # Creating the response
+    y = Functions.frankefunction(x1, x2)
+
+
+    # Shuffle before train-test splitting
+    Xs, ys = shufflematrices(X, y)
+
+    # Train-test splitting
+    if !split
+        return standardscale(Xs, Xs), ys
+    end
+    indextosplitat = convert(Int, floor(size(Xs, 1) * 0.8))
+    X_train, X_test = Xs[1:indextosplitat, :], Xs[(indextosplitat+1):size(Xs, 1), :]
+    y_train, y_test = ys[1:indextosplitat, :], ys[(indextosplitat+1):size(ys, 1), :]
+
+    # Scaling X\_train/X\_test
+    # Here we create a copy of the X\_train matrix as we want to use the
+    # column-means of this to scale both the X\_train and X\_test columns.
+    X_train_original = copy(X_train)
+    X_train = standardscale(X_train, X_train_original)
+    # We use the column means from the original X\_train to subtract from the
+    # columns in X\_test.
+    X_test = standardscale(X_test, X_train_original)
+
+    if add_noise
+        # Add response with noise
+        y_train += rand(Normal(0, noise_σ), length(y_train))
+        y_test += rand(Normal(0, noise_σ), length(y_test))
+    end
+
+    if include_intercept
+        X_train = [ones(size(X_train, 1)) X_train]
+        X_test = [ones(size(X_test, 1)) X_test]
+    end
+
+    return X_train, X_test, y_train, y_test
+end
+\end{lstlisting}
+
+Here we have used some other local functions like standardscale (scaling as
+described in the scaling section in this report) and shufflematrices (random
+shuffles rows in a matrix), which it should be clear what these do based on
+their name, but I'll also include the implementation of the
+\textit{generatedesignmatrix}, as it is very central for all the calculations we
+have done:
+\begin{lstlisting}[language=julia]
+# Generate a matrix with features as polynomial terms with interactions
+function generatedesignmatrix(x1, x2, order)
+    X = zeros((length(x1), 2 * order + (order - 1)^2))
+    for i in 1:order
+        X[:, i] = x1 .^ i
+        X[:, order+i] = x2 .^ i
+    end
+    for i in 1:(order-1)
+        for j in 1:(order-1)
+            X[:, 1+order+i*(order-1)+j] = (x1 .^ i) .* (x2 .^ j)
+        end
+    end
+
+    return X
+end
+\end{lstlisting}
+
+Shuffling the data is perhaps not nessecary here in the case of the
+franke-function seeing as the explanatory variables are randomly drawn (but I
+have done so anyway just out of good practice), however in the case of the
+landscape data this is very important, as here the data is sorted when reading
+the data in, and if we then do not shuffle the data before, and we then apply
+train-test-splitting, we will get different regions of our response for the
+training and testing data, in other words, the model will be trained on data
+from some area and tested on data from another area, which will then probably
+give quite poor performance (unless the two regions the train-data and test-data
+are gathered from are very similar).
+
 
 \subsection{Ordinary least squares}
 We have two vectors $x$ and $y$ $200$ responses each. We create a design-matrix
@@ -87,6 +290,8 @@ to find the $\hat{\beta}_{ols} = (X^T_{train} X_{train})^{-1} X^T_{train}
 $$\hat{y}_{train} = X_{train} \hat{\beta}_{ols}$$
 and for the traning set:
 $$\hat{y}_{test} = X_{test} \hat{\beta}_{ols}$$
+
+\subsection{Ridge and lasso}
 
 \subsection{Bootstrap}
 
