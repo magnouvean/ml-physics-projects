@@ -292,6 +292,74 @@ and for the traning set:
 $$\hat{y}_{test} = X_{test} \hat{\beta}_{ols}$$
 
 \subsection{Ridge and lasso}
+Ridge and lasso is in lots of ways very similar to ordinary least squares
+regression. The setup of the model is exactly the same, where for both these
+models we estimate some parameter vector $\mathbf{\beta}$, where we assume
+$$y = X \mathbf{\beta} + \mathbf{\epsilon}$$
+The difference arises with the cost function we minimize to estimate the parameters. For ridge we use:
+$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - X_{i *} \beta)\right) + \lambda \sum_{i=1}^p \beta_i^2$$
+and for lasso:
+$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - X_{i *} \beta)\right) + \lambda \sum_{i=1}^p \lvert \beta_i \rvert$$
+for some (hyper?)parameter $\lambda$, which determines how much we want to
+penalize high parameter values. Here we see further why it is important to scale
+the data beforehand. If we have data with widely different scaling this will
+impact how the optimal corresponding $\beta$ to the feature should be (not
+regarding the penalty term). If we have a feature with very high values, this
+$\beta$ will be smaller, than if we use a smaller scale/unit. But then this term
+$\beta^2$ will be much bigger, and we will reduce the cost much further by
+decreasing this parameter than if it had a smaller scale. In order to hinder
+this happening it them becomes important to scale the features somewhat alike,
+so that the scale the features is given on does not determine the fit we get.
+
+\subsection{Bias and variance of ols/ridge/lasso}
+We now calculate some properties/values of the ridge regression. We first
+calculate the expectation of some $y_i$. We have:
+\begin{align*}
+    E(y_i) & = E\left[ (\mathbf{X}\mathbf{\beta})_i + \epsilon_i \right]                 \\
+           & = E\left[ (\mathbf{X}\mathbf{\beta})_i \right] + E\left[ \epsilon_i \right] \\
+           & = (\mathbf{X}\mathbf{\beta})_i + 0                                          \\
+           & = \mathbf{X}_{i, *}\mathbf{\beta}
+\end{align*}
+For the variance get have:
+\begin{align*}
+    Var(y_i) & = Var(\mathbf{X}_{i, *} \mathbf{\beta} + \epsilon_i) \\
+             & = Var(\epsilon_i)                                    \\
+             & = \sigma^2
+\end{align*}
+(The first to the second line here follows from the fact that $\mathbf{X} \mathbf{\beta}$ is not stochastic).
+This is enough to conclude that $y_i \sim N(\mathbf{X}_{i, *} \mathbf{\beta},
+    \sigma^2)$.  To analyze our $\mathbf{\hat{\beta}}$ we can look at the
+expectance/variance of this. In order to elegantly calculate this we use two
+somewhat basic results, which I will first prove. Let $\mathbf{A}$ be a
+non-stochastic ($p\times n$) matrix and $\mathbf{X}$ be a stochastic ($n \times
+    p$) vector. We then have the following two results.
+$$E(\mathbf{A} \mathbf{X}) = \mathbf{A} E(\mathbf{X})$$
+and
+$$Var(\mathbf{A} \mathbf{X}) = \mathbf{A} Var(\mathbf{X}) \mathbf{A}^T$$
+The first one is rather easy to see. We have that $E(\mathbf{A} \mathbf{X}) =
+    (E((\mathbf{A} \mathbf{X})_1, \dots, E((\mathbf{A} \mathbf{X})_n))^T$. We have
+$$E((\mathbf{A} \mathbf{X})_i) = E(\sum_{j=1}^{p} \mathbf{A}_{i j} \mathbf{X}_j) = \sum_{j=1}^{p} \mathbf{A}_{i j} E(\mathbf{X}_j) = (\mathbf{A} E(\mathbf{X}_i))_i$$
+Hence we see that $E(\mathbf{A}\mathbf{X}) = \mathbf{A} E(\mathbf{X})$. For the variance we need another helping result, namely we need to find $E(X A^T)$. We have:
+\begin{align*}
+    E(X A^T) & = \dots \\
+             & = \dots
+\end{align*}
+Using this we get:
+\begin{align*}
+    E(\mathbf{\hat{\beta}}) & = E((\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y})             \\
+                            & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T E(\mathbf{Y})             \\
+                            & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} \mathbf{\beta} \\
+                            & = \mathbf{\beta}
+\end{align*}
+and
+\begin{align*}
+    Var(\mathbf{\hat{\beta}}) & = Var((\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y})                                                              \\
+                              & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T Var(\mathbf{Y}) \left( (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \right)^T \\
+                              & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \sigma^2 I \mathbf{X} \left( (\mathbf{X}^T \mathbf{X})^{-1} \right)^T        \\
+                              & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} \left((\mathbf{X}^T \mathbf{X})^T \right)^{-1}           \\
+                              & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} (\mathbf{X}^T \mathbf{X})^{-1}                           \\
+                              & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1}
+\end{align*}
 
 \subsection{Bootstrap}
 
