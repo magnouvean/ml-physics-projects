@@ -10,8 +10,6 @@ y = range(0, 1, length=n)
 surface(x,
     y,
     frankefunction,
-    title="frankefunction for values in [0, 1] and n=$(n)",
-    xlabel="x",
-    ylabel="y",
-    zlabel="z")
+    xlims=(-0.1, 1.1),
+    ylims=(-0.1, 1.1))
 savefig(dirname(@__DIR__) * "/figures/frankefunction.png")

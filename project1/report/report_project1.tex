@@ -4,6 +4,7 @@
 \usepackage{url}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage[section]{placeins}
 \graphicspath{{../figures/}}
 
 % Julia code configuration
@@ -50,6 +51,7 @@ texcl=true % interpet comments as LaTeX
 }
 \lstset{
 literate={σ}{{$\sigma$}}1
+{λ}{{$\lambda$}}1
 }
 % End julia code
 
@@ -114,7 +116,11 @@ To get a visual picture of how this response looks, given some $x1$ and $x2$
 values on $\left[ 0, 1 \right]$ we have the following plot \cite[figures,
     frankefunction.png]{githubrepoproject1}:
 
-\includegraphics[scale=0.5]{frankefunction}
+\begin{figure}
+    \includegraphics[scale=0.5]{frankefunction}
+    \caption{A surface plot of the franke-function on $\left[ 0, 1 \right] \times \left[ 0, 1 \right]$}
+    \label{franke-function-plot}
+\end{figure}
 
 As we can see this does somewhat resemble a terrain. We will generate this data
 both with and without noise.  In the case of without noise we will simply get
@@ -134,18 +140,19 @@ grid, where the numerical value indicates the height of the terrain in some way.
 The data is gathered from \url{https://earthexplorer.usgs.gov/}, and we have
 here downloaded a region around \textit{Møsvatn Austfjell} in Norway. This data
 includes a lot of datapoints ($3601\times 1801 = 6485401$ to be exact), which is
-a lot of data, in fact quite a lot more than we need. Trying to fit a lot of
+quite a lot more than we need to fit a good model. Trying to fit a lot of
 different models to such a big amount of data will often take a lot of memory
-and processing power, so for this sake I have limited the data to look at only
-the first $400\times 500 = 20000$ observations, which should be more than enough
-for our case. When reading the tiff-file we only get a matrix of values out, but
-we will look at this as an image, and then use the position of the response as
-explanatory variables for our model. In other words, if say the fifth pixel in
-the fourth row has the value $10^{-5}$, the response will obviously be
-$10^{-5}$, while the two explanatory varaibles will have values $5$ and $4$.
-This way we will be able to gather data which closely resembles that of the
-franke-function. We will use the same techniques to setup design a matrix and
-response, as we did with the franke-function.
+and processing power, so for this sake I have throughout our calculations
+limited the data to look at only the first $400\times 500 = 20000$ observations,
+which should be more than enough for our case. When reading the tiff-file we
+only get a matrix of values out, but we will look at this as an image, and then
+use the position of the response as explanatory variables for our model. In
+other words, if say the fifth pixel in the fourth row has the value $10^{-5}$,
+the response will obviously be $10^{-5}$, while the two explanatory variables
+will have values $5$ and $4$.  This way we will be able to gather data whose
+structure closely resembles that of the franke-function. We will use thus us the
+same techniques to setup design a matrix and response, as we did with the
+franke-function.
 
 \subsection{Data/Data scaling}
 The data and design matrix used throughout the project is mostly the same for
@@ -156,11 +163,11 @@ response is simply the value of the franke-function evaluated at some point
 (plus some added noise in some cases). When we added noise we have drawn this
 from the normal distribution with mean $0$ and standard-deviance $0.1$ in order
 to not have too low of a signal-to-noise-ratio (the franke-function gives quite
-low values). For the geographical data we load the data in from a tif file of
+low values). For the geographical data we load the data in from a tiff file of
 geographical data, but the setup of the design matrix is exactly the same, with
 the difference being that the $x1$'s $x2$'s and response have been drawn directly from the
-tif-file. The design matrix is largely the same for the different models with
-some minor differences.  For the $5$ th order polynomials we have included in
+tiff-file. The design matrix is largely the same for the different models with
+some minor differences.  For the $5$th order polynomials we have included in
 the first column the first-order values of the $x$, the second column the
 second-order values of $x$, and so on. The sixth to $10$ th column then is the
 first to fifth order terms of $y$ and then we take $4 \cdot 4 = 16$ columns for
@@ -284,8 +291,11 @@ are gathered from are very similar).
 \subsection{Ordinary least squares}
 We have two vectors $x$ and $y$ $200$ responses each. We create a design-matrix
 $X$ based on polynomial features of different orders up to order $5$ with
-interaction terms. As said we here add the first column to add a intercept. Then
-to find the $\hat{\beta}_{ols} = (X^T_{train} X_{train})^{-1} X^T_{train}
+interaction terms. As said we here add the first column to add a intercept.
+Ordinary least squares regression finds the $\mathbf{\beta}$ which minimizes the
+loss-function (this optimal value we call $\hat{\mathbf{\beta}}$) given like:
+$$C(\beta) = (y - X\mathbf{\beta})^T (y - X\mathbf{\beta})$$
+Then to find the $\hat{\beta}_{ols} = (X^T_{train} X_{train})^{-1} X^T_{train}
     y_{train}$. We then can make predictions for the training-set by:
 $$\hat{y}_{train} = X_{train} \hat{\beta}_{ols}$$
 and for the traning set:
@@ -300,7 +310,7 @@ The difference arises with the cost function we minimize to estimate the paramet
 $$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - X_{i *} \beta)\right) + \lambda \sum_{i=1}^p \beta_i^2$$
 and for lasso:
 $$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - X_{i *} \beta)\right) + \lambda \sum_{i=1}^p \lvert \beta_i \rvert$$
-for some (hyper?)parameter $\lambda$, which determines how much we want to
+for some hyperparameter $\lambda$, which determines how much we want to
 penalize high parameter values. Here we see further why it is important to scale
 the data beforehand. If we have data with widely different scaling this will
 impact how the optimal corresponding $\beta$ to the feature should be (not
@@ -362,8 +372,122 @@ and
 \end{align*}
 
 \subsection{Bootstrap}
+Since this project essentially boils down to comparing metrics for different
+models on some data it becomes important that these metrics which we calculate
+are reliable. In the case of the franke-function we have used $200$ datapoints,
+which we have split into a training-set and test-set. We have then trained the
+data on the training-set and then evaluated the trained model on the test-set,
+however since the test-set is only $20\%$ of our datapoints, we have that this
+test-set is rather small. This can make the test-error which we achieve quite
+specific to the model which we have trained, and our metrics may not be that
+reliable. In order to combat this we will use resampling techniques. One way
+which do this by is using bootstrap. We will use bootstrapping to estimate the
+MSE and R\^2 scores on the test-data. Thus we will first have to split the data
+into a training and testing-set like before. Then we draw bootstrap samples
+(i.e. we draw $n$ observations from the $n\times p$ design-matrix $X_{train}$
+with replacement) from the training-data and fit the model on this data and
+evaluate the metrics on the test-data. We do this $B$ times and take the mean of
+these metrics to get our final estimates. This often will give us a better
+estimate for the metrics because it does not require assumptions on error terms,
+which causes bootstrap to give us more reliable results when we have a smaller
+sample size (which we do in this case, especially for) \cite[s.~5.3]{lecturenotes5}.
 
 \subsection{Cross-validation}
+K-fold cross-validation is another resampling-technique which also can better our
+estimates for the various metrics. Unlike with bootstrapping we don't need to
+split the data into a training-set or test-set anymore. K-fold cross-validation
+works by splitting the data into $K$ folds of as equal sizes as possible. Now
+denote for some $1 \leq i \leq K$ $X^{-i}$ as the design-matrix with fold $i$
+excluded, and $X^i$ as the data for fold $i$ of our design-matrix. For
+cross-validation we do for $i = 1, \dots, K$:
+\begin{enumerate}
+    \item Fit our model on $X^{-i}$
+    \item Evaluate our metric on $X^{i}$
+\end{enumerate}
+We then, much like bootstrapping average over all the metrics to get our final
+metric. The reason this improves the estimate for the metrics is that since
+every fold is used for evaluating the metric, that every observation also is
+used in the estimate for our final metric. This is in contrast to our earlier
+estimate, which the metric is only evaluated using the rather small test-set.
+This should give us a better estimate for the true MSE or R\^2.
+\section{Results}
+\subsubsection{Franke-function}
+\subsubsection{Ordinary least squares}
+We have located the code for performing ordinary least squares regression on the
+franke-function with polynomial features up to order $5$ in the
+\textbf{LinearRegression.jl} on the project repository
+\cite{githubrepoproject1}. Running this we can extract the following metrics:\\
+\begin{tabular}{| c | c | c | c | c |}
+          & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
+          & MSE                                 & R\^2                             & MSE        & R\^2       \\
+    TRAIN & $0.001046$                          & $0.985926$                       & $0.008400$ & $0.905406$ \\
+    TEST  & $0.007677$                          & $0.907600$                       & $0.058654$ & $0.395051$ \\
+\end{tabular}
+
+We see there is quite good performance on the training-set and test-set when
+noise is not included. When we include noise-terms the model-performance on the
+training data is still quite good, but with the test-data we get rather poor
+results.
+
+\subsubsection{Ridge}
+If we run the \textbf{Ridge.jl} program in the project repository
+\cite{githubrepoproject1}, we can extract the following results:\\
+\begin{tabular}{| c | c | c | c | c |}
+          & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
+          & MSE                                 & R\^2                             & MSE        & R\^2       \\
+    TRAIN & $0.001046$                          & $0.985926$                       & $0.008400$ & $0.905406$ \\
+    TEST  & $0.003592$                          & $0.956765$                       & $0.017352$ & $0.821028$ \\
+\end{tabular}
+
+With the optimal $\lambda$ for test-data without noise being $1.659587\cdot
+    10^{-2}$ and when we include noise it becomes $1.513561$.
+Additionally we can see how the MSE and R\^2 score varies with different values
+of the hyperparameter $\lambda$ with the following two plots:\\
+
+\begin{figure}[!htb]
+    \centerline{\includegraphics[scale=0.5]{ridge_without_noise}}
+    \caption{A plot of the $\lambda$ in a ridge-model without noise on log10-scale plotted against the MSE and R\^2. We see that performances of these metrics goes a bit up and down for the different values of $\lambda$.}
+    \label{Ridge-with-noise}
+\end{figure}
+
+\begin{figure}[!htb]
+    \centerline{\includegraphics[scale=0.5]{ridge_with_noise}}
+    \caption{A plot of the $\lambda$ in a ridge-model with $\lambda$s on log10-scale plotted against the MSE and R\^2. We see a somewhat similar relationship as for the case with noise, but with greater scales on the y-axis}
+    \label{Ridge-no-noise}
+\end{figure}
+
+\subsubsection{Lasso}
+The \textbf{Lasso.jl} on the project repo \cite{githubrepoproject1} runs lasso
+regression on the franke-function data and calculates the MSE and R\^2. Running
+this we get:
+\begin{tabular}{| c | c | c | c | c |}
+          & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
+          & MSE                                 & R\^2                             & MSE        & R\^2       \\
+    TRAIN & $0.003280$                          & $0.955866$                       & $0.011319$ & $0.872539$ \\
+    TEST  & $0.002737$                          & $0.967054$                       & $0.016451$ & $0.830329$ \\
+\end{tabular}
+
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{lasso_without_noise}}
+    \caption{A plot of the $\lambda$ in a lasso-model with $\lambda$s on log10-scale plotted against the MSE and R\^2. Unlike the Ridge-case this completely flattens out at the end. This is due to the fact that for such high values of $\lambda$ the model-parameters which minimize the loss is simply with all the $\beta$s (other than the intercept term) is $0$}
+    \label{Lasso-no-noise}
+\end{figure}
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{lasso_with_noise}}
+    \caption{A plot of the $\lambda$ in a lasso-model with $\lambda$s on log10-scale plotted against the MSE and R\^2. We see the same flattening as in figure \ref{Lasso-no-noise}}
+    \label{Lasso-with-noise}
+\end{figure}
+
+\subsection{Landscape data}
+
+
+\section{Analysis}
+As we can see from the results, the ordinary least squares performs rather good
+on the models without noise, with ordinary least squares regression performing
+considerably better than both ridge and lasso, with ridge and lasso having quite
+comparable results. Looking at
+
+\section{Conclusion}
 
 \bibliography{./sources.bib}
 

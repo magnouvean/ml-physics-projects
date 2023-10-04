@@ -1,4 +1,5 @@
 module Functions
+using Printf: @printf
 
 using Statistics
 using Plots
@@ -19,26 +20,24 @@ r2score(y, ŷ) = 1 - (mean((y - ŷ) .^ 2)) / (mean((y .- mean(y)) .^ 2))
 # Prints the MSE and R^2 metric values given some different mses for different λ
 # values typically obtained using ridge/lasso.
 function showinfo(λs, mse_train, mse_test, r2_train, r2_test)
-    println("Best λ (mse, train): $(λs[argmin(mse_train)]), mse: $(minimum(mse_train))")
-    println("Best λ (mse, test): $(λs[argmin(mse_test)]), mse: $(minimum(mse_test))")
-    println("Best λ (R^2, train): $(λs[argmax(r2_train)]), R^2: $(maximum(r2_train))")
-    println("Best λ (R^2, test): $(λs[argmax(r2_test)]), R^2: $(maximum(r2_test))")
+    @printf "Best λ (mse, train): %e, mse: %.6f\n" λs[argmin(mse_train)] minimum(mse_train)
+    @printf "Best λ (mse, test): %e, mse: %.6f\n" λs[argmin(mse_test)] minimum(mse_test)
+    @printf "Best λ (R^2, train): %e, R^2: %.6f\n" λs[argmax(r2_train)] maximum(r2_train)
+    @printf "Best λ (R^2, test): %e, R^2: %.6f\n" λs[argmax(r2_test)] maximum(r2_test)
 end
 
-function plotinfo(λs, mse_train, mse_test, r2_train, r2_test, filename)
+# Helper function for plotting mse/r2 train and test against each other
+function plotinfo(λs, mse_train, mse_test, r2_train, r2_test, filename; title="")
     figuresdirectory = dirname(@__DIR__) * "/figures/"
     plot([log10.(λs), log10.(λs)],
-        [mse_train, mse_test],
-        label=["train" "test"],
+        [[mse_train r2_train], [mse_test r2_test]],
+        label=[["train" "train"] ["test" "test"]],
         xlabel="log10(λ)",
-        ylabel="MSE")
-    savefig(figuresdirectory * filename * "_mse.png")
-    plot([log10.(λs), log10.(λs)],
-        [r2_train, r2_test],
-        label=["train" "test"],
-        xlabel="log10(λ)",
-        ylabel="R^2")
-    savefig(figuresdirectory * filename * "_r2.png")
+        ylabel=["MSE" "R^2"],
+        plot_title=title,
+        plot_titlefontsize=14,
+        layout=2)
+    savefig(figuresdirectory * filename * ".png")
 end
 
 function calculateridgeintercept(X_train, y_train, β̂)
