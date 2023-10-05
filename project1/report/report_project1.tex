@@ -4,6 +4,7 @@
 \usepackage{url}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{subfig}
 \graphicspath{{../figures/}}
 
 % Julia code configuration
@@ -323,6 +324,52 @@ decreasing this parameter than if it had a smaller scale. In order to hinder
 this happening it them becomes important to scale the features somewhat alike,
 so that the scale the features is given on does not determine the fit we get.
 
+\subsection{The bias variance tradeoff}
+Central in this project will be the bias variance tradeoff. This is the reason
+why ridge and lasso often can give better predictions than ordinary least
+squares. We will here derive the bias-variance equation. Consider the model
+$\mathbf{y} = f(\mathbf{x}) + \epsilon$ where $E(\epsilon) = 0$ and
+$Var(\epsilon) = \sigma^2$, for some function $f$. The job in machine-learning
+is to estimate this $f$. We call $\hat{f}$ some estimate of this function $f$.
+We then get $\hat{\mathbf{y}} = \hat{f}(\mathbf{x})$, which is some prediction.
+We consider the squared error of one such prediction $(y_i - \hat{y}_i)^2$. We
+now want to find an expression for this mean-squared error, however this is a
+little difficult to calculate as both terms here are stochastic. We therefore
+calculate the expectance of this expression, in which we get:
+\begin{align*}
+    E((y - \hat{y})^2) & = E((f(x) + \epsilon - \hat{f}(x))^2)                                                      \\
+                       & = E((\epsilon + (f(x) - \hat{f}(x)))^2)                                                    \\
+                       & = E(\epsilon^2 + 2\cdot \epsilon \cdot (f(x) - \hat{f}(x)) + (f(x) - \hat{f}(x))^2)        \\
+                       & = E(\epsilon^2) + 2\cdot E(\epsilon) \cdot E(f(x) - \hat{f}(x)) + E((f(x) - \hat{f}(x))^2) \\
+                       & = E((\epsilon - E(\epsilon))^2) + E((f(x) - \hat{f}(x))^2)                                 \\
+                       & = \sigma^2 + E((f(x) - \hat{f}(x))^2)                                                      \\
+\end{align*}
+Here we have used independence of $\epsilon$ from $f(x) - \hat{f}(x)$ which
+stems from the fact that we may assume that $\hat{f}(x)$ and $\epsilon$ are
+independent. We now focus on calculating the second part of this, i.e. $E((f(x)
+    - \hat{f}(x))^2)$. We have:
+\begin{align*}
+     & E\left[(f(\mathbf{x}) - \hat{f}(\mathbf{x}))^2\right]                                                                                                                                                                                             \\
+     & = E\left[((f(\mathbf{x}) - E(\hat{f}(\mathbf{x}))) + (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x})))^2\right]                                                                                                                                     \\
+     & = E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 + 2\cdot (f(\mathbf{x}) - E(\hat{f}(\mathbf{x}))) \cdot (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x})) + (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2\right]                              \\
+     & = E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2\right] + 2\cdot E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x}))) \cdot (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))\right] + E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 \right] \\
+     & = (f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 + 2\cdot E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))\right] \cdot E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))\right] + E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 \right] \\
+     & = (f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 + 2\cdot E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))\right] \cdot (E(\hat{f}(\mathbf{x})) - E(\hat{f}(\mathbf{x}))) + E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 \right]            \\
+     & = (E(\hat{f}(\mathbf{x})) - f(\mathbf{x}))^2 + E\left[(\hat{f}(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 \right]                                                                                                                                    \\
+\end{align*}
+Typically in machine learning we call the first term here the squared bias of the
+model, and the second term the variance. In total we get:
+$$E((y - \hat{y})^2) = \sigma^2 + (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 + E\left[(\hat{f}(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2\right] = \sigma^2 + Bias(\hat{f}(x))^2 + Var(\hat{f}(x))$$
+We see that the expected squared prediction error is given as a sum of the
+variance of the noise $\sigma^2$, the bias of our model, and the variance of our
+model. Here $\sigma^2$ is an irreducible part we cannot control by the choice of
+our model, while the bias and variance is dependent on the type of model that we
+use \cite[s.~2.9]{hastie2009elements}. We can see here that the bias is the
+difference between our models' expectation and the actual expectation $f(x)$.
+The variance is how much the model varies for the different training data (try to rewrite this). We
+now go more into detail of this for the models
+we use in the project.
+
 \subsection{Bias and variance of ols/ridge/lasso}
 Instrumental to explaining the bias and variance of the different models, we
 will calculate bias and variance for the parameters in ols and ridge regression.
@@ -467,13 +514,13 @@ With the optimal $\lambda$ for test-data without noise being $1.659587\cdot
 Additionally we can see how the MSE and R\^2 score varies with different values
 of the hyperparameter $\lambda$ with the following two plots:\\
 
-\begin{figure}[!htb]
+\begin{figure}
     \centerline{\includegraphics[scale=0.5]{ridge_without_noise}}
     \caption{A plot of the $\lambda$ in a ridge-model without noise on log10-scale plotted against the MSE and R\^2. We see that performances of these metrics goes a bit up and down for the different values of $\lambda$.}
     \label{Ridge-with-noise}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}
     \centerline{\includegraphics[scale=0.5]{ridge_with_noise}}
     \caption{A plot of the $\lambda$ in a ridge-model with $\lambda$s on log10-scale plotted against the MSE and R\^2. We see a somewhat similar relationship as for the case with noise, but with greater scales on the y-axis}
     \label{Ridge-no-noise}
@@ -483,6 +530,7 @@ of the hyperparameter $\lambda$ with the following two plots:\\
 The \textbf{Lasso.jl} on the project repo \cite{githubrepoproject1} runs lasso
 regression on the franke-function data and calculates the MSE and R\^2. Running
 this we get:
+
 \begin{tabular}{| c | c | c | c | c |}
           & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
           & MSE                                 & R\^2                             & MSE        & R\^2       \\
@@ -501,6 +549,74 @@ this we get:
     \label{Lasso-with-noise}
 \end{figure}
 
+\subsubsection{Performance with more complex models}
+Up until now we have used only polynomial features of order 5. The
+\textbf{Resampling.jl} and \textbf{ResamplingCV.jl} explores fitting the
+franke-function to data with more polynomial degrees, with the metrics
+calculated using bootstrap and cross-validation respectively. Running these
+programs we gather some plots of the mean squared errors plotted against the
+model complexity, this time in the form of orders of polynomial features. Figure
+\ref{bootstrap-bias-var} shows the mse using ols, calculated using
+bootstrapping, while figure \ref{crossval-ols}, \ref{crossval-ridge} and
+\ref{crossval-lasso} show the same graphs for ols, ridge and lasso respectively,
+these calculated using cross-validation.
+
+\begin{figure}
+    \includegraphics[scale=0.5]{bootstrapbiasvariance}
+    \caption{The MSE calculated using bootstrap plotted against the increasing
+        orders of polynomial features. For the training we unsurprisingly get a
+        lower and lower MSE as we increase the orders of polynomials, but for the
+        testing data we get at first a lower MSE by increasing the polynomials up
+        until about order $6$ where it after this increases. This is to be expected
+        from what we know of the bias-variance tradeoff}
+    \label{bootstrap-bias-var}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_ols__5_folds}}}
+    \quad
+    \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_ols__10_folds}}}
+    \caption{Side by side cross-validated estimates of the mean squared error of
+        ordinary least squares models with varying orders of features with $k=5$ and
+        $k=10$ folds. We see that the mean squared error for the test data rapidly
+        increases after polynomial order $\approx 6$. Since both of the results for
+        $k=5$ and $k=10$ seem to be very similar we can be confident that we do not
+        need to increase the amount of folds here to get a more reliable result
+        - the result has already converged.}
+    \label{crossval-ols}
+\end{figure}
+\begin{figure}
+    \centering
+    \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_ridge__5_folds}}}
+    \quad
+    \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_ridge__10_folds}}}
+    \caption{Side by side cross-validated estimates of the mse, this time for
+        ridge models with varying degrees of polynomial features and $k=5$ and
+        $k=10$ this time as well. We get again very similar results for the two
+        sizes of folds. Here we see clearer that the test MSE decreases at first as
+        we get higher order polynomial features, before it increases again as we get
+        more and more complex models. We also notice that the scale here is much
+        smaller than in the ols case, likely due to ridge being a less complex
+        model.}
+    \label{crossval-ridge}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_lasso__5_folds}}}
+    \quad
+    \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_lasso__10_folds}}}
+    \caption{Side by side cross-validated estimates of the mse, finally this time for lasso models with varying degrees of polynomial features and $k=5$ and
+        $k=10$ folds this time as well, with the same result for the two
+        different fold sizes. Interesting here is that we actually get better
+        and better performance as we increase the polynomial order it could look
+        like. Keep in mind though that we only have tested up to order $14$. If
+        we were to increase this even more, we likely would get problems so long
+        as the $\lambda$ parameter stays the same.}
+    \label{crossval-lasso}
+\end{figure}
+
 \subsection{Landscape data}
 
 
@@ -513,6 +629,11 @@ comparable results. Looking at
 \section{Conclusion}
 
 \section{Appendix}
+
+\subsection{Project code (github)}
+All the julia programs described in the report and with the full source code can be
+found at:
+\url{https://github.com/magnouvean/ml-physics-projects/tree/main/project1/julia}
 
 \subsection{Expectance and variance with matrices}
 Let $A$ be a non-stochastic matrix and $\mathbf{X}$ be a stochastic vector. We have:
