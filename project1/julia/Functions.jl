@@ -17,13 +17,25 @@ end
 mse(y, ŷ) = mean((y - ŷ) .^ 2)
 r2score(y, ŷ) = 1 - (mean((y - ŷ) .^ 2)) / (mean((y .- mean(y)) .^ 2))
 
+# Shows info about some metric, given the lambdas used for the model, the metric
+# data on train/test and the metric name. Print this to console in a more easily
+# readable format. This will be useful multiple places throughout our code.
+function showinfo(λs, metrics_train, metrics_test, metric_name; use_min=true)
+    best_λ_train, best_λ_test, best_train, best_test = if use_min
+        λs[argmin(metrics_train)], λs[argmin(metrics_test)], minimum(metrics_train), minimum(metrics_test)
+    else
+        λs[argmax(metrics_train)], λs[argmax(metrics_test)], maximum(metrics_train), maximum(metrics_test)
+    end
+
+    @printf "Best λ (%s, train): %e, %s: %.6f\n" metric_name best_λ_train metric_name best_train
+    @printf "Best λ (%s, test): %e, %s: %.6f\n" metric_name best_λ_test metric_name best_test
+end
+
 # Prints the MSE and R^2 metric values given some different mses for different λ
 # values typically obtained using ridge/lasso.
-function showinfo(λs, mse_train, mse_test, r2_train, r2_test)
-    @printf "Best λ (mse, train): %e, mse: %.6f\n" λs[argmin(mse_train)] minimum(mse_train)
-    @printf "Best λ (mse, test): %e, mse: %.6f\n" λs[argmin(mse_test)] minimum(mse_test)
-    @printf "Best λ (R^2, train): %e, R^2: %.6f\n" λs[argmax(r2_train)] maximum(r2_train)
-    @printf "Best λ (R^2, test): %e, R^2: %.6f\n" λs[argmax(r2_test)] maximum(r2_test)
+function showinfo_mse_r2(λs, mse_train, mse_test, r2_train, r2_test)
+    showinfo(λs, mse_train, mse_test, "mse")
+    showinfo(λs, r2_train, r2_test, "r2", use_min=false)
 end
 
 # Helper function for plotting mse/r2 train and test against each other

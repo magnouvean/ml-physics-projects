@@ -6,7 +6,7 @@ include("./Data.jl")
 include("./Functions.jl")
 
 using .Data: λs, generatedata
-using .Functions: showinfo, plotinfo, mse, r2score, calculateridgeintercept
+using .Functions: showinfo_mse_r2, plotinfo, mse, r2score, calculateridgeintercept
 
 function calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
     mse_train = zeros(length(λs))
@@ -36,11 +36,11 @@ end
 println("Without noise")
 X_train, X_test, y_train, y_test = generatedata(5)
 mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
-showinfo(λs, mse_train, mse_test, r2_train, r2_test)
+showinfo_mse_r2(λs, mse_train, mse_test, r2_train, r2_test)
 plotinfo(λs, mse_train, mse_test, r2_train, r2_test, "ridge_without_noise", title="Without noise")
 
 println("With noise")
 X_train, X_test, y_train, y_test = generatedata(5, add_noise=true)
 mse_train, mse_test, r2_train, r2_test = calculate_mse_r2_ridge(λs, X_train, X_test, y_train, y_test)
-showinfo(λs, mse_train, mse_test, r2_train, r2_test)
+showinfo_mse_r2(λs, mse_train, mse_test, r2_train, r2_test)
 plotinfo(λs, mse_train, mse_test, r2_train, r2_test, "ridge_with_noise", title="With noise")

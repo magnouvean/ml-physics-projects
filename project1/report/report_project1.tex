@@ -137,22 +137,32 @@ As mentioned, another source for data which was used for analysis of the
 different models is some real-world geographical data. The data is stored as a
 tiff image file and consists simply of a set of numerical values in a square
 grid, where the numerical value indicates the height of the terrain in some way.
-The data is gathered from \url{https://earthexplorer.usgs.gov/}, and we have
-here downloaded a region around \textit{Møsvatn Austfjell} in Norway. This data
-includes a lot of datapoints ($3601\times 1801 = 6485401$ to be exact), which is
-quite a lot more than we need to fit a good model. Trying to fit a lot of
-different models to such a big amount of data will often take a lot of memory
-and processing power, so for this sake I have throughout our calculations
-limited the data to look at only the first $400\times 500 = 20000$ observations,
-which should be more than enough for our case. When reading the tiff-file we
-only get a matrix of values out, but we will look at this as an image, and then
-use the position of the response as explanatory variables for our model. In
-other words, if say the fifth pixel in the fourth row has the value $10^{-5}$,
-the response will obviously be $10^{-5}$, while the two explanatory variables
-will have values $5$ and $4$.  This way we will be able to gather data whose
-structure closely resembles that of the franke-function. We will use thus us the
-same techniques to setup design a matrix and response, as we did with the
-franke-function.
+Figure \ref{landscape-plot} contains a plot of the data which we have used for
+our analysis here.  The data is gathered from
+\url{https://earthexplorer.usgs.gov/}, and we have here downloaded a region
+around \textit{Møsvatn Austfjell} in Norway. This data includes a lot of
+datapoints ($3601\times 1801 = 6485401$ to be exact), which is quite a lot more
+than we need to fit a good model. Trying to fit a lot of different models to
+such a big amount of data will often take a lot of memory and processing power,
+so for this sake I have throughout our calculations limited the data to look at
+only the first $400\times 500 = 20000$ observations, which should be more than
+enough for our case. When reading the tiff-file we only get a matrix of values
+out, but we will look at this as an image, and then use the position of the
+response as explanatory variables for our model. In other words, if say the
+fifth pixel in the fourth row has the value $10^{-5}$, the response will
+obviously be $10^{-5}$, while the two explanatory variables will have values $5$
+and $4$.  This way we will be able to gather data whose structure closely
+resembles that of the franke-function. We will use thus us the same techniques
+to setup design a matrix and response, as we did with the franke-function.
+
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{landscapesurface}}
+    \caption{A surface plot of the landscape data we have used. Keep in mind
+        here that the axis here is simply the index of each datapoint in the
+        tiff-file. This means that the axis here doesn't really tell us much, but
+        shows the overall structure of the terrain nonetheless.}
+    \label{landscape-plot}
+\end{figure}
 
 \subsection{Data/Data scaling}
 The data and design matrix used throughout the project is mostly the same for
@@ -310,11 +320,21 @@ regression. The setup of the model is exactly the same, where for both these
 models we estimate some parameter vector $\mathbf{\beta}$, where we assume
 $$\mathbf{y} = \mathbf{X} \mathbf{\beta} + \mathbf{\epsilon}$$
 The difference arises with the cost function we minimize to estimate the parameters. For ridge we use:
-$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - X_{i *} \beta)\right) + \lambda \sum_{i=1}^p \beta_i^2$$
+$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_{i 1} - \dots - \beta_{p} x_{i p})\right) + \lambda \sum_{i=1}^p \beta_i^2$$
 and for lasso:
-$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - X_{i *} \beta)\right) + \lambda \sum_{i=1}^p \lvert \beta_i \rvert$$
-for some hyperparameter $\lambda$, which determines how much we want to
-penalize high parameter values. Here we see further why it is important to scale
+$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_{i 1} - \dots - \beta_{p} x_{i p})\right) + \lambda \sum_{i=1}^p \lvert \beta_i \rvert$$
+for some hyperparameter $\lambda$, which determines how much we want to penalize
+high parameter values. Keep in mind that we do not here penalize the intercept
+in the loss-function. We often do this because we in general are ok with a
+somewhat high intercept, because this often lead to better performance. We will
+therefore when writing our code, fit ridge regression without a intercept (by
+not including a first column of only $1$s), and then based on the other
+parameters calculate the optimal intercept $\beta_0$ which leads to the optimal
+loss. This we can do by the following equation:
+$$\beta_0 = \frac{1}{n} \sum_{i=0}^{n-1} y_i - \frac{1}{n} \sum_{i=0}^{n-1} \sum_{j=1}^{p-1} X_{i j} \beta_j$$
+As proved in \cite[s.~Further manipulations]{week35notes}.
+(To get our estimate we simply replace our $\beta_i$s with their estimates).
+Furthermore, from the cost-function we see further why it is important to scale
 the data beforehand. If we have data with widely different scaling this will
 impact how the optimal corresponding $\beta$ to the feature should be (not
 regarding the penalty term). If we have a feature with very high values, this

@@ -8,7 +8,7 @@ include("./Data.jl")
 include("./Functions.jl")
 
 using .Data: generatedesignmatrix, standardscale, shufflematrices
-using .Functions: calculateridgeintercept, kfold, mse
+using .Functions: calculateridgeintercept, kfold, mse, showinfo
 
 @sk_import linear_model:Lasso
 
@@ -37,6 +37,11 @@ function datafromlandscape(landscapedata)
 end
 
 x1, x2, y = datafromlandscape(landscapedata_norway)
+
+# We generate a surface plot first in order to visualize the terrain data
+plot(x1, x2, y, st=:surface)
+savefig(dirname(@__DIR__) * "/figures/landscapesurface.png")
+
 # We fix the order of the data to be 5 in our case
 X = generatedesignmatrix(x1, x2, 5)
 # Scale and shuffle matrix, which here is especially important because of the
@@ -104,11 +109,8 @@ end
 λs = 10.0 .^ (range(-14, 0, 12))
 ols_train, ols_test, ridge_train, ridge_test, lasso_train, lasso_test = crossvalolsridgelasso(X, y, λs, 3)
 println("OLS")
-display(ols_train)
-display(ols_train)
+println("Train: $(ols_train), test: $(ols_test)")
 println("Ridge")
-display(ridge_train)
-display(ridge_test)
+showinfo(λs, ridge_train, ridge_test, "mse")
 println("Lasso")
-display(lasso_train)
-display(lasso_test)
+showinfo(λs, lasso_train, lasso_test, "mse")
