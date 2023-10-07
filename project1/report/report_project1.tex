@@ -5,6 +5,7 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{subfig}
+\usepackage{bm}
 \graphicspath{{../figures/}}
 
 % Julia code configuration
@@ -73,7 +74,7 @@ perform better when we have some added noise (at least in the case when we have
 somewhat limited data), but that this is not the case when there is no noise (or
 a very high signal to noise-ratio). We have also explored how this result is
 tied to the bias-variance tradeoff, and manifested the importance this has for
-choosing the best model.
+choosing a correct model complexity for our given data.
 
 \section{Introduction}
 Linear regression often is seen as a rather simple machine-learning method in
@@ -148,12 +149,13 @@ so for this sake I have throughout our calculations limited the data to look at
 only the first $400\times 500 = 20000$ observations, which should be more than
 enough for our case. When reading the tiff-file we only get a matrix of values
 out, but we will look at this as an image, and then use the position of the
-response as explanatory variables for our model. In other words, if say the
-fifth pixel in the fourth row has the value $10^{-5}$, the response will
-obviously be $10^{-5}$, while the two explanatory variables will have values $5$
-and $4$.  This way we will be able to gather data whose structure closely
-resembles that of the franke-function. We will use thus us the same techniques
-to setup design a matrix and response, as we did with the franke-function.
+response in the matrix as explanatory variables for our model. In other words,
+if say the fifth pixel in the fourth row has the value $10^{-5}$, the response
+will obviously be $10^{-5}$, while the two explanatory variables will have
+values $5$ and $4$.  This way we will be able to gather data whose structure
+closely resembles that of the franke-function. We can then use the same
+techniques to set up a design-matrix and a response, as we do with the
+franke-function.
 
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{landscapesurface}}
@@ -166,47 +168,53 @@ to setup design a matrix and response, as we did with the franke-function.
 
 \subsection{Data/Data scaling}
 The data and design matrix used throughout the project is mostly the same for
-the different models, at least in the case of model evaluation for the
-franke-function. The data we have used here is simply a collection of two
-randomly generated datapoint-vectors $\mathbf{x}_1$ and $\mathbf{x}_2$, each of
-size $200$, and the response is simply the value of the franke-function
-evaluated at some point (plus some added noise in some cases). When we added
-noise we have drawn this from the normal distribution with mean $0$ and
-standard-deviance $0.1$ in order to not have too low of a signal-to-noise-ratio
-(the franke-function gives quite low values). For the geographical data we load
-the data in from a tiff file of geographical data, but the setup of the design
-matrix is exactly the same, with the difference being that the $x1$'s $x2$'s and
-response have been drawn directly from the tiff-file. The design matrix is
-largely the same for the different models with some minor differences.  For the
-$5$th order polynomials we have included in the first column the first-order
-values of the $x$, the second column the second-order values of $x$, and so on.
-The sixth to $10$ th column then is the first to fifth order terms of $y$ and
-then we take $4 \cdot 4 = 16$ columns for interaction terms between the two
-variables. A difference here is that for ordinary least squares we have added an
-intercept by setting the first column to consist of only $1$.
+the different models we fit the data to. As previously mentioned, for the
+franke-function the data we have used is simply a collection of two randomly
+generated datapoint-vectors $\mathbf{x}_1$ and $\mathbf{x}_2$, each of size
+$200$ (for the most part), and the response is simply the value of the
+franke-function evaluated at some point (plus some added noise in some cases).
+When we added noise we have drawn this from the normal distribution with mean
+$0$ and standard-deviance $0.1$, which satisfies a common assumption for linear
+regression models \cite[s.~1.4.5]{murphy2012machine}. We have chosen to use a
+standard-deviance of $0.1$ in order to not have too low of a
+signal-to-noise-ratio (the franke-function usually returns quite low values as
+one can can see from figure \ref{franke-function-plot}). For the geographical
+data we load the data in from a tiff file of geographical data, but the setup of
+the design matrix is exactly the same, with the difference being that the
+$x_1$s, $x_2$s and the response have been drawn directly from the tiff-file.
+For the setup of the design-matrix with fifth order polynomial features we have
+included in the first column the first-order values of the $x_1$s, the second
+column the second-order values of $x_1$s, and so on up to the fifth order.  The
+sixth to tenth column then is the first to fifth order terms of $x_2$s and then
+the rest of the $4 \cdot 4 = 16$ columns is for interaction terms between the
+two variables. One exception to this exact setup of design-matrix is for
+ordinary least squares where we have added an intercept by setting the first
+column to consist of only $1$s.
 \\
-Throughout the whole of this project we have scaled the
-features of the matrix, simply by centering the mean around $0$ and scaling by
-the standard deviance. In the case of ordinary least squared regression this
-scaling is not very important for model performance, as the model will be able
-to scale the $\beta$'s correspondingly for different scaled data, but in the
-case of ridge/lasso which both include a penalty term (see the ridge/lasso
-sections), it becomes important to scale the data so that the scale of the data
-doesn't affect how much we penalize the parameters (I will go into more detail
-on this in the ridge/lasso sections).
+Throughout the whole of this project we have scaled the features of the matrix,
+simply by centering the mean around $0$ and scaling by the standard deviance. In
+the case of ordinary least squares regression this scaling is not important for
+model performance, as the model will be able to scale the $\beta$s depending on
+the scaling of the features and give the same minimization of the loss-function
+(just with different parameters $\beta$).  However, in the case of ridge/lasso
+regression which both include a penalty term, it becomes important to scale the
+data so that the scale of the data doesn't affect how much we penalize the
+parameters (more about this in the ridge/lasso sections at
+\ref{ridge-lasso-model-sec}).
 \\
 A last thing of note we have used throughout the project is train-test-splitting
 (except when doing cross-validation). We then split our data into a train set
 consisting of $80\%$ of the datapoints, and $20\%$ of the data for testing.
 This lets us evaluate how well our model performs on "new" data, i.e. data the
-model has not been trained on from the dataset. The reason this is important is
-in order for us to recognize overfitted models, which often become the case when
-we have a higher model complexity \cite[s.~7.2]{hastie2009elements}. In such
-cases we could have a model that predicts the training data very well, but
-generalizes very poorly to new data.  For the franke-function I have written a
-function \textit{generatedata} which takes hand of all of the mentioned above
-(here I am using Julia). It is a bit long, but well worth inclusion here as it
-is central to all of the programs that use the franke-function:
+model has not been trained on. The reason this is important is in order for us
+to recognize overfitted models, which often become the case when we have a
+higher model complexity \cite[s.~7.2]{hastie2009elements}. In such cases we
+could have a model that predicts the training data very well, but generalizes
+very poorly to new data.  For the franke-function I have written a function
+\textit{generatedata} which takes hand of all of the mentioned above (I am using
+julia for all the code in this project). It is a bit long, but well worth
+inclusion here as it is central to all of the programs that use the
+franke-function:
 \begin{lstlisting}[language=julia]
 # Generate a design matrix consisting of random x-s (two explanatory variables)
 # with a polynomial of a given order (we will use order 5 for our analysis
@@ -262,12 +270,16 @@ function generatedata(order::Int64; split=true, include_intercept=false, add_noi
 end
 \end{lstlisting}
 
-Here we have used some other local functions like standardscale (scaling as
-described in the scaling section in this report) and shufflematrices (random
-shuffles rows in a matrix), which it should be clear what these do based on
-their name, but I'll also include the implementation of the
-\textit{generatedesignmatrix}, as it is very central for all the calculations we
-have done:
+Keep in mind here that we are using the features of the training-set to scale
+the features of the test-set. We have also used some other local functions like
+\textbf{standardscale} (scaling as described before) and
+\textbf{shufflematrices} (randomly shuffles rows in a matrix), which their
+implementation is rather trivial (but of course feel free to see exactly how
+they are implemented by looking at the full source-code at:
+\url{https://github.com/magnouvean/ml-physics-projects/tree/main/project1/julia}).
+We also here use \textbf{generatedesignmatrix}, which I'll include the
+implementation of the here, as it is a little more complicated, and very central
+for all the calculations we have done (including setting up the landscape data):
 \begin{lstlisting}[language=julia]
 # Generate a matrix with features as polynomial terms with interactions
 function generatedesignmatrix(x1, x2, order)
@@ -290,59 +302,76 @@ Shuffling the data is perhaps not nessecary here in the case of the
 franke-function seeing as the explanatory variables are randomly drawn (but I
 have done so anyway just out of good practice), however in the case of the
 landscape data this is very important, as here the data is sorted when reading
-the data in, and if we then do not shuffle the data before, and we then apply
+the data in, and if we then do not shuffle the data before, and we apply
 train-test-splitting, we will get different regions of our response for the
 training and testing data, in other words, the model will be trained on data
 from some area and tested on data from another area, which will then probably
 give quite poor performance (unless the two regions the train-data and test-data
 are gathered from are very similar).
 
+\subsection{Metrics}
+We will mainly use two different metrics in our analysis. The perhaps most
+central one is the mean squared error, and the other one is the $R^2$ score.
+Given some response $y$ with $n$ values and some predictions for $\mathbf{y}$,
+$\hat{\mathbf{y}}$ the mse is given as: \cite{week34notes}
+$$MSE(\mathbf{y}, \hat{\mathbf{y}}) = \sum_{i=1}^n (y_i - \hat{y}_i)^2$$
+while the $R^2$ score is given by: \cite{week34notes}
+$$R^2(\mathbf{y}, \hat{\mathbf{y}}) = 1 - \frac{\sum_{i=0}^{n-1} (y_i - \hat{y}_i)^2}{\sum_{i=0}^{n-1}(y_i - \overline{y})^2}$$
 
 \subsection{Ordinary least squares}
 The first, and conceptually simplest, model we looked at in this project was the
-ordinary least squares linear regression. Before we further describe this
-method, denote $\mathbf{X}$ as our design-matrix. This is generated as described
-already, by using polynomial features up to order $5$. However unlike for the
-other models, our design matrix in this case will have the first column just
-consisting of $1$s. This is to add an intercept-term.  Ordinary least squares
-regression finds the $\mathbf{\beta}$ which minimizes the loss-function (this
-optimal value we call $\hat{\mathbf{\beta}}$) given like:
-$$C(\beta) = (y - X\mathbf{\beta})^T (y - X\mathbf{\beta})$$
-Then to find the $\hat{\beta}_{ols} = (X^T_{train} X_{train})^{-1} X^T_{train}
-    y_{train}$. We then can make predictions for the training-set by:
-$$\hat{y}_{train} = X_{train} \hat{\beta}_{ols}$$
-and for the traning set:
-$$\hat{y}_{test} = X_{test} \hat{\beta}_{ols}$$
+ordinary least squares linear regression. Before we go deeper into this
+method, denote $\mathbf{X}$ as our design-matrix and $\mathbf{y}$ as our
+response. We assume the following relationship:
+$$\mathbf{y} = \mathbf{X} \bm{\beta} + \bm{\epsilon}$$
+Where $\bm{\epsilon}$ is some stochastic noise.
+We want to include a intercept for our model, and thus we let the first column
+in the design matrix $\mathbf{X}$ consist of only $1$s. Ordinary least squares
+regression finds the $\bm{\beta}$ which minimizes the loss-function over the
+training-data (this optimal value we call $\hat{\bm{\beta}}$) given like:
+$$C(\bm{\beta}) = (\mathbf{y} - \mathbf{X}_{train} \bm{\beta})^T (\mathbf{y} - \mathbf{X}_{train} \bm{\beta})$$
+Then we get the least squares estimate for $\hat{\bm{\beta}}_{ols}$ given by:
+$$\hat{\bm{\beta}}_{ols} = (\mathbf{X}^T_{train} \mathbf{X}_{train})^{-1} \mathbf{X}^T_{train} \mathbf{y}_{train}$$
+We then can make predictions for the training-set by:
+$$\hat{\mathbf{y}}_{train} = \mathbf{X}_{train} \hat{\bm{\beta}}_{ols}$$
+and for the test set:
+$$\hat{\mathbf{y}}_{test} = \mathbf{X}_{test} \hat{\bm{\beta}}_{ols}$$
 
 \subsection{Ridge and lasso}
+\label{ridge-lasso-model-sec}
 Ridge and lasso is in lots of ways very similar to ordinary least squares
-regression. The setup of the model is exactly the same, where for both these
-models we estimate some parameter vector $\mathbf{\beta}$, where we assume
-$$\mathbf{y} = \mathbf{X} \mathbf{\beta} + \mathbf{\epsilon}$$
+regression. The setup of the model is exactly the same, i.e. we again have:
+$$\mathbf{y} = \mathbf{X} \bm{\beta} + \mathbf{\epsilon}$$
 The difference arises with the cost function we minimize to estimate the parameters. For ridge we use:
-$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_{i 1} - \dots - \beta_{p} x_{i p})\right) + \lambda \sum_{i=1}^p \beta_i^2$$
+$$C(\bm{\beta}) = \left(\sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_{i 1} - \dots - \beta_{p} x_{i p})\right) + \lambda \sum_{i=1}^p \beta_i^2$$
 and for lasso:
-$$C(\mathbf{\beta}) = \left(\sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_{i 1} - \dots - \beta_{p} x_{i p})\right) + \lambda \sum_{i=1}^p \lvert \beta_i \rvert$$
+$$C(\bm{\beta}) = \left(\sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_{i 1} - \dots - \beta_{p} x_{i p})\right) + \lambda \sum_{i=1}^p \lvert \beta_i \rvert$$
 for some hyperparameter $\lambda$, which determines how much we want to penalize
 high parameter values. Keep in mind that we do not here penalize the intercept
 in the loss-function. We often do this because we in general are ok with a
 somewhat high intercept, because this often lead to better performance. We will
 therefore when writing our code, fit ridge regression without a intercept (by
 not including a first column of only $1$s), and then based on the other
-parameters calculate the optimal intercept $\beta_0$ which leads to the optimal
-loss. This we can do by the following equation:
+parameters calculate the intercept $\beta_0$ which leads to the optimal
+loss. This we calculate this by the following relationship:
 $$\beta_0 = \frac{1}{n} \sum_{i=0}^{n-1} y_i - \frac{1}{n} \sum_{i=0}^{n-1} \sum_{j=1}^{p-1} X_{i j} \beta_j$$
-As proved in \cite[s.~Further manipulations]{week35notes}.
-(To get our estimate we simply replace our $\beta_i$s with their estimates).
-Furthermore, from the cost-function we see further why it is important to scale
-the data beforehand. If we have data with widely different scaling this will
-impact how the optimal corresponding $\beta$ to the feature should be (not
-regarding the penalty term). If we have a feature with very high values, this
-$\beta$ will be smaller, than if we use a smaller scale/unit. But then this term
-$\beta^2$ will be much bigger, and we will reduce the cost much further by
-decreasing this parameter than if it had a smaller scale. In order to hinder
-this happening it them becomes important to scale the features somewhat alike,
-so that the scale the features is given on does not determine the fit we get.
+, as proved in \cite[s.~Further manipulations]{week35notes}. To get our
+estimate we simply replace our $\beta_i$s with their estimates. For
+lasso-regression we will use scikit-learns implementation, which takes care of
+this for us. Furthermore, from the loss-function expressions we see why it is
+important to scale the data beforehand. If we for example have a feature that is
+not scaled and takes very low values, the corresponding $\beta$ which
+minimizes the first sum (the ols cost) will typically be quite high. This would
+then result in this $\beta$ to be penalized quite a lot. If we then scale the
+feature to another unit (by for example multiplying with some big number), so
+that the feature takes much higher values the corresponding $\beta$ which
+minimizes the first sum would then become a lot smaller. This would mean that
+this parameter would be much less penalized. In other words we see that the
+scaling of the different features will decide how much its corresponding
+parameter will be penalized also, and this is not something we want. In order to
+hinder this happening it is important to scale the features somewhat alike, so
+that the scale the features does not determine which parameters will be shrunk
+a lot, and which will be shrunk less.
 
 \subsection{The bias variance tradeoff}
 Central in this project will be the bias variance tradeoff. This is the reason
@@ -664,8 +693,6 @@ Hence we see that $E(A \mathbf{X}) = A E(\mathbf{X})$.
 Note also that from this it follows that $E(A \mathbf{X})^T = (A
     E(\mathbf{X}))^T = E(\mathbf{X})^T A^T$ (we will use this for calculating the
 variance expression).
-Additionally we have for $E(X A^T)$:
-$E(X A^T)_i = E((X A^T)_i) = E(X_i )$
 
 We now want to look at the case of the variance. We have:
 \begin{align*}
