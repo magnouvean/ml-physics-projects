@@ -90,10 +90,8 @@ for k in [5, 10]
         [train_mses_ols, test_mses_ols, "ols"],
         [train_mses_ridge, test_mses_ridge, "ridge"],
         [train_mses_lasso, test_mses_lasso, "lasso"]]
-        println("Train mses ($(method_name)):")
-        display(mses_train)
-        println("Test mses ($(method_name)):")
-        display(mses_test)
+        println("mses for ($(method_name)):")
+        display([mses_train mses_test])
         plot([collect(2:14), collect(2:14)],
             [mses_train, mses_test],
             title="Cross-validation bias-variance ($(method_name)) with $(k) folds",

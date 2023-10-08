@@ -3,6 +3,8 @@ using Plots
 using ScikitLearn: @sk_import, fit!, predict
 using LinearAlgebra
 using Statistics: mean
+using StatsBase: sample
+using Random: seed!
 
 include("./Data.jl")
 include("./Functions.jl")
@@ -13,10 +15,12 @@ using .Functions: calculateridgeintercept, kfold, mse, showinfo
 @sk_import linear_model:Lasso
 
 # We will not use the whole data since this will take too long to train using
-# any sizable fold/λs. We use the first 400x500 grid of values here.
+# any sizable fold/λs. We use the first 400x500 grid of values here, which gives
+# 20000 observations, and use 10% of this for testing.
 landscapedata_norway = load(dirname(@__DIR__) * "/data/SRTM_data_Norway_2.tif")[1:400, 1:500]
 
-function datafromlandscape(landscapedata)
+function datafromlandscape(landscapedata; train_test_seed=1234)
+    seed!(train_test_seed)
     x_indices = collect(1:size(landscapedata, 1))
     y_indices = collect(1:size(landscapedata, 2))
 
@@ -33,10 +37,14 @@ function datafromlandscape(landscapedata)
         end
     end
 
-    return x, y, z
+    allindices = collect(1:length(x))
+    testindices = sample(allindices, Int(length(allindices) * 0.1))
+    trainindices = setdiff(allindices, testindices)
+
+    return x[trainindices], y[trainindices], z[trainindices], x[testindices], y[testindices], z[testindices]
 end
 
-x1, x2, y = datafromlandscape(landscapedata_norway)
+x1, x2, y, x1_test, x2_test, y_test = datafromlandscape(landscapedata_norway)
 
 # We generate a surface plot first in order to visualize the terrain data
 plot(x1, x2, y, st=:surface)
@@ -44,6 +52,9 @@ savefig(dirname(@__DIR__) * "/figures/landscapesurface.png")
 
 # We fix the order of the data to be 5 in our case
 X = generatedesignmatrix(x1, x2, 5)
+# We also create the test data and scale this based on X
+X_test = generatedesignmatrix(x1_test, x2_test, 5)
+X_test = standardscale(X_test, X)
 # Scale and shuffle matrix, which here is especially important because of the
 # ordered nature and high value of the features.
 X = standardscale(X, X)
@@ -106,11 +117,34 @@ function crossvalolsridgelasso(X, y, λs, nfolds)
     return mean(train_mses_ols), mean(test_mses_ols), mean(train_mses_ridge, dims=2), mean(test_mses_ridge, dims=2), mean(train_mses_lasso, dims=2), mean(test_mses_lasso, dims=2)
 end
 
-λs = 10.0 .^ (range(-14, 0, 12))
+λs = 10.0 .^ (range(-10, 2, 10))
 ols_train, ols_test, ridge_train, ridge_test, lasso_train, lasso_test = crossvalolsridgelasso(X, y, λs, 3)
 println("OLS")
 println("Train: $(ols_train), test: $(ols_test)")
+# We also predict fitting on the whole data, and testing on the test data, in
+# order for us to be able to compare the results with ridge/lasso where we do
+# this.
+ŷ_test_ols = X_test * pinv(X' * X) * X' * y
+mse_ols_test = mse(y_test, ŷ_test_ols)
+println("Test-data mse for ols: $(mse_ols_test)")
+
 println("Ridge")
 showinfo(λs, ridge_train, ridge_test, "mse")
+display([ridge_train ridge_test])
+# We check optimal chosen model for new data
+best_λ_ridge = λs[argmin(ridge_test)]
+β̂_ridge_opt = pinv(X' * X + best_λ_ridge * I) * X' * y
+β̂_0 = calculateridgeintercept(X, y, β̂_ridge_opt)
+ŷ_test_ridge = X_test * β̂_ridge_opt .+ β̂_0
+mse_ridge_opt = mse(y_test, ŷ_test_ridge)
+println("Test-data mse for optimal λ: $(mse_ridge_opt)")
+
 println("Lasso")
 showinfo(λs, lasso_train, lasso_test, "mse")
+display([lasso_train lasso_test])
+# We also check the optimal chosen model for new data for lasso
+best_λ_lasso = λs[argmin(lasso_test)]
+model_lasso_opt = fit!(Lasso(alpha=best_λ_lasso, random_state=1234), X, y)
+ŷ_test_lasso = predict(model_lasso_opt, X_test)
+mse_lasso_opt = mse(y_test, ŷ_test_lasso)
+println("Test-data mse for optimal λ: $(mse_lasso_opt)")

@@ -20,3 +20,10 @@ The following files are indented to be run directly to produce our results:
 - Resampling.jl
 - ResamplingCV.jl
 - Ridge.jl
+
+## Outputs
+The outputs from running the different files on my machine is contained withing
+the [OUTPUTS.md](./OUTPUTS.md) file. Additionally running a lot of the files
+produces figures as well. The names of these should be somewhat
+self-explanatory, and they are contained within the [figures](../figures/)
+directory.

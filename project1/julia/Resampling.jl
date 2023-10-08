@@ -44,6 +44,8 @@ end
 # singular matrix (which the pinv seems to have problems computing the inverse
 # for). To solve this problem we simply add more observations.
 train_mses, test_mses = bootstrapbiasvariance(collect(2:14), 1000)
+# First column train mses, second column test mses for each order
+display([train_mses test_mses])
 plot([collect(2:14), collect(2:14)],
     [train_mses, test_mses],
     label=["train" "test"],

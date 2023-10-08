@@ -73,18 +73,16 @@ function generatedata(order::Int64; split=true, include_intercept=false, add_noi
     if !split
         return standardscale(Xs, Xs), ys
     end
-    indextosplitat = convert(Int, floor(size(Xs, 1) * 0.8))
+    indextosplitat = Int(floor(size(Xs, 1) * 0.8))
     X_train, X_test = Xs[1:indextosplitat, :], Xs[(indextosplitat+1):size(Xs, 1), :]
     y_train, y_test = ys[1:indextosplitat, :], ys[(indextosplitat+1):size(ys, 1), :]
 
     # Scaling X_train/X_test
-    # Here we create a copy of the X_train matrix as we want to use the
-    # column-means of this to scale both the X_train and X_test columns.
-    X_train_original = copy(X_train)
-    X_train = standardscale(X_train, X_train_original)
     # We use the column means from the original X_train to subtract from the
-    # columns in X_test.
-    X_test = standardscale(X_test, X_train_original)
+    # columns in X_test. We must do this before we scale the X_train
+    X_test = standardscale(X_test, X_train)
+    # We then can scale the X_train
+    X_train = standardscale(X_train, X_train)
 
     if add_noise
         # Add response with noise
