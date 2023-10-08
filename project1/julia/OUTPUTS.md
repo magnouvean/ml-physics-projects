@@ -211,4 +211,59 @@ Best λ (mse, test): 1.000000e-10, mse: 0.000024
  4.95753e-5  4.95756e-5
 {{convergence-warning}}
 Test-data mse for optimal λ: 2.365336207037299e-5
+
+
+
+
+{{conda install-message caused by ScikitLearn.jl}}
+Fold: 1
+{{Lots of convergence warnings}}
+Fold: 2
+{{Lots of convergence warnings}}
+Fold: 3
+{{Lots of convergence warnings}}
+Fold: 4
+{{Lots of convergence warnings}}
+Fold: 5
+{{Lots of convergence warnings}}
+Fold: 6
+{{Lots of convergence warnings}}
+Fold: 7
+{{Lots of convergence warnings}}
+Fold: 8
+{{Lots of convergence warnings}}
+OLS
+Train: 1.6070461903413518e-5, test: 1.607538927485563e-5
+Test-data mse for ols: 1.5878387992286373e-5
+Ridge
+Best λ (mse, train): 2.154435e-09, mse: 0.000016
+Best λ (mse, test): 4.641589e-08, mse: 0.000016
+10×2 Matrix{Float64}:
+ 1.60714e-5  1.60767e-5
+ 1.60714e-5  1.60767e-5
+ 1.60714e-5  1.60767e-5
+ 1.60714e-5  1.60767e-5
+ 1.60796e-5  1.60848e-5
+ 1.62249e-5  1.623e-5
+ 1.64908e-5  1.64957e-5
+ 1.73707e-5  1.73754e-5
+ 1.94709e-5  1.9475e-5
+ 2.29655e-5  2.29697e-5
+Test-data mse for optimal λ: 1.5878365538552768e-5
+Lasso
+Best λ (mse, train): 1.000000e-10, mse: 0.000024
+Best λ (mse, test): 1.000000e-10, mse: 0.000024
+10×2 Matrix{Float64}:
+ 2.3916e-5   2.392e-5
+ 2.39161e-5  2.392e-5
+ 2.39179e-5  2.39218e-5
+ 2.39593e-5  2.39632e-5
+ 2.51416e-5  2.51446e-5
+ 2.83427e-5  2.83442e-5
+ 4.95753e-5  4.95759e-5
+ 4.95753e-5  4.95759e-5
+ 4.95753e-5  4.95759e-5
+ 4.95753e-5  4.95759e-5
+{{Convergence warning}}
+Test-data mse for optimal λ: 2.365336207037299e-5
 ```

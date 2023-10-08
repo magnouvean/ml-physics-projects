@@ -242,18 +242,16 @@ function generatedata(order::Int64; split=true, include_intercept=false, add_noi
     if !split
         return standardscale(Xs, Xs), ys
     end
-    indextosplitat = convert(Int, floor(size(Xs, 1) * 0.8))
+    indextosplitat = Int(floor(size(Xs, 1) * 0.8))
     X_train, X_test = Xs[1:indextosplitat, :], Xs[(indextosplitat+1):size(Xs, 1), :]
     y_train, y_test = ys[1:indextosplitat, :], ys[(indextosplitat+1):size(ys, 1), :]
 
     # Scaling X\_train/X\_test
-    # Here we create a copy of the X\_train matrix as we want to use the
-    # column-means of this to scale both the X\_train and X\_test columns.
-    X_train_original = copy(X_train)
-    X_train = standardscale(X_train, X_train_original)
     # We use the column means from the original X\_train to subtract from the
-    # columns in X\_test.
-    X_test = standardscale(X_test, X_train_original)
+    # columns in X\_test. We must do this before we scale the X\_train
+    X_test = standardscale(X_test, X_train)
+    # We then can scale the X\_train
+    X_train = standardscale(X_train, X_train)
 
     if add_noise
         # Add response with noise
@@ -312,8 +310,8 @@ are gathered from are very similar).
 \subsection{Metrics}
 We will mainly use two different metrics in our analysis. The perhaps most
 central one is the mean squared error, and the other one is the $R^2$ score.
-Given some response $y$ with $n$ values and some predictions for $\mathbf{y}$,
-$\hat{\mathbf{y}}$ the mse is given as: \cite{week34notes}
+Given some response $\mathbf{y}$ with $n$ values and some predictions for
+$\mathbf{y}$, $\hat{\mathbf{y}}$ the mse is given as: \cite{week34notes}
 $$MSE(\mathbf{y}, \hat{\mathbf{y}}) = \sum_{i=1}^n (y_i - \hat{y}_i)^2$$
 while the $R^2$ score is given by: \cite{week34notes}
 $$R^2(\mathbf{y}, \hat{\mathbf{y}}) = 1 - \frac{\sum_{i=0}^{n-1} (y_i - \hat{y}_i)^2}{\sum_{i=0}^{n-1}(y_i - \overline{y})^2}$$
@@ -374,14 +372,14 @@ that the scale the features does not determine which parameters will be shrunk
 a lot, and which will be shrunk less.
 
 \subsection{The bias variance tradeoff}
-Central in this project will be the bias variance tradeoff. This is the reason
+Central in this project will be the bias variance tradeoff, as this is the reason
 why ridge and lasso often can give better predictions than ordinary least
 squares. We will here derive the bias-variance equation. Consider the model
 $\mathbf{y} = f(\mathbf{x}) + \epsilon$ where $E(\epsilon) = 0$ and
 $Var(\epsilon) = \sigma^2$, for some function $f$. The job in machine-learning
 is to estimate this $f$. We call $\hat{f}$ some estimate of this function $f$.
 We then get $\hat{\mathbf{y}} = \hat{f}(\mathbf{x})$, which is some prediction.
-We consider the squared error of one such prediction $(y_i - \hat{y}_i)^2$. We
+We consider the squared error of one such prediction $(y - \hat{y})^2$. We
 now want to find an expression for this mean-squared error, however this is a
 little difficult to calculate as both terms here are stochastic. We therefore
 calculate the expectance of this expression, in which we get:
@@ -398,17 +396,17 @@ stems from the fact that we may assume that $\hat{f}(x)$ and $\epsilon$ are
 independent. We now focus on calculating the second part of this, i.e. $E((f(x)
     - \hat{f}(x))^2)$. We have:
 \begin{align*}
-     & E\left[(f(\mathbf{x}) - \hat{f}(\mathbf{x}))^2\right]                                                                                                                                                                                             \\
-     & = E\left[((f(\mathbf{x}) - E(\hat{f}(\mathbf{x}))) + (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x})))^2\right]                                                                                                                                     \\
-     & = E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 + 2\cdot (f(\mathbf{x}) - E(\hat{f}(\mathbf{x}))) \cdot (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x})) + (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2\right]                              \\
-     & = E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2\right] + 2\cdot E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x}))) \cdot (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))\right] + E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 \right] \\
-     & = (f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 + 2\cdot E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))\right] \cdot E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))\right] + E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 \right] \\
-     & = (f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 + 2\cdot E\left[(f(\mathbf{x}) - E(\hat{f}(\mathbf{x})))\right] \cdot (E(\hat{f}(\mathbf{x})) - E(\hat{f}(\mathbf{x}))) + E\left[(E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 \right]            \\
-     & = (E(\hat{f}(\mathbf{x})) - f(\mathbf{x}))^2 + E\left[(\hat{f}(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2 \right]                                                                                                                                    \\
+     & E\left[(f(x) - \hat{f}(x))^2\right]                                                                                                                                                \\
+     & = E\left[((f(x) - E(\hat{f}(x))) + (E(\hat{f}(x)) - \hat{f}(x)))^2\right]                                                                                                          \\
+     & = E\left[(f(x) - E(\hat{f}(x)))^2 + 2\cdot (f(x) - E(\hat{f}(x))) \cdot (E(\hat{f}(x)) - \hat{f}(x)) + (E(\hat{f}(x)) - \hat{f}(x))^2\right]                                       \\
+     & = E\left[(f(x) - E(\hat{f}(x)))^2\right] + 2\cdot E\left[(f(x) - E(\hat{f}(\mathbf{x}))) \cdot (E(\hat{f}(x)) - \hat{f}(x))\right] + E\left[(E(\hat{f}(x)) - \hat{f}(x))^2 \right] \\
+     & = (f(\mathbf{x}) - E(\hat{f}(x)))^2 + 2\cdot \left(f(x) - E(\hat{f}(x))\right) \cdot E\left[(E(\hat{f}(x)) - \hat{f}(x))\right] + E\left[(E(\hat{f}(x)) - \hat{f}(x))^2 \right]    \\
+     & = (f(\mathbf{x}) - E(\hat{f}(x)))^2 + 2\cdot \left((f(x) - E(\hat{f}(x)))\right) \cdot (E(\hat{f}(x)) - E(\hat{f}(x))) + E\left[(E(\hat{f}(x)) - \hat{f}(x))^2 \right]             \\
+     & = (E(\hat{f}(x)) - f(x))^2 + E\left[(\hat{f}(x) - E(\hat{f}(x)))^2 \right]                                                                                                         \\
 \end{align*}
 Typically in machine learning we call the first term here the squared bias of the
 model, and the second term the variance. In total we get:
-$$E((y - \hat{y})^2) = \sigma^2 + (E(\hat{f}(\mathbf{x})) - \hat{f}(\mathbf{x}))^2 + E\left[(\hat{f}(\mathbf{x}) - E(\hat{f}(\mathbf{x})))^2\right] = \sigma^2 + Bias(\hat{f}(x))^2 + Var(\hat{f}(x))$$
+$$E((y - \hat{y})^2) = \sigma^2 + (E(\hat{f}(x)) - f(x))^2 + E\left[(\hat{f}(x) - E(\hat{f}(x)))^2\right] = \sigma^2 + Bias(\hat{f}(x))^2 + Var(\hat{f}(x))$$
 We see that the expected squared prediction error is given as a sum of the
 variance of the noise $\sigma^2$, the bias of our model, and the variance of our
 model. Here $\sigma^2$ is an irreducible part we cannot control by the choice of
@@ -423,72 +421,77 @@ we use in the project.
 Instrumental to explaining the bias and variance of the different models, we
 will calculate bias and variance for the parameters in ols and ridge regression.
 In the case of ordinary least squares we assume:
-$$y_i = \mathbf{X}_{i *} \mathbf{\beta} + \epsilon_i$$
-With $\epsilon_i \sim N(0, \sigma^2)$. Looking at the expectance of $y_i$ it is
-easy then to see:
+$$y_i = \mathbf{X}_{i *} \bm{\beta} + \epsilon_i$$
+With $\epsilon_i \sim N(0, \sigma^2)$, and $\mathbf{X}_{i *}$ being the $i$-th
+row in the design-matrix. Looking at the expectance of $y_i$ it is easy then to
+see:
 \begin{align*}
-    E(y_i) & = E\left[ \mathbf{X}_{i *} \mathbf{\beta} + \epsilon_i \right]                 \\
-           & = E\left[ \mathbf{X}_{i *} \mathbf{\beta} \right] + E\left[ \epsilon_i \right] \\
-           & = \mathbf{X}_{i *} \mathbf{\beta} + 0                                          \\
-           & = \mathbf{X}_{i *}\mathbf{\beta}
+    E(y_i) & = E\left[ \mathbf{X}_{i *} \bm{\beta} + \epsilon_i \right]                 \\
+           & = E\left[ \mathbf{X}_{i *} \bm{\beta} \right] + E\left[ \epsilon_i \right] \\
+           & = \mathbf{X}_{i *} \bm{\beta} + 0                                          \\
+           & = \mathbf{X}_{i *}\bm{\beta}
 \end{align*}
-(Here we have used the fact that $\mathbf{X}_{i *} \mathbf{\beta}$ is
+(Here we have used the fact that $\mathbf{X}_{i *} \bm{\beta}$ is
 non-stochastic and $E(\epsilon_i) = 0$). Calculating the variance of $y_i$ we
 have:
 \begin{align*}
-    Var(y_i) & = Var(\mathbf{X}_{i, *} \mathbf{\beta} + \epsilon_i) \\
-             & = Var(\epsilon_i)                                    \\
+    Var(y_i) & = Var(\mathbf{X}_{i, *} \bm{\beta} + \epsilon_i) \\
+             & = Var(\epsilon_i)                                \\
              & = \sigma^2
 \end{align*}
 (Again we have here used that $\mathbf{X}_{i *} \mathbf{\beta}$ is non-stochastic).
 This is enough to conclude that $y_i \sim N(\mathbf{X}_{i *} \mathbf{\beta},
-    \sigma^2)$.  To analyze our $\mathbf{\hat{\beta}}$ we can look at the
-expectance/variance of this. In order to elegantly calculate this we use two
-somewhat basic results, which I have proved in the appendix. Let $\mathbf{A}$ be a
-non-stochastic ($p\times n$) matrix and $\mathbf{X}$ be a stochastic ($n \times
-    p$) vector. We then have the following two results.
-$$E(\mathbf{A} \mathbf{X}) = \mathbf{A} E(\mathbf{X})$$
+    \sigma^2)$. To connect this to the bias-variance tradeoff we analyze the
+expectance and variance of our $\hat{\bm{\beta}}$ for at least ols and ridge. We
+start by looking at the ols case. In order to elegantly calculate this we use
+two somewhat basic results, which I have proved in the appendix. Let
+$A$ be a non-stochastic ($p\times n$) matrix and $\mathbf{Y}$ be a
+stochastic ($n \times p$) vector. We then have the following two results:
+$$E(A \mathbf{Y}) = A E(\mathbf{Y})$$
 and
-$$Var(\mathbf{A} \mathbf{X}) = \mathbf{A} Var(\mathbf{X}) \mathbf{A}^T$$
-Using these results and using that $\hat{\beta} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y}$:
+$$Var(A \mathbf{Y}) = A Var(\mathbf{Y}) A^T$$
+Proofs for these can be found in the appendix. Using these results and using
+that $\hat{\beta} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y}$:
 \begin{align*}
-    E(\mathbf{\hat{\beta}}) & = E((\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y})             \\
-                            & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T E(\mathbf{Y})             \\
-                            & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} \mathbf{\beta} \\
-                            & = \mathbf{\beta}
+    E(\hat{\bm{\beta}}) & = E((\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y})         \\
+                        & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T E(\mathbf{Y})         \\
+                        & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} \bm{\beta} \\
+                        & = \bm{\beta}
 \end{align*}
 and
 \begin{align*}
-    Var(\mathbf{\hat{\beta}}) & = Var((\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y})                                                              \\
-                              & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T Var(\mathbf{Y}) \left( (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \right)^T \\
-                              & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \sigma^2 I \mathbf{X} \left( (\mathbf{X}^T \mathbf{X})^{-1} \right)^T        \\
-                              & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} \left((\mathbf{X}^T \mathbf{X})^T \right)^{-1}           \\
-                              & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} (\mathbf{X}^T \mathbf{X})^{-1}                           \\
-                              & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1}
+    Var(\hat{\bm{\beta}}) & = Var((\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{Y})                                                              \\
+                          & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T Var(\mathbf{Y}) \left( (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \right)^T \\
+                          & = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \sigma^2 I \mathbf{X} \left( (\mathbf{X}^T \mathbf{X})^{-1} \right)^T        \\
+                          & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} \left((\mathbf{X}^T \mathbf{X})^T \right)^{-1}           \\
+                          & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{X} (\mathbf{X}^T \mathbf{X})^{-1}                           \\
+                          & = \sigma^2 (\mathbf{X}^T \mathbf{X})^{-1}
 \end{align*}
-For ridge we have that $\hat{\beta}_{ridge} = (\mathbf{X}^T \mathbf{X} + \lambda
+For ridge we have that $\hat{\bm{\beta}}_{ridge} = (\mathbf{X}^T \mathbf{X} + \lambda
     \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{Y}$. We now calculate the expectance
 of this:
 \begin{align*}
-    E(\mathbf{\hat{\beta}}_{ridge}) & = E((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{Y})             \\
-                                    & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T E(\mathbf{Y})             \\
-                                    & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{X} \mathbf{\beta}
+    E(\hat{\bm{\beta}}_{ridge}) & = E((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{Y})         \\
+                                & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T E(\mathbf{Y})         \\
+                                & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{X} \bm{\beta}
 \end{align*}
 and for the variance:
 \begin{align*}
-    Var(\mathbf{\hat{\beta}}_{ridge}) & = Var((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{Y})                                                                                \\
-                                      & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T Var(\mathbf{Y})  ((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T)^T    \\
-                                      & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \sigma^2 \mathbf{I}_{p p} \mathbf{X} (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \\
-                                      & = \sigma^2 (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{X} ((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1})^T              \\
+    Var(\hat{\bm{\beta}}_{ridge}) & = Var((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{Y})                                                                                \\
+                                  & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T Var(\mathbf{Y})  ((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T)^T    \\
+                                  & = (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \sigma^2 \mathbf{I}_{p p} \mathbf{X} (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \\
+                                  & = \sigma^2 (\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1} \mathbf{X}^T \mathbf{X} ((\mathbf{X}^T \mathbf{X} + \lambda \mathbf{I}_{p p})^{-1})^T              \\
 \end{align*}
 Using these results it is easy to see that under the assumption that $\mathbf{y}
-    = \mathbf{X}\mathbf{\beta} + \mathbf{\epsilon}$, that the ordinary least squares
-model is unbiased, while this is not the case for ridge-regression. However we
-see that the variance of the ridge-model has considerably lower variance than
-the ols. This does allow for ridge to outperform ols, since the bias-variance
-tradeoff states that the expected prediction error is the sum of the bias and
-variance. Much of this effect also applies for lasso regression as well as this
-also has a higher bias and lower variance than ols.
+    = \mathbf{X}\mathbf{\beta} + \mathbf{\epsilon}$ which we have assumed, that the
+ordinary least squares model is unbiased (because $Bias(\hat{f}(x)) =
+    (E(\hat{f}(x)) - f(x)) = x \bm{\beta} - x\bm{\beta} = 0$), while this is
+not the case for ridge-regression. However we see that the variance of the
+ridge-model has considerably lower variance than the ols. This does allow for
+ridge to outperform ols, since the bias-variance tradeoff states that the
+expected prediction error is the sum of the bias and variance. Much of this
+effect also applies for lasso regression as well as this also has a higher bias
+and lower variance than ols.
 
 \subsection{Bootstrap}
 Since this project essentially boils down to comparing metrics for different
@@ -530,7 +533,7 @@ used in the estimate for our final metric. This is in contrast to our earlier
 estimate, which the metric is only evaluated using the rather small test-set.
 This should give us a better estimate for the true MSE or R\^2.
 \section{Results}
-\subsubsection{Franke-function}
+\subsection{Franke-function}
 \subsubsection{Ordinary least squares}
 We have located the code for performing ordinary least squares regression on the
 franke-function with polynomial features up to order $5$ in the
@@ -546,39 +549,46 @@ franke-function with polynomial features up to order $5$ in the
 We see there is quite good performance on the training-set and test-set when
 noise is not included. When we include noise-terms the model-performance on the
 training data is still quite good, but with the test-data we get rather poor
-results.
+results. This is a sign that we have an overfitted model.
 
 \subsubsection{Ridge}
 If we run the \textbf{Ridge.jl} program in the project repository
 \cite{githubrepoproject1}, we can extract the following results:\\
 \begin{tabular}{| c | c | c | c | c |}
           & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
-          & MSE                                 & R\^2                             & MSE        & R\^2       \\
+          & MSE                                 & $R^2$                            & MSE        & $R^2$      \\
     TRAIN & $0.001046$                          & $0.985926$                       & $0.008400$ & $0.905406$ \\
     TEST  & $0.003592$                          & $0.956765$                       & $0.017352$ & $0.821028$ \\
 \end{tabular}
 
 With the optimal $\lambda$ for test-data without noise being $1.659587\cdot
     10^{-2}$ and when we include noise it becomes $1.513561$.
-Additionally we can see how the MSE and R\^2 score varies with different values
-of the hyperparameter $\lambda$ with the following two plots:\\
-
+To see more in detail how the MSE and $R^2$-score varies with different value of
+the hyperparameter figure \ref{Lasso-no-noise} and \ref{Lasso-with-noise}. We
+see that for the training-data that ridge and ols seemingly performs the same.
+This is because the best MSE here comes from the lowest value of $\lambda$,
+which is so low that they pretty much give the same fit. Here we see that we
+actually get better performance on new data both in the case where we have not
+added noise, and when we have, though in the case where there is no noise, ridge
+only performs marginally better, but when we have added noise, the ridge
+performs much much better. In this case we get completely acceptable
+performance, so we seem to have solved the problem of overfitting quite good.
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{ridge_without_noise}}
-    \caption{A plot of the $\lambda$ in a ridge-model without noise on log10-scale plotted against the MSE and R\^2. We see that performances of these metrics goes a bit up and down for the different values of $\lambda$.}
+    \caption{A plot of the $\lambda$ in a ridge-model without noise on log10-scale plotted against the MSE and $R^2$-score. We see that performances of these metrics goes a bit up and down for the different values of $\lambda$.}
     \label{Ridge-with-noise}
 \end{figure}
 
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{ridge_with_noise}}
-    \caption{A plot of the $\lambda$ in a ridge-model with $\lambda$s on log10-scale plotted against the MSE and R\^2. We see a somewhat similar relationship as for the case with noise, but with greater scales on the y-axis}
+    \caption{A plot of the $\lambda$ in a ridge-model with $\lambda$s on log10-scale plotted against the MSE and $R^2$. We see a somewhat similar relationship as for the case with noise, but with greater scales on the y-axis}
     \label{Ridge-no-noise}
 \end{figure}
 
 \subsubsection{Lasso}
 The \textbf{Lasso.jl} on the project repo \cite{githubrepoproject1} runs lasso
-regression on the franke-function data and calculates the MSE and R\^2. Running
-this we get:
+regression on the franke-function data and calculates the MSE and $R^2$. Running
+this we can extract:
 
 \begin{tabular}{| c | c | c | c | c |}
           & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
@@ -586,6 +596,12 @@ this we get:
     TRAIN & $0.003280$                          & $0.955866$                       & $0.011319$ & $0.872539$ \\
     TEST  & $0.002737$                          & $0.967054$                       & $0.016451$ & $0.830329$ \\
 \end{tabular}
+With the optimal $\lambda$ for the training-data being $1.3804 \cdot 10^5$, and
+for the test data being $9.1201 \cdot 10^{-4}$.
+
+In this case we get an even better performance overall than using ridge in the case of
+new data, and certainly better than the ols case, both with and without noise in
+the response.
 
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{lasso_without_noise}}
@@ -608,7 +624,38 @@ model complexity, this time in the form of orders of polynomial features. Figure
 \ref{bootstrap-bias-var} shows the mse using ols, calculated using
 bootstrapping, while figure \ref{crossval-ols}, \ref{crossval-ridge} and
 \ref{crossval-lasso} show the same graphs for ols, ridge and lasso respectively,
-these calculated using cross-validation.
+these calculated using cross-validation. Looking only at the numerical results
+from the cross-validation for ols on the test-data we got:
+
+\begin{table}[htpb!]
+    \resizebox{\columnwidth}{!}{
+        \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
+            Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9      & 10     & 11     & 12     & 13     & 14     \\
+            MSE   & 0.1822 & 0.1746 & 0.1756 & 0.1796 & 0.1896 & 0.2394 & 0.4217 & 0.8437 & 1.1845 & 1.6786 & 2.0402 & 3.2349 & 4.3811
+        \end{tabular}
+    }
+\end{table}
+
+Similarly for ridge we got:
+
+\begin{table}[htpb!]
+    \resizebox{\columnwidth}{!}{
+        \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
+            Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9       & 10     & 11     & 12     & 13     & 14     \\
+            MSE   & 0.0172 & 0.0080 & 0.0058 & 0.0054 & 0.0055 & 0.0099 & 0.0147 & 0.02334 & 0.0364 & 0.0568 & 0.0876 & 0.1290 & 0.1830
+        \end{tabular}
+    }
+\end{table}
+
+And for lasso:
+\begin{table}[htpb!]
+    \resizebox{\columnwidth}{!}{
+        \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
+            Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9      & 10     & 11     & 12     & 13     & 14     \\
+            MSE   & 0.0169 & 0.0076 & 0.0061 & 0.0044 & 0.0036 & 0.0033 & 0.0032 & 0.0030 & 0.0029 & 0.0027 & 0.0026 & 0.0025 & 0.0025
+        \end{tabular}
+    }
+\end{table}
 
 \begin{figure}
     \includegraphics[scale=0.5]{bootstrapbiasvariance}
@@ -666,16 +713,63 @@ these calculated using cross-validation.
     \label{crossval-lasso}
 \end{figure}
 
-\subsection{Landscape data}
+Here we can see the bias-variance tradeoff in full effect. When we include
+higher order polynomial features, we also get a higher model-complexity. This
+means our models will have lower bias, but also much higher variance. The
+expected prediction error being the sum of these two typically means that our
+model-performances follows a sort of U-shape plotted against model-complexity,
+where the optimal value has a somewhat low bias and a somewhat low variance, but
+also typically not at the minimum of either. This is what we see in general
+throughout our results here. Here the exception seems to be the Lasso, which
+seems to only get a lower and lower MSE as we increase the polynomial order.
+This is probably partially because lasso is able to perform its own kind of
+model-selection, where the parameter corresponding to some of the parameters
+will be $0$. However if we try various different values of $\lambda$, we would
+eventually get an increase in the MSE as the variance would eventually become
+too big even in this case.
 
+\subsection{Landscape data}
+Running the \textbf{Landscape.jl} we performed cross-validation on the various
+models to estimate MSE, and choose optimal hyperparameters.
 
 \section{Analysis}
-As we can see from the results, the ordinary least squares performs rather good
-on the models without noise, with ordinary least squares regression performing
-considerably better than both ridge and lasso, with ridge and lasso having quite
-comparable results. Looking at
+As we can see from the results, in the case of when we have data without noise
+(as in the franke-function with no noise), we have quite comparable and good
+results when fitting the different models to the data, with lasso performing
+just about better than ridge, while ols performs the worst, but still quite
+good. When we add noise to the data all the models perform worse, but lasso and
+ridge manage to still come up with quite good performance (lasso still performed
+the best), while ols performed much much worse than before. We can see a link
+between this performance hit and the bias-variance tradeoff, with ridge and
+lasso models with quite big values of $\lambda$ performing the best, in fact
+these optimal $\lambda$ values were in both cases higher for the test-data than
+the train-data. This clearly indicates that simpler models (which is what we get
+when we have higher values of $\lambda$) perform better. This is likely because
+in this case, even though the model bias is somewhat bigger, the variance will
+be much smaller. We have seen this also when trying out different polynomial
+orders and seeing the MSE values these give. In general at least for for ridge
+and ols we see that both calculating the MSE using bootstrap and
+cross-validation that we get slight decreases in MSE when increasing the
+polynomial orders, before the MSE eventually increase again with the polynomial
+order as the models get more complex. Looking at the overall performances for
+the different polynomial orders we see that the original $5$-th order
+polynomials we used is a good middle-ground between low bias and low variance,
+seeing as it performs quite well for ols, ridge and lasso. For the landscape
+data we saw that we got a similar performance for the ols and ridge, while lasso
+performed the worst. This difference is likely related to a different
+signal-to-noise-ratio than before, but perhaps even more important, due to the
+fact that we now have many more observations. With more observations we do not
+overfit like we did before, and the variance of the model becomes lower than
+when we have less data. This makes linear regression a more viable choice seeing
+as this has considerably lower bias.
 
 \section{Conclusion}
+We have in this project seen how ols, ridge and lasso performs on data. We see
+that for data without noise and quite low amount of observations that all these
+three different models performed somewhat similarly, but when we added noise to
+the model that the less complex models, i.e. ridge and lasso with somewhat
+sizeable $\lambda$ parameter performed better. This clearly is related to the
+bias-variance-tradeoff, which we have derived earlier. However in the
 
 \section{Appendix}
 

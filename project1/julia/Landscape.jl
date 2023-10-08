@@ -118,13 +118,15 @@ function crossvalolsridgelasso(X, y, λs, nfolds)
 end
 
 λs = 10.0 .^ (range(-10, 2, 10))
-ols_train, ols_test, ridge_train, ridge_test, lasso_train, lasso_test = crossvalolsridgelasso(X, y, λs, 3)
+ols_train, ols_test, ridge_train, ridge_test, lasso_train, lasso_test = crossvalolsridgelasso(X, y, λs, 8)
 println("OLS")
 println("Train: $(ols_train), test: $(ols_test)")
 # We also predict fitting on the whole data, and testing on the test data, in
 # order for us to be able to compare the results with ridge/lasso where we do
 # this.
-ŷ_test_ols = X_test * pinv(X' * X) * X' * y
+X_with_intercept = [ones(size(X, 1)) X]
+X_test_with_intercept = [ones(size(X_test, 1)) X_test]
+ŷ_test_ols = X_test_with_intercept * pinv(X_with_intercept' * X_with_intercept) * X_with_intercept' * y
 mse_ols_test = mse(y_test, ŷ_test_ols)
 println("Test-data mse for ols: $(mse_ols_test)")
 
