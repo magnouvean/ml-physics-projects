@@ -12,11 +12,15 @@ No output
 ## LinearRegression.jl
 ```{txt}
 Without noise
-MSE train: 0.001046, MSE test: 0.007677
-R^2 train: 0.985926, R^2 test: 0.907600
+Best performance MSE (train data): 0.0010458873706902273, order: 5
+Best performance R^2 (train data): 0.9859263783653947, order: 5
+Best performance MSE (test data): 0.005326048089194724, order: 3
+Best performance R^2 (test data): 0.9358998345216957, order: 3
 With noise
-MSE train: 0.008400, MSE test: 0.058654
-R^2 train: 0.905406, R^2 test: 0.395051
+Best performance MSE (train data): 0.00840031822164739, order: 5
+Best performance R^2 (train data): 0.9054059424495206, order: 5
+Best performance MSE (test data): 0.018910967221048437, order: 3
+Best performance R^2 (test data): 0.8049535091279812, order: 3
 ```
 
 ## Ridge.jl
