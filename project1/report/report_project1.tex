@@ -543,13 +543,44 @@ franke-function with polynomial features up to order $5$ in the
           & \multicolumn{2}{|c|}{Without noise} & \multicolumn{2}{|c|}{With noise}                           \\
           & MSE                                 & R\^2                             & MSE        & R\^2       \\
     TRAIN & $0.001046$                          & $0.985926$                       & $0.008400$ & $0.905406$ \\
-    TEST  & $0.007677$                          & $0.907600$                       & $0.058654$ & $0.395051$ \\
+    TEST  & $0.005326$                          & $0.935900$                       & $0.018911$ & $0.804954$ \\
 \end{tabular}
 
-We see there is quite good performance on the training-set and test-set when
-noise is not included. When we include noise-terms the model-performance on the
-training data is still quite good, but with the test-data we get rather poor
-results. This is a sign that we have an overfitted model.
+Where the optimal MSE/$R^2$ metrics were acquired for polynomial order $3$ (both
+with and without noise). We see there is quite good performance on the
+training-set and test-set when noise is not included. When we include
+noise-terms the model-performance on the training data is still quite good, but
+the performance on the test-data does take a hit. If we look at higher order
+polynomials from figure \ref{linearregression-no-noise} where we have not
+included noise we see that the higher orders perform near optimal, but when we
+have added noise as in figure \ref{linearregression-with-noise} we see that the
+performance on the test data quickly becomes very poor. This is a sign that we
+more quickly overfit the models in this case. Additionally if we look at the
+average size of values our parameters $\beta$ takes, as shown in figure
+\ref{beta-abs-sum}, we see that the parameters take bigger and bigger values.
+This typically increases the variance of our model as we get bigger differences
+between estimates for smaller changes to the training data. This confirms that
+the model variance is bigger for higher order polynomials, and from what we know
+from the bias-variance-tradeoff, this is probably the explanation why we get so
+poor results on predictions on new data when we increase the polynomial order.
+
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{linearregression_no_noise}}
+    \caption{A plot of the order of polynomial features against the MSE and $R^2$ for the model fit. Here are using a response without stochastic noise.}
+    \label{linearregression-no-noise}
+\end{figure}
+
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{linearregression_no_noise}}
+    \caption{A plot of the order of polynomial features against the MSE and $R^2$ for the model fit. Here are using a response with stochastic noise.}
+    \label{linearregression-with-noise}
+\end{figure}
+
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{linearregression_no_noise}}
+    \caption{The absolute value of all our estimated $\beta$s summed together for each polynomial order.}
+    \label{beta-abs-sum}
+\end{figure}
 
 \subsubsection{Ridge}
 If we run the \textbf{Ridge.jl} program in the project repository
@@ -596,6 +627,7 @@ this we can extract:
     TRAIN & $0.003280$                          & $0.955866$                       & $0.011319$ & $0.872539$ \\
     TEST  & $0.002737$                          & $0.967054$                       & $0.016451$ & $0.830329$ \\
 \end{tabular}
+
 With the optimal $\lambda$ for the training-data being $1.3804 \cdot 10^5$, and
 for the test data being $9.1201 \cdot 10^{-4}$.
 
@@ -615,7 +647,7 @@ the response.
 \end{figure}
 
 \subsubsection{Performance with more complex models}
-Up until now we have used only polynomial features of order 5. The
+Up until now we have used only polynomial features of order lower than 5. The
 \textbf{Resampling.jl} and \textbf{ResamplingCV.jl} explores fitting the
 franke-function to data with more polynomial degrees, with the metrics
 calculated using bootstrap and cross-validation respectively. Running these
@@ -779,16 +811,31 @@ found at:
 \url{https://github.com/magnouvean/ml-physics-projects/tree/main/project1/julia}
 
 \subsection{Expectance and variance with matrices}
-Let $A$ be a non-stochastic matrix and $\mathbf{X}$ be a stochastic vector. We have:
+Let $A$ be a non-stochastic $p \times n$ matrix and $\mathbf{X}$ be a stochastic
+$n \times 1$ vector. We have:
 $$E(A \mathbf{X}) = (E(A \mathbf{X})_1, \dots, E((A \mathbf{X})_n))^T$$
-We have:
-$$E(A \mathbf{X})_i = E((A \mathbf{X})) = E(A_{i *} \mathbf{X}) = A_{i *} E(\mathbf{X})$$
+We then have:
+$$E(A \mathbf{X})_i = E((A \mathbf{X})_i) = E(\sum_{k=1}^n A_{i k} \mathbf{X}_k) = \sum_{k=1}^n A_{i k} E(\mathbf{X}_k) = A_{i *} E(\mathbf{X})$$
 Hence we see that $E(A \mathbf{X}) = A E(\mathbf{X})$.
 Note also that from this it follows that $E(A \mathbf{X})^T = (A
     E(\mathbf{X}))^T = E(\mathbf{X})^T A^T$ (we will use this for calculating the
 variance expression).
 
-We now want to look at the case of the variance. We have:
+We now want to look at the case of the variance. We first calculate an
+intermediate expression. Let $A$ as before be a non-stochastic $p \times n$
+matrix and $\mathbf{B}$ a stochastic $n \times n$ matrix. We want to find:
+$$E(A \mathbf{B} A^T)$$
+We have:
+\begin{align*}
+    E(A \mathbf{B} A^T)_{i j} & = E((A \mathbf{B} A^T)_{i j})                                         \\
+                              & = E(\sum_{k = 1}^n A_{i k} (\mathbf{B} A^T)_{k j})                    \\
+                              & = \sum_{k = 1}^n A_{i k} E((\mathbf{B} A^T)_{k j})                    \\
+                              & = \sum_{k = 1}^n A_{i k} E(\sum_{l=1}^{n} \mathbf{B}_{k l} A^T_{l j}) \\
+                              & = \sum_{k = 1}^n A_{i k} \sum_{l=1}^{n} A^T_{l j} E(\mathbf{B}_{k l}) \\
+                              & = (A E(\mathbf{B}) A^T)_{i j}
+\end{align*}
+Hence we see that $E(A \mathbf{B} A^T) = A E(\mathbf{B}) A^T$.  We are now ready
+to find the variance:
 \begin{align*}
     Var(A \mathbf{X}) & = E((A \mathbf{X} - E(A \mathbf{X})) (A \mathbf{X} - E(A \mathbf{X}))^T)                                                                       \\
                       & = E((A \mathbf{X})(A \mathbf{X})^T  - A \mathbf{X} E(A \mathbf{X})^T - E(A \mathbf{X}) (A \mathbf{X})^T + E(A \mathbf{X}) E(A \mathbf{X})^T)   \\
@@ -797,7 +844,7 @@ We now want to look at the case of the variance. We have:
                       & = A E(A (\mathbf{X} - E(\mathbf{X})) (\mathbf{X} - E(\mathbf{X}))^T) A^T                                                                       \\
                       & = A Var(\mathbf{X}) A^T                                                                                                                        \\
 \end{align*}
-
+Where we have used the previous result for the last equality.
 
 \bibliography{./sources.bib}
 

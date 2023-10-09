@@ -20,7 +20,7 @@ function calculate_scores(orders, add_noise)
     r2_scores_train = zeros(length(orders))
     mse_scores_test = zeros(length(orders))
     r2_scores_test = zeros(length(orders))
-    β_size = zeros(length(orders))
+    β_avg_size = zeros(length(orders))
 
     for (i, k) in enumerate(orders)
         X_train, X_test, y_train, y_test = generatedata(k, include_intercept=true, add_noise=add_noise)
@@ -30,10 +30,10 @@ function calculate_scores(orders, add_noise)
         mse_scores_test[i] = mse_test
         r2_scores_train[i] = r2_train
         r2_scores_test[i] = r2_test
-        β_size[i] = sum(abs.(β̂))
+        β_avg_size[i] = sum(abs.(β̂)) / length(β̂)
     end
 
-    return mse_scores_train, mse_scores_test, r2_scores_train, r2_scores_test, β_size
+    return mse_scores_train, mse_scores_test, r2_scores_train, r2_scores_test, β_avg_size
 end
 
 function plot_scores(orders, mse_train, mse_test, r2_train, r2_test, title, filename)
