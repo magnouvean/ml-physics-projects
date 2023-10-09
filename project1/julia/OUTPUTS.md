@@ -181,51 +181,6 @@ Fold: 2
 {{Lots of convergence warnings}}
 Fold: 3
 {{Lots of convergence warnings}}
-OLS
-Train: 1.606986551239298e-5, test: 1.6075296488878954e-5
-Test-data mse for ols: 6.588165084329605e-5
-Ridge
-Best λ (mse, train): 2.154435e-09, mse: 0.000016
-Best λ (mse, test): 2.154435e-09, mse: 0.000016
-10×2 Matrix{Float64}:
- 1.60727e-5  1.60787e-5
- 1.60727e-5  1.60787e-5
- 1.60727e-5  1.60787e-5
- 1.60727e-5  1.60787e-5
- 1.60852e-5  1.60913e-5
- 1.62398e-5  1.62461e-5
- 1.65439e-5  1.65502e-5
- 1.75348e-5  1.75391e-5
- 1.96554e-5  1.96572e-5
- 2.33015e-5  2.33038e-5
-Test-data mse for optimal λ: 1.5878386991627745e-5
-Lasso
-Best λ (mse, train): 1.000000e-10, mse: 0.000024
-Best λ (mse, test): 1.000000e-10, mse: 0.000024
-10×2 Matrix{Float64}:
- 2.39159e-5  2.39184e-5
- 2.3916e-5   2.39185e-5
- 2.39177e-5  2.39203e-5
- 2.39591e-5  2.39616e-5
- 2.51414e-5  2.51435e-5
- 2.83425e-5  2.83445e-5
- 4.95753e-5  4.95756e-5
- 4.95753e-5  4.95756e-5
- 4.95753e-5  4.95756e-5
- 4.95753e-5  4.95756e-5
-{{convergence-warning}}
-Test-data mse for optimal λ: 2.365336207037299e-5
-
-
-
-
-{{conda install-message caused by ScikitLearn.jl}}
-Fold: 1
-{{Lots of convergence warnings}}
-Fold: 2
-{{Lots of convergence warnings}}
-Fold: 3
-{{Lots of convergence warnings}}
 Fold: 4
 {{Lots of convergence warnings}}
 Fold: 5

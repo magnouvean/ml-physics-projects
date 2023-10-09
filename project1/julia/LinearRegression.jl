@@ -73,4 +73,4 @@ plot([orders orders],
     label=["without noise" "with noise"],
     xlabel="polynomial order",
     ylabel="β size (abs sum)")
-savefig(dirname(@__DIR__) * "/linearregression_beta_size.png")
+savefig(dirname(@__DIR__) * "/figures/linearregression_beta_size.png")
