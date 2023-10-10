@@ -52,5 +52,5 @@ plot([log10.(λs) log10.(λs)],
     [β_sizes_no_noise β_sizes_with_noise],
     label=["without noise" "with noise"],
     xlabel="log10(λ)",
-    ylabel="abs(avg(β))")
+    ylabel="avg(abs(β))")
 savefig(dirname(@__DIR__) * "/figures/ridge_beta_size.png")
