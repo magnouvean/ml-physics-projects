@@ -156,9 +156,10 @@ out, but we will look at this as an image, and then use the position of the
 response in the matrix as explanatory variables for our model. In other words,
 if say the fifth pixel in the fourth row has the value $10^{-5}$, the response
 will obviously be $10^{-5}$, while the two explanatory variables will have
-values $5$ and $4$.  This way we will be able to gather data whose structure
-closely resembles that of the franke-function. We can then use the same
-techniques to set up a design-matrix and a response, as we do with the
+values $5$ and $4$ (originally that is, but we will scale these and add
+interactions and so on).  This way we will be able to gather data whose
+structure closely resembles that of the franke-function. We can then use the
+same techniques to set up a design-matrix and a response, as we do with the
 franke-function.
 
 \begin{figure}
@@ -217,7 +218,7 @@ to recognize overfitted models, which often become the case when we have a
 higher model complexity \cite[s.~7.2]{hastie2009elements}. In such cases we
 could have a model that predicts the training data very well, but generalizes
 very poorly to new data.  For the franke-function I have written a function
-\textit{generatedata} which takes hand of all of the mentioned above (I am using
+\textbf{generatedata} which takes hand of all of the mentioned above (I am using
 Julia for all the code in this project). It is a bit long, but well worth
 inclusion here as it is central to all of the programs that use the
 franke-function:
@@ -388,9 +389,10 @@ $Var(\bm{\epsilon}) = \sigma^2 \mathbf{I}$, for some function $f$. The job in ma
 is to estimate this $f$. We call $\hat{f}$ some estimate of this function $f$.
 We then get $\hat{\mathbf{y}} = \hat{f}(\mathbf{x})$, which is some prediction.
 We consider the squared error of one such prediction $(y - \hat{y})^2$. We
-now want to find an expression for this mean-squared error, however this is a
-little difficult to calculate as both terms here are stochastic. We therefore
-calculate the expectance of this expression, in which we get:
+now want to find an expression for this squared error as this is what the
+MSE statistic approximates. However this is a little difficult to calculate as
+both terms here are stochastic. We therefore calculate the expectance of this
+expression, in which we get:
 \begin{align*}
     E((y - \hat{y})^2) & = E((f(x) + \epsilon - \hat{f}(x))^2)                                                      \\
                        & = E((\epsilon + (f(x) - \hat{f}(x)))^2)                                                    \\
@@ -415,7 +417,7 @@ independent. We now focus on calculating the second part of this, i.e. $E((f(x)
 Typically in machine learning we call the first term here the squared bias of the
 model, and the second term the variance. In total we get:
 $$E((y - \hat{y})^2) = \sigma^2 + (E(\hat{f}(x)) - f(x))^2 + E\left[(\hat{f}(x) - E(\hat{f}(x)))^2\right] = \sigma^2 + Bias(\hat{f}(x))^2 + Var(\hat{f}(x))$$
-In vector form we then see that:
+In vector form this becomes:
 $$E((\mathbf{y} - \hat{\mathbf{y}})^T (\mathbf{y} - \hat{\mathbf{y}})) = \sigma^2 + Bias(\hat{f}(\mathbf{x}))^2 + Var(\hat{f}(\mathbf{x}))$$
 We see that the expected squared prediction error is given as a sum of the
 variance of the noise $\sigma^2$, the bias of our model, and the variance of our
@@ -500,14 +502,15 @@ and for the variance:
 \end{align*}
 Using these results it is easy to see that under the assumption that $\mathbf{y}
     = \mathbf{X}\bm{\beta} + \bm{\epsilon}$ which we have assumed, that the ordinary
-least squares model is unbiased (because $Bias(\hat{f}(\mathbf{x})) = (E(\hat{f}(\mathbf{x})) -
-    f(\mathbf{x})) = \mathbf{x} \bm{\beta} - \mathbf{x} \bm{\beta} = 0$), while this is not the case for
-ridge-regression. However we see that the variance of the ridge-model has
-potential for lower variance than the ols if we set $\lambda$ big enough. This
-does allow for ridge to outperform ols, since the bias-variance tradeoff states
-that the expected prediction error is the sum of the bias and variance. Much of
-this effect also applies for lasso regression as well as this also has a higher
-bias and lower variance than ols.
+least squares model is unbiased (because $Bias(\hat{f}(\mathbf{x})) =
+    (E(\hat{f}(\mathbf{x})) - f(\mathbf{x})) = \mathbf{x} \bm{\beta} - \mathbf{x}
+    \bm{\beta} = 0$), while this is not the case for ridge-regression (or lasso for
+that matter). However we see that the variance of the ridge-model has potential
+for lower variance than the ols if we set $\lambda$ big enough. This does allow
+for ridge to outperform ols, since the bias-variance tradeoff states that the
+expected prediction error (and therefore also approximately the MSE) is the sum
+of the bias and variance. Much of this effect also applies for lasso regression
+as well, as this also has a higher bias and lower variance than ols.
 
 \subsection{Bootstrap}
 Since this project essentially boils down to comparing metrics for different
@@ -553,6 +556,19 @@ every fold is used for evaluating the metric, that every observation also is
 used in the estimate for our final metric. This is in contrast to just simple
 train-test-splitting where the metric is only evaluated using the rather small
 test-set.  This should give us a better estimate for the true MSE and $R^2$.
+\\\\
+Both the bootstrapping and cross-validation will be utilized so get reliable
+MSE/$R^2$ estimates on the franke-function data for various different
+model-complexities. One detail here is that for most of our calculations with
+the franke-function we are using $200$ datapoints, however when we use higher
+and higher order polynomial features (which is how we increase the complexity in
+these calculations) this can become problematic. We will use up to $14$th order
+polynomial features, and this means we get up to $1+2\cdot 14+13^2 = 198$
+features. Seeing as we also split the data into a training-set and test-set, we
+then get a training-set with less rows than columns, and thus $X^T X$ becomes
+singular. In order to not get a singular matrix we therefore just increase the
+number of observations to $1000$ when using these resampling methods on the
+franke-function.
 \section{Results}
 \subsection{Franke-function}
 \subsubsection{Ordinary least squares}
@@ -568,32 +584,38 @@ metrics:\\
     TEST  & $0.005326$                          & $0.935900$                       & $0.018911$ & $0.804954$ \\
 \end{tabular}
 
-Where the optimal MSE/$R^2$ metrics were acquired for polynomial order $3$ (both
-with and without noise). We see there is quite good performance on the
-training-set and test-set when noise is not included. When we include
+Where the optimal testing MSE/$R^2$ metrics were acquired for polynomial order
+$3$ (both with and without noise), while for the training-data the best result
+was for polynomial order $5$. For the training-data we will see throughout all
+our results that the more complex models perform better (at least for MSE), as
+we are optimizing the MSE with fewer restrictions. I will sometimes skip
+commenting that the most complex models performs the best on the training data
+as such results are usually trivial.  We see there is quite good performance on
+the training-set and test-set when noise is not included.  When we include
 noise-terms the model-performance on the training data is still quite good, but
-the performance on the test-data does take a hit (so do the training metrics
-as well, but not as much). If we look at higher order polynomials from figure
+the performance on the test-data does take a hit (so do the training metrics as
+well, but not as much). If we look at higher order polynomials from figure
 \ref{linearregression-no-noise}, where we have no added noise, we can see that
 the higher orders (in particular order $5$) performs quite comparatively to the
 minimum of order $3$ (for new data of course).  However in the case where we
 have added noise, which we have in figure \ref{linearregression-with-noise},
-this is not the case, as here the fifth order polynomial model performs very poorly,
-much worse than order $3$ in fact. The fact that this happens only when we have
-added noise is a sign that we more quickly overfit the models when we have more
-stochastic noise.  Additionally if we look at the average size of values our
-parameters $\beta$ takes, as shown in figure \ref{beta-abs-sum}, we see that the
-parameters take bigger and bigger values as we increase the polynomial order.
-Here we also see that the average $\beta$ values in the case where we have noise
-is considerably bigger than the case where we do not have noise. Typically the
-variance increases as the $\beta$ values get bigger as changes to the data will
-then typically change the parameters by a lot when the $\beta$ values are big,
-especially in the case where we have little data. All this indicates that the
-model variance is bigger for higher order polynomials, and from what we know
-from the bias-variance-tradeoff, this is probably the explanation why we get so
-poor results on predictions on new data when we increase the polynomial order.
-This is also probably the reason why the performances in the higher order
-polynomial cases is so much worse when we have added noise.
+this is not the case, as here the fifth order polynomial model performs very
+poorly, much worse than order $3$ in fact. The fact that this happens only when
+we have added noise is a sign that we more quickly overfit the models when we
+have more stochastic noise.  Additionally if we look at the average size of
+values our parameters $\beta$ takes, as shown in figure \ref{beta-abs-sum}, we
+see that the parameters take bigger and bigger values as we increase the
+polynomial order.  Here we also see that the average $\beta$ values in the case
+where we have noise is considerably bigger than the case where we do not have
+noise. Typically the variance increases as the $\beta$ values get bigger as
+changes to the data will then typically change the parameters by a lot when the
+$\beta$ values are big, especially in the case where we have little data. All
+this indicates that the model variance is bigger for higher order polynomials,
+and from what we know from the bias-variance-tradeoff, this is probably the
+explanation why we get so poor results on predictions on new data when we
+increase the polynomial order.  This is also probably the reason why the
+performances in the higher order polynomial cases is so much worse when we have
+added noise.
 
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{linearregression_no_noise}}
@@ -631,20 +653,21 @@ With the optimal $\lambda$ for test-data without noise being $1.659587\cdot
 To see more in detail how the MSE and $R^2$-score varies with different value of
 the hyperparameter $\lambda$, see figure \ref{Lasso-no-noise} and
 \ref{Lasso-with-noise}. We see that for the training-data that ridge and ols
-seemingly performs the same.  This is because the best MSE here comes from the
-lowest value of $\lambda$, which is so low that they pretty much give the same
-fit. Here we see that we actually get better performance on new data than the
-ols case both in the case where we have not added noise, and when we have. In
-both cases these differences are quite marginal compared to the optimal valued
-ols case, but still better. Keep in mind here that we have used fifth order
-polynomial features, so if we compare it to the ols case with fifth order
-polynomial features we get a lot better results, especially in the case where we
-add noise. If we look at figure \ref{Ridge-beta-sizes} we see that the average
-absolute size of our parameters shrink as we increase $\lambda$, and hence the
-variance of the model also probably will.  The fact that we manage to reduce the
-variance in this way is likely the reason why our ridge model with fifth order
-polynomial features vastly outperforms the ols model with the same features, at
-least on the test-data when we have some added noise.
+seemingly performs almost the same.  This is because the best MSE here comes from the
+lowest value of $\lambda$ (again the most complex model), which is so low that
+they pretty much give the same fit. Here we see that we actually get better
+performance on new data than the ols case both in the case where we have not
+added noise, and when we have. In both cases these differences are quite
+marginal compared to the optimal valued ols case, but still better. Keep in mind
+here that we have used fifth order polynomial features, so if we compare it to
+the ols case with fifth order polynomial features we get a lot better results,
+especially in the case where we add noise. If we look at figure
+\ref{Ridge-beta-sizes} we see that the average absolute size of our parameters
+shrink as we increase $\lambda$, and hence the variance of the model also
+probably will.  The fact that we manage to reduce the variance in this way is
+likely the reason why our ridge model with fifth order polynomial features
+vastly outperforms the ols model with the same features, at least on the
+test-data when we have some added noise.
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{ridge_without_noise}}
     \caption{A plot of the $\lambda$ in a ridge-model without noise on log10-scale plotted against the MSE and $R^2$-score. We see that performances of these metrics goes a bit up and down for the different values of $\lambda$.}
@@ -686,7 +709,11 @@ out after a while. This is because when we increase the $\lambda$ enough all the
 parameters will be $0$, and then all the metrics will stay the same from hereon
 naturally. We also see that unlike the ridge-case the MSE and $R^2$ swings much
 less in general, and almost looks to be increasing the whole way, with only a
-small local/global minimums.
+small local/global minimums. Much like the ridge case we see from figure
+\ref{Lasso-beta-sizes} that here the average parameter size also decrease when
+we increase the penalization term. This indicates that as we increase the
+$\lambda$ the model variance decreases, which opens up for the improvement in
+MSE we have seen, again due to the bias-variance-tradeoff.
 
 \begin{figure}
     \centerline{\includegraphics[scale=0.5]{lasso_without_noise}}
@@ -697,6 +724,11 @@ small local/global minimums.
     \centerline{\includegraphics[scale=0.5]{lasso_with_noise}}
     \caption{A plot of the $\lambda$ in a lasso-model with $\lambda$s on log10-scale plotted against the MSE and $R^2$. We see the same flattening as in figure \ref{Lasso-no-noise}.}
     \label{Lasso-with-noise}
+\end{figure}
+\begin{figure}
+    \centerline{\includegraphics[scale=0.5]{lasso_beta_size}}
+    \caption{$log10(\lambda)$ plotted against the average absolute size of our parameters $\beta$. We see that the relationship is expectedly shrinking.}
+    \label{Lasso-beta-sizes}
 \end{figure}
 
 \subsubsection{Performance with more complex models}
@@ -806,18 +838,19 @@ higher order polynomial features, we also get a higher model-complexity. This
 means our models will have lower bias, but also much higher variance. The
 expected prediction error being the sum of these two typically means that our
 model-performances follows a sort of U-shape plotted against model-complexity
-(this we have already seen for the ols and ridge MSE/$R^2$ plots in particular),
+(this we have already seen for the ols and ridge MSE plots in particular),
 where the optimal value has a somewhat low bias and a somewhat low variance, but
 also typically not at the minimum of either. This is what we see in general
 throughout our results here (see figure \ref{bootstrap-bias-var} and
-\ref{crossval-ridge} in particular). Here the exception seems to be the Lasso,
-which seems to only get a lower and lower MSE as we increase the polynomial
-order.  This is probably partially because lasso is able to perform its own kind
-of model-selection, where the parameter corresponding to some of the parameters
-will be $0$. However if we add more and more polynomial features and still keep
-the $\lambda$ fixed, we would eventually get an increase in the MSE as the lasso
-would not be able to reduce the variance enough to keep up with the more and
-more complex features.
+\ref{crossval-ridge} in particular). From our results it seems that for ridge
+and ols, that there is not much point going beyond fifth order polynomial
+features. Here the exception seems to be the Lasso, which seems to only get a
+lower and lower MSE as we increase the polynomial order.  This is probably
+partially because lasso is able to perform its own kind of model-selection,
+where the parameter corresponding to some of the features will be $0$. However
+if we add more and more polynomial features and still keep the $\lambda$ fixed,
+we would eventually get an increase in the MSE as the lasso would not be able to
+reduce the variance enough to keep up with the more and more complex features.
 
 \subsection{Landscape data}
 Running the \textbf{Landscape.jl} on the project repo \cite{githubrepoproject1}
@@ -845,55 +878,58 @@ from reducing this further, and therefore the models with lower bias will give
 the best predictions (which is the ols).
 
 \section{Analysis}
-As we can see from the results, in the case of when we have data without noise
+As we can see from the results, in the case when we have data without noise
 (as in the franke-function with no noise), we have quite comparably good results
 when fitting the different models to the data, with lasso performing just about
 better than ridge, while ols performing the worst, but still quite good. When we
 add noise to the data all the models perform worse, but lasso and ridge manage
 to still come up with quite good performance (lasso still performed the best),
-while higher order polynomial featured ols performed much much worse than
-before, but lower order ols models performed comparable to ridge/lasso still.
-What ridge and lasso models with quite big values of $\lambda$ and lower order
-polynomial ols have in common is that they are all comparatively not that
-complex models. The reason these models performed so good is likely because,
-even though the model bias is somewhat bigger, the variance will be much
-smaller, and from the bias-variance-tradeoff we know that it is the sum of these
-which needs to be low for the model to make good predictions. We have seen this
-also when trying out different polynomial orders and seeing the MSE values these
-give. In general at least for ridge and ols we see that both calculating the MSE
-using bootstrap and cross-validation that we get slight decreases in MSE when
-increasing the polynomial orders, before the MSE eventually increase again with
-the polynomial order as the models get more complex. Looking at the overall
-performances for the different models on the different polynomial orders we see
-that they all work the best on quite different orders. For the ridge one would
-get the best performance around $5$-th order polynomial features, while for ols
-this is closer to $3$-rd order, while for lasso one can go a lot higher than
-both of the ols and ridge.  For the landscape data we saw that we got a similar
-performance for the ols and ridge, while lasso all of a sudden performed the
-worst. This difference is likely related to a different signal-to-noise-ratio
-than before, but perhaps even more important, due to the fact that we then had
-many more observations. With more observations we do not overfit like we did
-before, and the variance of the model becomes lower than when we have less data.
-This makes linear regression a more viable choice seeing as this often has
-considerably lower bias.\\ At last, one thing to take note of is that throughout
-some of the code (in particular the parts that have to do with ridge/lasso using
-the franke-function), we have fitted many models with different hyperparameters
-and then chosen the model which gave the best result for our MSE metric. This
-MSE metric however would be too optimistic for the MSE on the true data
-\cite[s.~7.2]{hastie2009elements}.  Here we could further improve the estimates
-by generating a separate test-set, which we evaluate our selected best model on.
-Keep in mind though that we did do this for the landscape data, so our metrics
-here should be rather fine. Another place we could improve is to test
-performances for more penalization terms for ridge and lasso. We used a limited
-set here in order to speed up the calculations, and one could perhaps test a few
-more in order to see if model-performances becomes better.
+while higher order polynomial featured ols (the most complex models) performed
+much much worse than before, but lower order ols models performed comparable to
+ridge/lasso still.  What ridge and lasso models with quite big values of
+$\lambda$ and lower order polynomial ols have in common is that they are all
+comparatively not that complex models. The reason these models performed so good
+is likely because, even though the model bias is somewhat bigger, the variance
+will be much smaller, and from the bias-variance-tradeoff we know that it is the
+sum of these which needs to be low for the model to make good predictions. We
+have seen this also when trying out different polynomial orders and seeing the
+MSE values these give. In general at least for ridge and ols we see that both
+calculating the MSE using bootstrap and cross-validation that we get slight
+decreases in MSE when increasing the polynomial orders, before the MSE
+eventually increase again with the polynomial order as the models get more
+complex. Looking at the overall performances for the different models on the
+different polynomial orders we see that they all work the best on quite
+different orders. For the ridge one would get the best performance around $5$-th
+order polynomial features, while for ols this is closer to $3$-rd order, while
+for lasso one can go a lot higher than both of the ols and ridge.  For the
+landscape data we saw that we got a similar performance for the ols and ridge,
+while lasso all of a sudden performed the worst. This difference is likely
+related to a different signal-to-noise-ratio than before, but perhaps even more
+important, due to the fact that we then had many more observations. With more
+observations we do not overfit like we did before, and the variance of the model
+becomes lower than when we had less data.  This makes linear regression a more
+viable choice seeing as this often has considerably lower bias.\\ At last, one
+thing to take note of is that throughout some of the code (in particular the
+parts that have to do with ridge/lasso using the franke-function), we have
+fitted many models with different hyperparameters and then chosen the model
+which gave the best result for our MSE metric. This MSE metric however would be
+too optimistic for the MSE on the true data \cite[s.~7.2]{hastie2009elements}.
+Here we could further improve the estimates by generating a separate test-set,
+which we evaluate our selected best model on.  Keep in mind though that we did
+do this for the landscape data, so our metrics here should be rather fine.
+Another place we could improve is to test performances for more penalization
+terms for ridge and lasso. We used a limited set here in order to speed up the
+calculations, and one could perhaps test a few more in order to see if
+model-performances becomes better. Likewise one could also test higher/lower
+order polynomial features for the models of the landscape-data, and see if we
+can get better performance on a polynomial order other than $5$.
 
 \section{Conclusion}
 We have in this project seen how ols, ridge and lasso performs on data generated
 from the franke-function and landscape-data. We see that for data without noise
-and quite low amount of observations that all these three different models
+and quite low amount of observations, that all these three different models
 performed somewhat similarly, but when we added noise that the less
-complex models, i.e. ridge and lasso with somewhat sizeable $\lambda$ parameter,
+complex models, i.e. ridge and lasso with a sizeable $\lambda$ parameter,
 and ols with lower order polynomial features performed better. This clearly is
 related to the bias-variance-tradeoff, which we have derived earlier. However in
 the case of the landscape-data, where we had a lot more observations and
@@ -915,7 +951,7 @@ found at:
 \subsection{Expectance and variance with matrices}
 Let $A$ be a non-stochastic $p \times n$ matrix and $\mathbf{X}$ be a stochastic
 $n \times 1$ vector. We have:
-$$E(A \mathbf{X}) = (E(A \mathbf{X})_1, \dots, E((A \mathbf{X})_n))^T$$
+$$E(A \mathbf{X}) = (E((A \mathbf{X})_1), \dots, E((A \mathbf{X})_p))^T$$
 We then have:
 $$E(A \mathbf{X})_i = E((A \mathbf{X})_i) = E(\sum_{k=1}^n A_{i k} \mathbf{X}_k) = \sum_{k=1}^n A_{i k} E(\mathbf{X}_k) = A_{i *} E(\mathbf{X})$$
 Hence we see that $E(A \mathbf{X}) = A E(\mathbf{X})$.
@@ -946,7 +982,7 @@ to find the variance:
                       & = A E((\mathbf{X} - E(\mathbf{X})) (\mathbf{X} - E(\mathbf{X}))^T) A^T                                                                         \\
                       & = A Var(\mathbf{X}) A^T                                                                                                                        \\
 \end{align*}
-Where we have used the previous result for the last equality.
+Where we have used the previous result for the second last equality.
 
 \bibliography{./sources.bib}
 

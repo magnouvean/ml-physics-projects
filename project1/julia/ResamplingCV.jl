@@ -97,7 +97,7 @@ for k in [5, 10]
             title="Cross-validation bias-variance ($(method_name)) with $(k) folds",
             label=["train" "test"],
             xlabel="order",
-            ylabel="Bootstrap MSE")
+            ylabel="CV MSE")
         savefig(dirname(@__DIR__) * "/figures/crossvalbiasvariance_$(method_name)__$(k)_folds.png")
     end
 end

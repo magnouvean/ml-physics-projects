@@ -51,6 +51,6 @@ plotinfo(λs, mse_train, mse_test, r2_train, r2_test, "ridge_with_noise", title=
 plot([log10.(λs) log10.(λs)],
     [β_sizes_no_noise β_sizes_with_noise],
     label=["without noise" "with noise"],
-    xlabel="polynomial ",
-    ylabel="log10(λ)")
+    xlabel="log10(λ)",
+    ylabel="abs(avg(β))")
 savefig(dirname(@__DIR__) * "/figures/ridge_beta_size.png")
