@@ -745,15 +745,19 @@ ridge and lasso respectively, these calculated using cross-validation. Keep in
 mind that here we have just set some fixed value for $\lambda$ for both ridge
 and lasso, based on what gave good results on fifth order polynomial features in
 previous calculations. Looking only at the numerical results from the
-cross-validation for ols on the test-data we got:
+cross-validation for ols on the test-data we got (for $k=10$ folds):
 
 \begin{table}[htpb!]
     \resizebox{\columnwidth}{!}{
         \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
             Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9      & 10     & 11     & 12     & 13     & 14     \\
-            MSE   & 0.1822 & 0.1746 & 0.1756 & 0.1796 & 0.1896 & 0.2394 & 0.4217 & 0.8437 & 1.1845 & 1.6786 & 2.0402 & 3.2349 & 4.3811
+            MSE   & 0.1718 & 0.1658 & 0.1646 & 0.1682 & 0.1726 & 0.1776 & 0.1832 & 0.1896 & 0.2004 & 0.2044 & 0.2151 & 0.2263 & 0.2504
         \end{tabular}
     }
+
+
+
+
 \end{table}
 
 Similarly for ridge we got:
@@ -761,8 +765,8 @@ Similarly for ridge we got:
 \begin{table}[htpb!]
     \resizebox{\columnwidth}{!}{
         \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
-            Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9       & 10     & 11     & 12     & 13     & 14     \\
-            MSE   & 0.0172 & 0.0080 & 0.0058 & 0.0054 & 0.0055 & 0.0099 & 0.0147 & 0.02334 & 0.0364 & 0.0568 & 0.0876 & 0.1290 & 0.1830
+            Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9      & 10     & 11     & 12     & 13     & 14     \\
+            MSE   & 0.0160 & 0.0080 & 0.0044 & 0.0032 & 0.0025 & 0.0029 & 0.0034 & 0.0041 & 0.0049 & 0.0058 & 0.0070 & 0.0088 & 0.0119
         \end{tabular}
     }
 \end{table}
@@ -772,7 +776,7 @@ And for lasso:
     \resizebox{\columnwidth}{!}{
         \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
             Order & 2      & 3      & 4      & 5      & 6      & 7      & 8      & 9      & 10     & 11     & 12     & 13     & 14     \\
-            MSE   & 0.0169 & 0.0076 & 0.0061 & 0.0044 & 0.0036 & 0.0033 & 0.0032 & 0.0030 & 0.0029 & 0.0027 & 0.0026 & 0.0025 & 0.0025
+            MSE   & 0.0160 & 0.0079 & 0.0062 & 0.0046 & 0.0038 & 0.0034 & 0.0032 & 0.0030 & 0.0029 & 0.0027 & 0.0026 & 0.0025 & 0.0025
         \end{tabular}
     }
 \end{table}
@@ -783,7 +787,7 @@ And for lasso:
         orders of polynomial features. For the training we unsurprisingly get a
         lower and lower MSE as we increase the orders of polynomials, but for the
         testing data we get at first a lower MSE by increasing the polynomials up
-        until about order $6$ where it after this increases. This is to be expected
+        until about order $7$ where it after this increases. This is to be expected
         from what we know of the bias-variance tradeoff.}
     \label{bootstrap-bias-var}
 \end{figure}
@@ -795,8 +799,8 @@ And for lasso:
     \subfloat{{\includegraphics[width=5.5cm]{crossvalbiasvariance_ols__10_folds}}}
     \caption{Side by side cross-validated estimates of the mean squared error of
         ordinary least squares models with varying orders of features with $k=5$ and
-        $k=10$ folds. We see that the mean squared error for the test data rapidly
-        increases after polynomial order $\approx 6$. Since both of the results for
+        $k=10$ folds. We see that the mean squared error for the test data
+        increases after polynomial order $\approx 4$. Since both of the results for
         $k=5$ and $k=10$ seem to be very similar we can be confident that we do not
         need to increase the amount of folds here to get a more reliable result
         - the result has already converged.}
@@ -812,9 +816,7 @@ And for lasso:
         $k=10$ this time as well. We get again very similar results for the two
         sizes of folds. Here we see clearer that the test MSE decreases at first as
         we get higher order polynomial features, before it increases again as we get
-        more and more complex models. We also notice that the scale here is much
-        smaller than in the ols case, likely due to ridge being a less complex
-        model.}
+        more and more complex models.}
     \label{crossval-ridge}
 \end{figure}
 
@@ -838,19 +840,44 @@ higher order polynomial features, we also get a higher model-complexity. This
 means our models will have lower bias, but also much higher variance. The
 expected prediction error being the sum of these two typically means that our
 model-performances follows a sort of U-shape plotted against model-complexity
-(this we have already seen for the ols and ridge MSE plots in particular),
-where the optimal value has a somewhat low bias and a somewhat low variance, but
-also typically not at the minimum of either. This is what we see in general
-throughout our results here (see figure \ref{bootstrap-bias-var} and
-\ref{crossval-ridge} in particular). From our results it seems that for ridge
-and ols, that there is not much point going beyond fifth order polynomial
-features. Here the exception seems to be the Lasso, which seems to only get a
-lower and lower MSE as we increase the polynomial order.  This is probably
-partially because lasso is able to perform its own kind of model-selection,
-where the parameter corresponding to some of the features will be $0$. However
-if we add more and more polynomial features and still keep the $\lambda$ fixed,
-we would eventually get an increase in the MSE as the lasso would not be able to
-reduce the variance enough to keep up with the more and more complex features.
+(this we have seen earlier for the ols and ridge MSE plots like in figure
+\ref{linearregression-no-noise}/\ref{linearregression-with-noise} or
+\ref{Ridge-no-noise}/\ref{Ridge-with-noise}).  Typically the optimal value has a
+somewhat low bias and a somewhat low variance, but also typically not at the
+minimum of either. This is what we see in general throughout our results here
+(see figure \ref{bootstrap-bias-var}, \ref{crossval-ols} and \ref{crossval-ridge} in particular).
+From our results it seems that for ridge and ols, that there is not much point
+going beyond  seventh order polynomial features. Here the exception seems to be the
+Lasso, which seems to only get a lower and lower MSE as we increase the
+polynomial order.  This is probably partially because lasso is able to perform
+its own kind of model-selection, where the parameter corresponding to some of
+the features will be $0$. However if we add more and more polynomial features
+and still keep the $\lambda$ fixed, we would eventually get an increase in the
+MSE as the lasso would not be able to reduce the variance enough to keep up with
+the more and more complex features.
+
+One thing we can notice when looking at the results of the cross-validation and
+bootstrapping MSE is that we seem to get a bit different results for
+cross-validation and bootstrapping. In particular we clearly see differences in
+the plots of model-complexity plotted against MSE for bootstrapping (figure
+\ref{bootstrap-bias-var}) and the corresponding one using cross-validation
+(figure \ref{crossval-ols}). What we see is that for cross-validation the optimal
+polynomial order is considerably lower than the optimal polynomial order
+calculated using bootstrap. One big difference between the two methods as I
+already have described is that when we are using bootstrapping we are using the
+same test-data for every metric evaluation, just with models trained on
+different bootstrap samples. However with cross-validation we are using
+different folds for training and testing so eventually all the data is used to
+calculate the metric, and this way it is does not rely on the split of the data,
+but instead relies on the number of folds given. In the case of bootstrapping,
+there is a potential problem then that the metric we calculate only applies to
+the exact test-split made and not the general data, which can happen if the
+split we have made isn't that representative of the real data (like for example
+if it doesn't contain any extreme observations or outliers).  We can perhaps see
+some signs of this here as the bootstrap estimate shows us that the polynomials
+of order $7$ performs the best, while this was not what we have experienced so
+far with the franke-function (though this is hard to know as we have used more
+datapoints in this case).
 
 \subsection{Landscape data}
 Running the \textbf{Landscape.jl} on the project repo \cite{githubrepoproject1}

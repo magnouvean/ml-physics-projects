@@ -25,7 +25,7 @@ function crossvalbiasvariance(orders, n, nfolds, λ=10^(-5))
     test_mses_lasso = zeros(length(orders))
     kfoldindices = kfold(nfolds, n)
     for (i, order) in enumerate(orders)
-        X, y = generatedata(order, split=false, include_intercept=true, add_noise=true, n=n)
+        X, y = generatedata(order, split=false, include_intercept=true, add_noise=true, n=n, custom_seed=1234)
 
         mse_train_ols = zeros(nfolds)
         mse_test_ols = zeros(nfolds)

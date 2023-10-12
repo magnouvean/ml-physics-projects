@@ -13,7 +13,7 @@ function bootstrapbiasvariance(orders, n, B=50)
     train_mses = zeros(length(orders))
     test_mses = zeros(length(orders))
     for (i, order) in enumerate(orders)
-        X_train, X_test, y_train, y_test = generatedata(order, include_intercept=true, add_noise=true, n=n)
+        X_train, X_test, y_train, y_test = generatedata(order, include_intercept=true, add_noise=true, n=n, custom_seed=1234)
 
         mse_train = zeros(B)
         mse_test = zeros(B)
