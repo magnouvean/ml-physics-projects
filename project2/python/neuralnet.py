@@ -19,12 +19,12 @@ def relu_der(x):
     return (x > 0) * 1
 
 
-def sse(y, y_pred):
+def sse(y_pred, y):
     diff = y - y_pred
     return (diff.T @ diff)[0, 0]
 
 
-def sse_der(y, y_pred):
+def sse_der(y_pred, y):
     return 2 * (y - y_pred)
 
 
@@ -45,9 +45,12 @@ class NeuralNet:
         | typing.Callable[[float], float] = sigmoid_der,
         output_function: typing.Callable[[float], float] = lambda x: x,
         output_function_der: typing.Callable[[float], float] = lambda _: 1,
+        lmbda: float = 0.0,  # penalization isn't really implemented yet, so this is somewhat useless for now
     ):
         # Hidden layers is the sizes minus input and output layers
         self._n_hidden_layers = len(layer_sizes) - 2
+        # Set hyperparameters
+        self._lmbda = lmbda
 
         # Error handling
         if self._n_hidden_layers == 0:
@@ -77,8 +80,8 @@ class NeuralNet:
         self._output_function_der = output_function_der
 
         # a-s are the values of the layers, while z-s are the values of the layers before activation
+        self._h = [np.zeros(layer_size) for layer_size in layer_sizes[1:]]
         self._a = [np.zeros(layer_size) for layer_size in layer_sizes[1:]]
-        self._z = [np.zeros(layer_size) for layer_size in layer_sizes[1:]]
 
         # Initialize weights/biases
         self.random_seed = random_seed
@@ -113,46 +116,58 @@ class NeuralNet:
         return z, a
 
     def forward(self, X: np.array):
-        self._a_0 = X
-        self._z[0], self._a[0] = self._forward_one(X, 1)
-        for i in range(1, self._n_hidden_layers + 1):
-            self._z[i], self._a[i] = self._forward_one(self._a[i - 1], i + 1)
+        self._h_0 = X
+        h_prev = self._h_0
+        for i in range(self._n_hidden_layers + 1):
+            self._a[i], self._h[i] = self._forward_one(h_prev, i + 1)
+            h_prev = self._h[i]
 
-        return self._a[-1]
+        return self._h[-1]
 
-    def fit(self, X: np.array, y: np.array, epochs: int = 100, learning_rate=0.1):
+    def fit(
+        self,
+        X: np.array,
+        y: np.array,
+        epochs: int = 100,
+        learning_rate=0.1,
+        sgd=False,
+        sgd_size=10,
+    ):
+        """Fit the neural network using backpropagation as described in goodfellow et al 6.4 algorithm
+
+        Args:
+            X (np.array): Design matrix
+            y (np.array): Response/target
+            epochs (int, optional): Number of epochs to run. Defaults to 100.
+            learning_rate (float, optional): The size of the learning rate parameter. Defaults to 0.1.
+        """
         for _ in range(epochs):
+            rand_indices = np.random.choice(X.shape[0], sgd_size, replace=False)
+            X_data = X[rand_indices, :] if sgd else X
+            y_data = y[rand_indices] if sgd else y
             # We start with finding a in the L layer (also known as the target)
             # by doing a forward propagation
-            self.forward(X)
-            print(f"COST: {self._cost_function(y, self._a[-1])}")
+            y_pred = self.forward(X_data)
+            print(f"COST: {self._cost_function(y_pred, y_data)}")
 
-            weight_updates = [0] * (self._n_hidden_layers + 1)
-            bias_updates = [0] * (self._n_hidden_layers + 1)
+            weight_grads = [0] * (self._n_hidden_layers + 1)
+            bias_grads = [0] * (self._n_hidden_layers + 1)
 
-            delta_l = self._output_function_der(self._z[-1]) * self._cost_function_der(
-                y, self._a[-1]
-            )
-            w_grad_l = self._a[-2].T @ delta_l
-            b_grad_l = np.sum(delta_l, axis=0)
-
-            weight_updates[-1] = -learning_rate * w_grad_l
-            bias_updates[-1] = -learning_rate * b_grad_l
-
-            for l in range(self._n_hidden_layers - 1, -1, -1):
-                a_prev = self._a[l - 1] if l > 0 else self._a_0
-                delta_l = (
-                    delta_l
-                    @ self._weights[l + 1].T
-                    * self._activation_functions_der[l](self._z[l])
+            g = self._cost_function_der(y_pred, y_data)
+            for k in range(self._n_hidden_layers + 1, 0, -1):
+                h_k_1 = self._h[k - 2] if k > 1 else self._h_0
+                a_k = self._a[k - 1]
+                W_k = self._weights[k - 1]
+                f_der = (
+                    self._output_function_der
+                    if k == self._n_hidden_layers + 1
+                    else self._activation_functions_der[k - 1]
                 )
-                w_grad_l = a_prev.T @ delta_l
-                b_grad_l = np.sum(delta_l, axis=0)
-                weight_updates[l] = -learning_rate * w_grad_l
-                bias_updates[l] = -learning_rate * b_grad_l
+                g = g * f_der(a_k)
+                weight_grads[k - 1] = h_k_1.T @ g
+                bias_grads[k - 1] = np.sum(g, axis=0)
+                g = g @ W_k.T
 
-            for l, (weight_update, bias_update) in enumerate(
-                zip(weight_updates, bias_updates)
-            ):
-                self._weights[l] -= weight_update
-                self._biases[l] -= bias_update
+            for k, (weight_grad, bias_grad) in enumerate(zip(weight_grads, bias_grads)):
+                self._weights[k] += learning_rate * weight_grad
+                self._biases[k] += learning_rate * bias_grad
