@@ -110,7 +110,7 @@ class NeuralNet:
         )
         z = X @ self._weights[i - 1]
         for j in range(z.shape[0]):
-            z[j, :] = self._biases[i - 1]
+            z[j, :] += self._biases[i - 1]
         a = activation_func(z)
 
         return z, a

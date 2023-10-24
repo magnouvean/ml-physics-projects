@@ -21,7 +21,7 @@ nn = NeuralNet(
     cost=sse,
     cost_der=sse_der,
 )
-nn.fit(X, y, learning_rate=0.00001, epochs=10000, sgd=True)
+nn.fit(X, y, learning_rate=0.0001, epochs=10000)
 my_y_pred = nn.forward(X)
 print(f"mse (personal): {mse(y, my_y_pred)}")
 
