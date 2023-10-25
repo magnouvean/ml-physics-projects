@@ -1,5 +1,8 @@
 import typing
+
 import numpy as np
+
+from schedulers import Scheduler
 
 
 def sigmoid(x):
@@ -38,6 +41,7 @@ class NeuralNet:
         layer_sizes: typing.Iterable,
         cost: typing.Callable,
         cost_der: typing.Callable,
+        scheduler: Scheduler,
         random_seed: int = 1234,
         activation_functions: typing.Iterable
         | typing.Callable[[float], float] = sigmoid,
@@ -51,6 +55,8 @@ class NeuralNet:
         self._n_hidden_layers = len(layer_sizes) - 2
         # Set hyperparameters
         self._lmbda = lmbda
+
+        self._scheduler = scheduler
 
         # Error handling
         if self._n_hidden_layers == 0:
@@ -129,7 +135,6 @@ class NeuralNet:
         X: np.array,
         y: np.array,
         epochs: int = 100,
-        learning_rate=0.1,
         sgd=False,
         sgd_size=10,
     ):
@@ -139,10 +144,11 @@ class NeuralNet:
             X (np.array): Design matrix
             y (np.array): Response/target
             epochs (int, optional): Number of epochs to run. Defaults to 100.
-            learning_rate (float, optional): The size of the learning rate parameter. Defaults to 0.1.
         """
+        self._scheduler.reset()
         for _ in range(epochs):
-            rand_indices = np.random.choice(X.shape[0], sgd_size, replace=False)
+            if sgd:
+                rand_indices = np.random.choice(X.shape[0], sgd_size, replace=False)
             X_data = X[rand_indices, :] if sgd else X
             y_data = y[rand_indices] if sgd else y
             # We start with finding a in the L layer (also known as the target)
@@ -169,5 +175,5 @@ class NeuralNet:
                 g = g @ W_k.T
 
             for k, (weight_grad, bias_grad) in enumerate(zip(weight_grads, bias_grads)):
-                self._weights[k] += learning_rate * weight_grad
-                self._biases[k] += learning_rate * bias_grad
+                self._weights[k] -= self._scheduler.update(weight_grad)
+                self._biases[k] -= self._scheduler.update(bias_grad)

@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from jax import numpy as jnp
-import matplotlib.pyplot as plt
 
 np.random.seed(1234)
 
