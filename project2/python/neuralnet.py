@@ -1,4 +1,5 @@
 import typing
+import copy
 
 import numpy as np
 
@@ -56,7 +57,12 @@ class NeuralNet:
         # Set hyperparameters
         self._lmbda = lmbda
 
-        self._scheduler = scheduler
+        self._scheduler_weights = [
+            copy.deepcopy(scheduler) for _ in range(self._n_hidden_layers + 1)
+        ]
+        self._scheduler_biases = [
+            copy.deepcopy(scheduler) for _ in range(self._n_hidden_layers + 1)
+        ]
 
         # Error handling
         if self._n_hidden_layers == 0:
@@ -130,6 +136,47 @@ class NeuralNet:
 
         return self._h[-1]
 
+    def _print_performance(self, X: np.ndarray, y: np.ndarray):
+        y_pred = self.forward(X)
+        print(f"COST: {self._cost_function(y_pred, y)}")
+
+    def _backward_once(self, X: np.ndarray, y: np.ndarray):
+        """Performs one backward propagation on some data.
+
+        Args:
+            X (np.ndarray): The design matrix of the data to use.
+            y (np.ndarray): The response of the data to use.
+        """
+        # We start with finding a in the L layer (also known as the target)
+        # by doing a forward propagation
+        y_pred = self.forward(X)
+
+        weight_grads = [0] * (self._n_hidden_layers + 1)
+        bias_grads = [0] * (self._n_hidden_layers + 1)
+
+        g = self._cost_function_der(y_pred, y)
+        for k in range(self._n_hidden_layers + 1, 0, -1):
+            h_k_1 = self._h[k - 2] if k > 1 else self._h_0
+            a_k = self._a[k - 1]
+            W_k = self._weights[k - 1]
+            f_der = (
+                self._output_function_der
+                if k == self._n_hidden_layers + 1
+                else self._activation_functions_der[k - 1]
+            )
+            g = g * f_der(a_k)
+            weight_grads[k - 1] = h_k_1.T @ g
+            bias_grads[k - 1] = np.sum(g, axis=0)
+            g = g @ W_k.T
+
+        for k, (weight_grad, bias_grad) in enumerate(
+            zip(weight_grads, bias_grads)
+        ):
+            weight_update = self._scheduler_weights[k].update(weight_grad)
+            bias_update = self._scheduler_biases[k].update(bias_grad)
+            self._weights[k] -= weight_update
+            self._biases[k] -= bias_update
+
     def fit(
         self,
         X: np.array,
@@ -137,43 +184,32 @@ class NeuralNet:
         epochs: int = 100,
         sgd=False,
         sgd_size=10,
+        print_every: int = 0,
     ):
-        """Fit the neural network using backpropagation as described in goodfellow et al 6.4 algorithm
+        """Train the neural network to some data
 
         Args:
-            X (np.array): Design matrix
-            y (np.array): Response/target
-            epochs (int, optional): Number of epochs to run. Defaults to 100.
+            X (np.array): The design matrix.
+            y (np.array): The response. Must be of compatible dimensions as X.
+            epochs (int, optional): The max amount of epochs to allow. Defaults to 100.
+            sgd (bool, optional): Wether to use stochastic gradient descent or not. Defaults to False.
+            sgd_size (int, optional): The size of each mini-batch when using stochastic gradient descent. Defaults to 10.
+            print_every (int, optional): Print the cost every `print_every` epoch. If 0 do not print at all. Defaults to 0.
         """
-        self._scheduler.reset()
-        for _ in range(epochs):
-            if sgd:
-                rand_indices = np.random.choice(X.shape[0], sgd_size, replace=False)
-            X_data = X[rand_indices, :] if sgd else X
-            y_data = y[rand_indices] if sgd else y
-            # We start with finding a in the L layer (also known as the target)
-            # by doing a forward propagation
-            y_pred = self.forward(X_data)
-            print(f"COST: {self._cost_function(y_pred, y_data)}")
+        # Reset all the schedulers
+        for k in range(self._n_hidden_layers + 1):
+            self._scheduler_weights[k].reset()
+            self._scheduler_biases[k].reset()
 
-            weight_grads = [0] * (self._n_hidden_layers + 1)
-            bias_grads = [0] * (self._n_hidden_layers + 1)
+        for i in range(epochs):
+            n_iter_per_epoch = 1 if not sgd else int(X.shape[0] / sgd_size)
+            for _ in range(n_iter_per_epoch):
+                if sgd:
+                    rand_indices = np.random.choice(X.shape[0], sgd_size, replace=False)
+                X_data = X[rand_indices, :] if sgd else X
+                y_data = y[rand_indices] if sgd else y
+                self._backward_once(X_data, y_data)
 
-            g = self._cost_function_der(y_pred, y_data)
-            for k in range(self._n_hidden_layers + 1, 0, -1):
-                h_k_1 = self._h[k - 2] if k > 1 else self._h_0
-                a_k = self._a[k - 1]
-                W_k = self._weights[k - 1]
-                f_der = (
-                    self._output_function_der
-                    if k == self._n_hidden_layers + 1
-                    else self._activation_functions_der[k - 1]
-                )
-                g = g * f_der(a_k)
-                weight_grads[k - 1] = h_k_1.T @ g
-                bias_grads[k - 1] = np.sum(g, axis=0)
-                g = g @ W_k.T
 
-            for k, (weight_grad, bias_grad) in enumerate(zip(weight_grads, bias_grads)):
-                self._weights[k] -= self._scheduler.update(weight_grad)
-                self._biases[k] -= self._scheduler.update(bias_grad)
+            if print_every > 0 and i % print_every == 0:
+                self._print_performance(X, y)
