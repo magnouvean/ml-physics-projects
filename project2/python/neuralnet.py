@@ -1,5 +1,5 @@
-import typing
 import copy
+import typing
 
 import numpy as np
 
@@ -29,11 +29,15 @@ def sse(y_pred, y):
 
 
 def sse_der(y_pred, y):
-    return 2 * (y - y_pred)
+    return 2 * (y_pred - y)
 
 
-def mse(y, y_pred):
+def mse(y_pred, y):
     return sse(y, y_pred) / len(y)
+
+
+def l2regularizer(grad: np.ndarray) -> np.ndarray:
+    return grad
 
 
 class NeuralNet:
@@ -51,11 +55,13 @@ class NeuralNet:
         output_function: typing.Callable[[float], float] = lambda x: x,
         output_function_der: typing.Callable[[float], float] = lambda _: 1,
         lmbda: float = 0.0,  # penalization isn't really implemented yet, so this is somewhat useless for now
+        regularizer: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer,
     ):
         # Hidden layers is the sizes minus input and output layers
         self._n_hidden_layers = len(layer_sizes) - 2
-        # Set hyperparameters
+        # Penalization variables
         self._lmbda = lmbda
+        self._regularizer = regularizer
 
         self._scheduler_weights = [
             copy.deepcopy(scheduler) for _ in range(self._n_hidden_layers + 1)
@@ -106,7 +112,7 @@ class NeuralNet:
             # corresponding layer_size, so i is the index of the previous layer.
             prev_layer_size = layer_sizes[i]
             layer_weights = np.random.randn(prev_layer_size, layer_size) * 0.00001
-            layer_biases = np.zeros(layer_size) + 0.00001
+            layer_biases = np.zeros(layer_size)
             self._weights.append(layer_weights)
             self._biases.append(layer_biases)
 
@@ -165,23 +171,21 @@ class NeuralNet:
                 else self._activation_functions_der[k - 1]
             )
             g = g * f_der(a_k)
-            weight_grads[k - 1] = h_k_1.T @ g
+            weight_grads[k - 1] = h_k_1.T @ g + self._lmbda * self._regularizer(W_k)
             bias_grads[k - 1] = np.sum(g, axis=0)
             g = g @ W_k.T
 
-        for k, (weight_grad, bias_grad) in enumerate(
-            zip(weight_grads, bias_grads)
-        ):
+        for k, (weight_grad, bias_grad) in enumerate(zip(weight_grads, bias_grads)):
             weight_update = self._scheduler_weights[k].update(weight_grad)
             bias_update = self._scheduler_biases[k].update(bias_grad)
-            self._weights[k] -= weight_update
-            self._biases[k] -= bias_update
+            self._weights[k] += weight_update
+            self._biases[k] += bias_update
 
     def fit(
         self,
         X: np.array,
         y: np.array,
-        epochs: int = 100,
+        epochs: int = 200,
         sgd=False,
         sgd_size=10,
         print_every: int = 0,
@@ -201,6 +205,12 @@ class NeuralNet:
             self._scheduler_weights[k].reset()
             self._scheduler_biases[k].reset()
 
+        # Fail if the sgd size is too big for the data
+        if X.shape[0] < sgd_size:
+            raise ValueError(
+                f"The size of a minibatch in stochastic gradient descent cannot be bigger than the amount of datapoints (datapoints: {X.shape[0]}, sgd_size: {sgd_size})"
+            )
+
         for i in range(epochs):
             n_iter_per_epoch = 1 if not sgd else int(X.shape[0] / sgd_size)
             for _ in range(n_iter_per_epoch):
@@ -209,7 +219,6 @@ class NeuralNet:
                 X_data = X[rand_indices, :] if sgd else X
                 y_data = y[rand_indices] if sgd else y
                 self._backward_once(X_data, y_data)
-
 
             if print_every > 0 and i % print_every == 0:
                 self._print_performance(X, y)
