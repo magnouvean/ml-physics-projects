@@ -76,10 +76,8 @@ class SchedulerRMSProp(Scheduler):
         learning_rate,
         timedecay: typing.Callable[[int], float] = lambda _: 1,
         rmsprop_decay=0.99,
-        use_momentum=False,
-        momentum_alpha=0.9,
     ):
-        super().__init__(learning_rate, timedecay, use_momentum, momentum_alpha)
+        super().__init__(learning_rate, timedecay)
         self._rmsprop_decay = rmsprop_decay
 
     def _update_no_momentum(self, grad, delta=1e-6):
@@ -98,10 +96,8 @@ class SchedulerAdam(Scheduler):
         timedecay: typing.Callable[[int], float] = lambda _: 1,
         adam_decay1=0.9,
         adam_decay2=0.999,
-        use_momentum=False,
-        momentum_alpha=0.9,
     ):
-        super().__init__(learning_rate, timedecay, use_momentum, momentum_alpha)
+        super().__init__(learning_rate, timedecay)
         self._adam_decay1 = adam_decay1
         self._adam_decay2 = adam_decay2
 

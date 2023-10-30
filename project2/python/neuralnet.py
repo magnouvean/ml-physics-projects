@@ -36,6 +36,14 @@ def mse(y_pred, y):
     return sse(y, y_pred) / len(y)
 
 
+def cross_entropy(y_pred, y):
+    return -np.sum(y * np.log(y_pred))
+
+
+def cross_entropy_der(y_pred, y):
+    return y_pred - y
+
+
 def l2regularizer(grad: np.ndarray) -> np.ndarray:
     return grad
 
@@ -54,7 +62,7 @@ class NeuralNet:
         | typing.Callable[[float], float] = sigmoid_der,
         output_function: typing.Callable[[float], float] = lambda x: x,
         output_function_der: typing.Callable[[float], float] = lambda _: 1,
-        lmbda: float = 0.0,  # penalization isn't really implemented yet, so this is somewhat useless for now
+        lmbda: float = 0.0,
         regularizer: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer,
     ):
         # Hidden layers is the sizes minus input and output layers
@@ -111,7 +119,7 @@ class NeuralNet:
             # element, i will always be one less than the index of the
             # corresponding layer_size, so i is the index of the previous layer.
             prev_layer_size = layer_sizes[i]
-            layer_weights = np.random.randn(prev_layer_size, layer_size) * 0.00001
+            layer_weights = np.random.randn(prev_layer_size, layer_size)
             layer_biases = np.zeros(layer_size)
             self._weights.append(layer_weights)
             self._biases.append(layer_biases)
@@ -144,7 +152,7 @@ class NeuralNet:
 
     def _print_performance(self, X: np.ndarray, y: np.ndarray):
         y_pred = self.forward(X)
-        print(f"COST: {self._cost_function(y_pred, y)}")
+        print(f"COST: {self._cost_history[-1]}")
 
     def _backward_once(self, X: np.ndarray, y: np.ndarray):
         """Performs one backward propagation on some data.
@@ -189,6 +197,8 @@ class NeuralNet:
         sgd=False,
         sgd_size=10,
         print_every: int = 0,
+        tol=1e-4,
+        n_iter_no_change=10,
     ):
         """Train the neural network to some data
 
@@ -206,12 +216,30 @@ class NeuralNet:
             self._scheduler_biases[k].reset()
 
         # Fail if the sgd size is too big for the data
-        if X.shape[0] < sgd_size:
+        if sgd and X.shape[0] < sgd_size:
             raise ValueError(
                 f"The size of a minibatch in stochastic gradient descent cannot be bigger than the amount of datapoints (datapoints: {X.shape[0]}, sgd_size: {sgd_size})"
             )
 
+        self._cost_history = []
         for i in range(epochs):
+            y_pred = self.forward(X)
+            current_cost = self._cost_function(y_pred, y)
+            max_diff = (
+                None
+                if len(self._cost_history) < n_iter_no_change
+                else max(
+                    (
+                        abs(current_cost - cost)
+                        for cost in self._cost_history[-n_iter_no_change:]
+                    )
+                )
+            )
+            if not max_diff is None and max_diff < tol:
+                print(f"Convergence after {i} epochs")
+                break
+            self._cost_history.append(current_cost)
+
             n_iter_per_epoch = 1 if not sgd else int(X.shape[0] / sgd_size)
             for _ in range(n_iter_per_epoch):
                 if sgd:
