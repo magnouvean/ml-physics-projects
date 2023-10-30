@@ -1,0 +1,94 @@
+\documentclass{article}
+\title{Project 2 \\ FYS-STK3155/4155}
+\author{Magnus Bergkvam}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{bm}
+
+
+\begin{document}
+\maketitle
+\bibliographystyle{unsrt}
+
+\section{Introduction}
+
+\section{Methods}
+\subsection{The Newton-Raphson method}
+Very central to the numerical optimization we do is the Newton-Raphson method.
+This is a method which allows us to minimize some function by using the gradient
+of the function. The method has it's origins in the Taylor-expansion of the
+function we wish to minimize. In our case we use this to minimize cost-functions
+for the models we use. Let $C(\bm{\beta}; \bm{X}, \bm{y})$ be some general
+cost-function depending on some design matrix $\bm{X}$ and a response vector
+$\bm{y}$. We wish to find the $\bm{\beta}$ which minimizes this cost, given
+$\bm{X}$ and $\bm{y}$, i.e. we minimize $C$ with respect to $\bm{\beta}$, while
+keeping $\bm{X}$ and $\bm{y}$ fixed. We can then approximate the cost using a
+Taylor-expansion of second order around some value $\bm{\beta}^*$, in which case
+we get:
+\begin{align*}
+    C(\bm{\beta}, \bm{X}, \bm{y}) & \approx C(\bm{\beta}^*; \bm{X}, \bm{y}) + \frac{\partial C(\bm{\beta}^*; \bm{X}, \bm{y})}{\partial \beta}(\beta - \bm{\beta}^*) + \frac{1}{2} \frac{\partial^2 C(\bm{\beta}; \bm{X}, \bm{y})}{\partial^2 \bm{\beta}}(\bm{\beta} - \bm{\beta}^*)^2 \\
+                                  & = C(\bm{\beta}^*; \bm{X}, \bm{y}) + \nabla_{\bm{\beta}} C(\bm{\beta}^*) (\beta - \bm{\beta}^*) + \frac{1}{2} \bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*)^2
+\end{align*}
+Where $\nabla_{\bm{\beta}} C$ is the gradient of $C$ w.r.t. $\bm{\beta}$ and
+$\bm{H}_{\bm{\beta}}$ is the Hesse-matrix (second derivative) of $C$ w.r.t.
+$\bm{\beta}$. This should be a good approximation for $C$ sufficiently close to
+$\bm{\beta}^*$. We then can find the derivative of this w.r.t. $\bm{\beta}$:
+\begin{align*}
+    \frac{\partial C(\bm{\beta}, \bm{X}, \bm{y})}{\partial \bm{\beta}} & \approx
+    \nabla_{\bm{\beta}} C(\bm{\beta}^*) + \bm{H}_{\bm{\beta}}(\bm{\beta}^*)(\bm{\beta} - \bm{\beta}^*) \\
+\end{align*}
+If we set this to $0$ we further get:
+$$\bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*) = -\nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
+which leads to
+$$\bm{\beta} - \bm{\beta}^* = - \bm{H}_{\bm{\beta}}(\bm{\beta}^*)^{-1} \nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
+and finally
+$$\bm{\beta} = \bm{\beta}^* - \bm{H}_{\bm{\beta}}(\bm{\beta}^*)^{-1} \nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
+
+This tells us that the minimum of the cost-function, using any $\bm{\beta}^*$ is
+given as above. The problem with this is that this is using the
+Taylor-expansion, which is only reliable close to $\beta^*$ so chances are that
+using this formula will not give us a global minimum. However it generally tends
+to bring us closer to the minimum we are looking after. What we then usually do
+is to start with some initial guess for the optimal $\bm{\beta}$, which we
+denote $\bm{\beta}^{(0)}$. We then for $k=1, \dots$ let $\bm{\beta}^(k) =
+    \bm{\beta}^{(k-1)} - \bm{H}_{\bm{\beta}}(\bm{\beta}^{(k-1)})^{-1}
+    \nabla_{\bm{\beta}} C(\bm{\beta}^{(k-1)})$ all the way until we have convergence.
+
+\subsection{Schedulers}
+Something which often is problematic when using the Newton-Raphson method as
+described over is that we need to estimate the Hessian matrix and also invert
+it. First of all finding a way to calculate the second derivative can be a
+difficulty in and of itself, but it may also be computationally expensive to do
+so. Not only that we also need to invert this matrix which can also become very
+computationally expensive, and perhaps also numerically unstable with higher
+dimension hesse matrices. It's important to note that the Hessian matrix is a
+square matrix with the same dimensions as $\bm{\beta}$ in both width and height.
+Inverting this matrix then may not be a problem if we only have a few
+parameters, but for example when dealing with logistic regression with lots of
+features, or neural networks with lots of hidden nodes and layers this becomes
+unviable. We therefore will use various methods to approximate this hessian matrix.
+
+\subsubsection{Ordinary gradient descent}
+Ordinary gradient descent is a very simple way of approximating the inverse of
+the Hessian matrix. Here we simply approximate it with some numerical
+learning-rate, which we denote $\lambda$. This way our algorithm becomes:
+$$\bm{\beta}^(k) = \bm{\beta}^{(k-1)} - \lambda \nabla_{\bm{\beta}} C(\bm{\beta}^{(k-1)})$$
+Often we may just keep this fixed, but we can also make it depend on $k$. For
+example one may wish to start with a higher learning-rate and make this decrease
+with the number of iterations. This method I will refer to as using time-decay.
+When using gradient descent for training our model $\lambda$ then becomes a
+hyperparameter in our model. Often this hyperparameter is rather important in
+determining the fit of the model. We often want a rather high learning-rate as
+this will lead to faster convergence towards some optimum, however if we make it
+to big we may not get convergence at all. I will mainly throughout the code
+simply set up a grid of learning-rates and fit to all of them, and simply choose
+the learning-rate which gives the best performance, but there are countless
+other more advanced way of tuning this parameter.
+
+\subsubsection{Adam}
+
+
+
+\end{document}

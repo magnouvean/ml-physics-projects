@@ -11,8 +11,8 @@ from schedulers import Scheduler
 class Optimizer(abc.ABC):
     def __init__(
         self,
-        X,
-        y,
+        X: np.ndarray,
+        y: np.ndarray,
         scheduler: Scheduler,
         cost: Callable[[np.ndarray, np.ndarray, np.ndarray], float] | None = None,
         cost_grad: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray]
