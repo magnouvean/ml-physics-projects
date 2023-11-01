@@ -7,7 +7,7 @@ import numpy as np
 class Scheduler(abc.ABC):
     def __init__(
         self,
-        learning_rate,
+        learning_rate: float,
         timedecay: typing.Callable[[int], float] = lambda _: 1,
         use_momentum=False,
         momentum_alpha=0.9,

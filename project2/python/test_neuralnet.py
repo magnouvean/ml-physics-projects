@@ -1,10 +1,12 @@
 import pytest
+from project2.python.schedulers import SchedulerConstant
+from scheduler import *
 
 from neuralnet import *
 
 
 def test_correct_dimensions():
-    nn = NeuralNet((1, 2, 1), mse, mse_der)
+    nn = NeuralNet((1, 2, 1), mse, SchedulerConstant(0.1))
     assert nn._weights[0].shape == (1, 2)
     assert nn._weights[1].shape == (2, 1)
     assert len(nn._biases[0]) == 2
@@ -12,7 +14,7 @@ def test_correct_dimensions():
 
 
 def test_deep_correct_dimensions():
-    nn = NeuralNet((4, 89, 10, 32, 4), mse, mse_der)
+    nn = NeuralNet((4, 89, 10, 32, 4), mse, SchedulerConstant(0.1))
     assert nn._weights[0].shape == (4, 89)
     assert nn._weights[1].shape == (89, 10)
     assert nn._weights[2].shape == (10, 32)
@@ -27,9 +29,8 @@ def test_forward_propagration():
     nn = NeuralNet(
         (1, 2, 1),
         mse,
-        mse_der,
+        SchedulerConstant(0.1),
         activation_functions=lambda x: x,
-        activation_functions_der=lambda x: 1,
     )
     X = np.zeros(4).reshape((4, 1))
     nn._weights[0] = np.ones((1, 2))
@@ -39,6 +40,6 @@ def test_forward_propagration():
     X[2, 0] = 5
     X[3, 0] = -1
     hidden = X @ nn._weights[0] + nn._biases[0]
-    hidden = hidden @ nn._weights[1] + nn._biases[1]
+    actual = hidden @ nn._weights[1] + nn._biases[1]
     y_pred = nn.forward(X)
     assert y_pred == actual

@@ -5,7 +5,9 @@ from optimizer import Optimizer
 from schedulers import Scheduler
 
 
-def logistic_regression_cost_der(X: np.ndarray, y: np.ndarray, theta: np.ndarray):
+def logistic_regression_cost_grad(
+    X: np.ndarray, y: np.ndarray, theta: np.ndarray
+) -> np.ndarray:
     y_hat = sigmoid(X @ theta)
     return -X.T @ (y - y_hat)
 
@@ -16,7 +18,7 @@ class LogisticRegression:
 
     def fit(self, X: np.ndarray, y: np.ndarray, epochs=100) -> np.ndarray:
         optimizer = Optimizer(
-            X, y, self._scheduler, cost_grad=logistic_regression_cost_der
+            X, y, self._scheduler, cost_grad=logistic_regression_cost_grad
         )
         self._betas = optimizer.optimize(epochs)
 
