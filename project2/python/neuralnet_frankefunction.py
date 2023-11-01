@@ -1,7 +1,7 @@
 import numpy as np
+import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
-import tensorflow as tf
 
 from p2libs import *
 

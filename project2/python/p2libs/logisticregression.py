@@ -1,8 +1,8 @@
 import typing
+
 import numpy as np
 
 from .functions import l2regularizer
-
 from .neuralnet import sigmoid
 from .optimizer import Optimizer
 from .schedulers import Scheduler

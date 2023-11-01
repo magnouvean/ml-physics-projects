@@ -1,6 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from p2libs import NeuralNet, SchedulerAdam, sigmoid, cross_entropy, cross_entropy_grad
+
+from p2libs import (NeuralNet, SchedulerAdam, cross_entropy,
+                    cross_entropy_grad, sigmoid)
 
 breast_cancer_data = pd.read_csv("../data/wisconsin_data.csv", sep=",")
 X = breast_cancer_data.drop(["id", "diagnosis"], axis=1).dropna(axis=1).to_numpy()

@@ -1,5 +1,6 @@
-from p2libs import *
 import numpy as np
+
+from p2libs import *
 
 np.random.seed(1234)
 

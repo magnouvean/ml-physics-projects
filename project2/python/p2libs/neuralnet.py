@@ -4,8 +4,8 @@ import typing
 import jax
 import numpy as np
 
-from .schedulers import Scheduler
 from .functions import *
+from .schedulers import Scheduler
 
 
 class NeuralNet:
