@@ -29,10 +29,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.5)
 
 
 # Define the schedulers we need:
-scheduler_constant = SchedulerConstant(learning_rate=0.05, use_momentum=True)
-scheduler_rmsprop = SchedulerRMSProp(learning_rate=0.05)
+scheduler_constant = SchedulerConstant(learning_rate=0.5, use_momentum=True)
+scheduler_rmsprop = SchedulerRMSProp(learning_rate=0.0005)
 scheduler_adagrad = SchedulerAdagrad(learning_rate=0.05, use_momentum=True)
 scheduler_adam = SchedulerAdam(learning_rate=0.01)
+
 
 n_epochs = 200
 
@@ -47,9 +48,7 @@ for method_name, scheduler in [
         NeuralNet(
             (2, 100, 100, 1),
             scheduler=scheduler,
-            cost=mse,
-            activation_functions=sigmoid,
-            activation_functions_der=sigmoid_der,
+            cost=sse,
             lmbda=0.0001,
         )
         if method_name != "Sklearn"

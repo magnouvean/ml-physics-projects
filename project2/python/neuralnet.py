@@ -80,6 +80,13 @@ def identity_output_function(x: np.ndarray) -> np.ndarray:
     return x
 
 
+def identity_output_function_der(x: np.ndarray) -> np.ndarray:
+    """
+    A trivially simple derivative of the identity function, which works on numpy arrays
+    """
+    return np.ones_like(x)
+
+
 def l2regularizer(grad: np.ndarray) -> np.ndarray:
     return grad
 
@@ -133,7 +140,7 @@ class NeuralNet:
         # Set the cost and its derivative
         self._cost_function = cost
         self._cost_function_grad = (
-            jax.grad(self._cost_function, 1) if cost_grad is None else cost_grad
+            jax.grad(self._cost_function, 0) if cost_grad is None else cost_grad
         )
 
         # Set activation and output functions with derivatives
@@ -154,8 +161,11 @@ class NeuralNet:
         # Also set output function and it's derivative
         self._output_function = output_function
         if callable(output_function_der):
+            # If the function is callable we assume the output function has been
+            # calculated analytically and passed in correct.
             self._output_function_der = output_function_der
         else:
+            # If not we have to find it by looking at the output function.
             self._output_function_der = self._give_activation_func_der(output_function)
 
         # a-s are the values of the layers, while z-s are the values of the layers before activation
@@ -180,18 +190,27 @@ class NeuralNet:
     def _give_activation_func_der(
         self, activ_func: typing.Callable[[np.ndarray], np.ndarray]
     ) -> typing.Callable[[np.ndarray], np.ndarray]:
+        """Takes in a activation function and gives the derivative of it back
+
+        Args:
+            activ_func (typing.Callable[[np.ndarray], np.ndarray]): The activation function to find the derivative of.
+
+        Returns:
+            typing.Callable[[np.ndarray], np.ndarray]: The derivative of the activation function.
+        """
         if activ_func == sigmoid:
-            # Use the analytical derivative if we are using sigmoid
+            # Use the analytical derivative if we are using sigmoid.
             return sigmoid_der
         elif activ_func == relu:
-            # Also use the analytical derivative if we are using relu
+            # Also use the analytical derivative if we are using relu.
             return relu_der
         elif activ_func == identity_output_function:
-            # Identity function obviously has the constant 1 as derivative
-            return lambda _: 1
+            # Identity function obviously has the constant 1 as derivative.
+            return identity_output_function_der
         else:
-            # For anything else we can just use automatic differentiation
-            return jax.grad(activ_func)
+            # For anything else we can just use automatic differentiation. Here
+            # we want this to work on arrays as well so we use vmap.
+            return jax.vmap(jax.vmap(jax.grad(activ_func, 0)))
 
     def _forward_one(self, X: np.ndarray, i: int) -> tuple[np.ndarray, np.ndarray]:
         """
