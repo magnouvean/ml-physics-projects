@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from schedulers import Scheduler
+from .schedulers import Scheduler
 
 
 class Optimizer(abc.ABC):

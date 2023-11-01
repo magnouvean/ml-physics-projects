@@ -1,6 +1,20 @@
-from data import *
-from optimizer import Optimizer
-from schedulers import *
+from p2libs import *
+import numpy as np
+
+np.random.seed(1234)
+
+f = lambda x: 4 - 6 * x**2 + x**4
+x = np.linspace(-2, 2, 1001)
+X = np.c_[np.ones(len(x)), x, x**2, x**3, x**4]
+y = f(x)
+
+analytical = np.linalg.pinv(X.T @ X) @ X.T @ y
+
+
+def cost_mse_ols(X, y, theta):
+    a = y - X @ theta
+    return np.sum(a**2)
+
 
 # Calculate some sensible learning_rate
 hesse = 2 * X.T @ X
