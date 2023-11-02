@@ -147,6 +147,14 @@ class NeuralNet:
         return z, a
 
     def forward(self, X: np.ndarray) -> np.ndarray:
+        """Performs forward-propagation on some design matrix X.
+
+        Args:
+            X (np.ndarray): The design matrix.
+
+        Returns:
+            np.ndarray: The output of the forward propagation algorithm.
+        """
         self._h_0 = X
         h_prev = self._h_0
         for i in range(self._n_hidden_layers + 1):
@@ -154,6 +162,22 @@ class NeuralNet:
             h_prev = self._h[i]
 
         return self._h[-1]
+
+    def predict(self, X: np.ndarray, decision_boundary: float | None = None) -> np.ndarray:
+        """Like forward, except includes options for classification.
+
+        Args:
+            X (np.ndarray): The design matrix of observations to predict for.
+            decision_boundary (float | None): If given, predicts 1 if above the `decision_boundary`, and 0 if below.
+
+        Returns:
+            np.ndarray: Predictions of the neural net (categorical or numerical depending on `decision_boundary`)
+        """
+        y = self.forward(X)
+        if decision_boundary is None:
+            return y
+        else:
+            return np.array((y > decision_boundary), dtype=int)
 
     def _print_performance(self, X: np.ndarray, y: np.ndarray):
         """Print the cost of the current network for some given data.
