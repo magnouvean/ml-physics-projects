@@ -21,8 +21,8 @@ X = breast_cancer_data.drop(["id", "diagnosis"], axis=1).dropna(axis=1).to_numpy
 y = (breast_cancer_data["diagnosis"] == "B").to_numpy(dtype=int).reshape(X.shape[0], 1)
 
 # Train-test-validation splitting
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.4)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3)
+X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.4)
 
 # We first determine the amount of hidden layers by some greedy algorithm
 adam_learning_rate = 0.1
@@ -78,11 +78,11 @@ learning_rates = 10 ** (np.linspace(-6, 2, n_params_each))
 regularization_parameters = 10 ** (np.linspace(-9, -1, n_params_each))
 schedulers = [SchedulerConstant, SchedulerAdagrad, SchedulerAdam, SchedulerRMSProp]
 train_accuracies = []
-test_accuracies = []
+val_accuracies = []
 for Scheduler in schedulers:
     print(Scheduler)
     train_accuracy = np.zeros((len(learning_rates), len(regularization_parameters)))
-    test_accuracy = np.zeros_like(train_accuracy)
+    val_accuracy = np.zeros_like(train_accuracy)
     for i, learning_rate in enumerate(learning_rates):
         scheduler = (
             Scheduler(learning_rate)
@@ -106,21 +106,24 @@ for Scheduler in schedulers:
                 sgd_size=32,
             )
             y_pred_train = nn.predict(X_train, decision_boundary=0.5)
-            y_pred_test = nn.predict(X_test, decision_boundary=0.5)
+            y_pred_val = nn.predict(X_val, decision_boundary=0.5)
             train_accuracy[i, j] = np.mean(y_pred_train == y_train)
-            test_accuracy[i, j] = np.mean(y_pred_test == y_test)
+            val_accuracy[i, j] = np.mean(y_pred_val == y_val)
 
     train_accuracies.append(train_accuracy)
-    test_accuracies.append(test_accuracy)
+    val_accuracies.append(val_accuracy)
 
 for i in range(len(train_accuracies)):
     print(f"Scheduler number {i} max train accuracy: {np.max(train_accuracies[i])}")
-    print(f"Scheduler number {i} max test accuracy: {np.max(test_accuracies[i])}")
+    print(f"Scheduler number {i} max validation accuracy: {np.max(val_accuracies[i])}")
 
-best_pair = np.argmax(test_accuracies[2])
+
+# As we can see Adam, adagrad and rmsprop all did very good. We pick adam as our chosen one however, because it did as good as the others, and usually is the
+# best option.
+best_pair = np.argmax(val_accuracies[2])
 best_lr_index, best_rgl_index = (
-    best_pair // test_accuracies[2].shape[0],
-    best_pair % test_accuracies[2].shape[1],
+    best_pair // val_accuracies[2].shape[0],
+    best_pair % val_accuracies[2].shape[1],
 )
 print(f"Best learning_rate for best model: {learning_rates[best_lr_index]}")
 print(
@@ -139,11 +142,31 @@ nn = NeuralNet(
     lmbda=regularization_parameters[best_rgl_index],
 )
 nn.fit(X_train, y_train, epochs=2000, print_every=200, tol=1e-2)
-y_pred_val = nn.predict(X_val, decision_boundary=0.5)
-final_accuracy = np.mean(y_pred_val == y_val)
+y_pred_test = nn.predict(X_test, decision_boundary=0.5)
+final_accuracy = np.mean(y_pred_test == y_test)
 print(f"Final model accuracy: {final_accuracy}")
 
 
-# import tensorflow as tf
+# We do a similar fit using tensorflow here.
+import tensorflow as tf
 
-# nn = tf.keras.Sequential(tf.keras.Dense(100, 100, activation="relu"))
+# Define regularizer and optimizer. Here I had some problems when using the
+# best learning_rate from above, so I just use the default.
+l2reg = tf.keras.regularizers.l2(regularization_parameters[best_rgl_index])
+o = tf.keras.optimizers.Adam()
+
+# Create a model much alike above and train it
+nn = tf.keras.Sequential(
+    [
+        tf.keras.layers.Dense(100, activation="sigmoid", kernel_regularizer=l2reg),
+        tf.keras.layers.Dense(10, activation="sigmoid", kernel_regularizer=l2reg),
+        tf.keras.layers.Dense(1, activation="sigmoid", kernel_regularizer=l2reg),
+    ]
+)
+nn.compile(loss="binary_crossentropy", optimizer=o, metrics=["accuracy"])
+nn.fit(X_train, y_train, epochs=2000, validation_data=(X_val, y_val), verbose=False)
+
+# Evaluate the final tensorflow model finally
+y_pred_test = np.array(nn.predict(X_test) > 0.5, dtype=int)
+final_accuracy_tf = np.mean(y_pred_test == y_test)
+print(f"Final model accuracy (tensorflow): {final_accuracy_tf}")

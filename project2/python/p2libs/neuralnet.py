@@ -90,8 +90,8 @@ class NeuralNet:
         self._a = [np.zeros(layer_size) for layer_size in layer_sizes[1:]]
 
         # Initialize weights/biases
-        self.random_seed = random_seed
-        np.random.seed(random_seed)
+        self._random_seed = random_seed
+        np.random.seed(self._random_seed)
         self._weights = []
         self._biases = []
         for i, layer_size in enumerate(layer_sizes[1:]):
@@ -139,12 +139,12 @@ class NeuralNet:
             if i <= self._n_hidden_layers
             else self._output_function
         )
-        z = np.array(X @ self._weights[i - 1])
-        for j in range(z.shape[0]):
-            z[j, :] += self._biases[i - 1]
-        a = activation_func(z)
+        a = np.array(X @ self._weights[i - 1])
+        for j in range(a.shape[0]):
+            a[j, :] += self._biases[i - 1]
+        h = activation_func(a)
 
-        return z, a
+        return a, h
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """Performs forward-propagation on some design matrix X.
@@ -163,7 +163,9 @@ class NeuralNet:
 
         return self._h[-1]
 
-    def predict(self, X: np.ndarray, decision_boundary: float | None = None) -> np.ndarray:
+    def predict(
+        self, X: np.ndarray, decision_boundary: float | None = None
+    ) -> np.ndarray:
         """Like forward, except includes options for classification.
 
         Args:
@@ -234,6 +236,7 @@ class NeuralNet:
         print_every: int = 0,
         tol: float = 1e-4,
         n_iter_no_change: int = 10,
+        seed: int = None,
     ):
         """Train the neural network to some data
 
@@ -247,6 +250,8 @@ class NeuralNet:
             tol (float, optional): Determines convergence if the maximum difference over the last `n_iter_no_change` is less than this. Defaults to 1e-4.
             n_iter_no_change (int, optional): The amount of iterations back we look for convergence over. Default to 10.
         """
+        # Set the seed again
+        np.random.seed(seed if not seed is None else self._random_seed)
         # Reset all the schedulers
         for k in range(self._n_hidden_layers + 1):
             self._scheduler_weights[k].reset()
