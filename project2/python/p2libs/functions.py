@@ -24,14 +24,28 @@ def relu(x: np.ndarray) -> np.ndarray:
     """
     The relu activation function.
     """
-    return (x > 0) * x
+    return np.where(x > np.zeros_like(x), x, np.zeros_like(x))
 
 
 def relu_der(x: np.ndarray) -> np.ndarray:
     """
     The derivative of the relu activation function.
     """
-    return (x > 0) * 1
+    return np.where(x > np.zeros_like(x), 1, 0)
+
+
+def lrelu(x: np.ndarray, delta=1e-3) -> np.ndarray:
+    """
+    The leaky relu activation function.
+    """
+    return np.where(x > np.zeros_like(x), x, delta * x)
+
+
+def lrelu_der(x: np.ndarray, delta=1e-3):
+    """
+    The derivative of the leaky relu activation function.
+    """
+    return np.where(x > 0, 1, delta)
 
 
 def sse(y_pred: np.ndarray, y: np.ndarray) -> float:

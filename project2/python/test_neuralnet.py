@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 
-from p2libs import NeuralNet, SchedulerAdam, SchedulerConstant, mse, sse, sse_grad
+from p2libs import (NeuralNet, SchedulerAdam, SchedulerConstant, mse, sse,
+                    sse_grad)
 
 
 def test_correct_dimensions():

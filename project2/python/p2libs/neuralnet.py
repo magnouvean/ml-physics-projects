@@ -121,6 +121,9 @@ class NeuralNet:
         elif activ_func == relu:
             # Also use the analytical derivative if we are using relu.
             return relu_der
+        elif activ_func == lrelu:
+            # Also use the analytical derivative if we are using leaky relu.
+            return lrelu_der
         elif activ_func == identity_output_function:
             # Identity function obviously has the constant 1 as derivative.
             return identity_output_function_der

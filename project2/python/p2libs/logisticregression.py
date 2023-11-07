@@ -11,7 +11,7 @@ from .schedulers import Scheduler
 def logistic_regression_cost_grad(
     X: np.ndarray, y: np.ndarray, beta: np.ndarray
 ) -> np.ndarray:
-    y_hat = sigmoid(X @ beta)
+    y_hat = sigmoid(X @ beta)  # .reshape((len(y), 1))
     return -X.T @ (y - y_hat)
 
 
