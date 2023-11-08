@@ -50,4 +50,4 @@ class LogisticRegression:
         self, X: np.ndarray, probs=True, decision_boundary: float = 0.5
     ) -> np.ndarray:
         p = sigmoid(X @ self._betas)
-        return p if probs else p > decision_boundary
+        return p if probs else np.array(p > decision_boundary, dtype=int)

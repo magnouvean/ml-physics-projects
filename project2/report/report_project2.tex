@@ -45,16 +45,16 @@ tasks. Often
 \section{Methods}
 \subsection{The Newton-Raphson method}
 Very central to the numerical optimization we do is the Newton-Raphson method.
-This is a method which allows us to minimize some function by using the gradient
-of the function. The method has it's origins in the Taylor-expansion of the
-function we wish to minimize. In our case we use this to minimize cost-functions
-for the models we use. Let $C(\bm{\beta}; \bm{X}, \bm{y})$ be some general
-cost-function depending on some design matrix $\bm{X}$ and a response vector
-$\bm{y}$. We wish to find the $\bm{\beta}$ which minimizes this cost, given
-$\bm{X}$ and $\bm{y}$, i.e. we minimize $C$ with respect to $\bm{\beta}$, while
-keeping $\bm{X}$ and $\bm{y}$ fixed. We can then approximate the cost using a
-Taylor-expansion of second order around some value $\bm{\beta}^*$, in which case
-we get:
+This is a method which allows us to find the minimum of some function by using
+the gradient its gradient. The method has it's origins in the Taylor-expansion
+of the function we wish to minimize. In our case we use this to minimize
+cost-functions for the models we use. Let $C(\bm{\beta}; \bm{X}, \bm{y})$ be
+some general cost-function depending on some design matrix $\bm{X}$ and a
+response vector $\bm{y}$. We wish to find the $\bm{\beta}$ which minimizes this
+cost, given $\bm{X}$ and $\bm{y}$, i.e. we minimize $C$ with respect to
+$\bm{\beta}$, while keeping $\bm{X}$ and $\bm{y}$ fixed. We can then approximate
+the cost using a Taylor-expansion of second order around some value
+$\bm{\beta}^*$, in which case we get:
 \begin{align*}
     C(\bm{\beta}, \bm{X}, \bm{y}) & \approx C(\bm{\beta}^*; \bm{X}, \bm{y}) + \frac{\partial C(\bm{\beta}^*; \bm{X}, \bm{y})}{\partial \beta}(\beta - \bm{\beta}^*) + \frac{1}{2} \frac{\partial^2 C(\bm{\beta}; \bm{X}, \bm{y})}{\partial^2 \bm{\beta}}(\bm{\beta} - \bm{\beta}^*)^2 \\
                                   & = C(\bm{\beta}^*; \bm{X}, \bm{y}) + \nabla_{\bm{\beta}} C(\bm{\beta}^*) (\beta - \bm{\beta}^*) + \frac{1}{2} \bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*)^2
@@ -80,11 +80,11 @@ Taylor-expansion, which is only reliable close to $\beta^*$ so chances are that
 using this formula will not give us a global minimum. However it generally tends
 to bring us closer to the minimum we are looking after. What we then usually do
 is to start with some initial guess for the optimal $\bm{\beta}$, which we
-denote $\bm{\beta}^{(0)}$. We then for $k=1, \dots$ let $\bm{\beta}^(k) =
+denote $\bm{\beta}^{(0)}$. We then for $k=1, \dots$ let $\bm{\beta}^{(k)} =
     \bm{\beta}^{(k-1)} - \bm{H}_{\bm{\beta}}(\bm{\beta}^{(k-1)})^{-1}
     \nabla_{\bm{\beta}} C(\bm{\beta}^{(k-1)})$ all the way until we have convergence.
 
-\subsection{Schedulers}
+\subsection{Learning-rate schedulers}
 Something which often is problematic when using the Newton-Raphson method as
 described over is that we need to estimate the Hessian matrix and also invert
 it. First of all finding a way to calculate the second derivative can be a
@@ -116,6 +116,8 @@ the learning-rate which gives the best performance, but there are countless
 other more advanced way of tuning this parameter.
 
 \subsubsection{Adam}
+
+\section{Results}
 
 \bibliography{./sources.bib}
 
