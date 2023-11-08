@@ -13,29 +13,34 @@
 \bibliographystyle{unsrt}
 
 \section{Abstract}
-We tested out performances of neural networks for regression and binary
-classification purposes, and compared this with the models we explored in the
-previous project \cite{githubrepoproject1}, as well as our own implementation of
-logistic regression. We here implemented our own neural network from scratch,
-basing the training on the backpropagation-algorithm. We also tested out various
-different optimization techniques for optimizing the loss, including stochastic
-gradient descent and the usage of different schedulers. We tested out regression
-on the franke-function which we also studied in project 1
-\cite{githubrepoproject1}, while for classification we used breast cancer data
-from wisconsin \cite{sklearncancerdata} \cite{breastcancerwisconsin}. What we
-saw was that for the franke-function with regularization we did not get any
-major performance gains compared to the simpler linear models we tested in
-project 1 \cite{githubrepoproject1}. For the cancer data we also saw that while
-the neural networks did perform well, logistic regression with some
-regularization also here performed comparably. Throughout the project we have
+In this project we tested out performances of neural networks for regression and
+binary classification purposes, and compared this with the models we explored in
+the previous project \cite{githubrepoproject1}, as well as our own
+implementation of logistic regression. We here implemented our own neural
+network code from scratch, basing the training on the backpropagation-algorithm.
+We also tested out various different optimization techniques for optimizing the
+loss, including stochastic gradient descent and the usage of different
+schedulers, like adam, rmsprop and adagrad. We tested out regression on the
+franke-function which we also studied in project 1 \cite{githubrepoproject1},
+while for classification we used breast cancer data from wisconsin
+\cite{sklearncancerdata} \cite{breastcancerwisconsin}. What we saw was that for
+the franke-function with regularization we did not get any major performance
+gains compared to the simpler linear models we tested in project 1
+\cite{githubrepoproject1}. For the cancer data we also saw that while the neural
+networks did perform well, so did logistic regression with some regularization,
+so there was little to no gain here either. Throughout the project we have
 manifested again that just because neural networks might be powerful and
-impressive in and of themselves, they are not necessarily the best option
-always. We also saw how things like hidden layer sizes and activation functions
-didn't matter all that much for the end performance, while regularization and
-the learning-rate/learning-rate-scheduler mattered a lot for the performance in
-the end.
+impressive in and of themselves, they are not necessarily the best anyhow. We
+also saw which parts of a neural net was most instrumental for good model
+performance, with especially the learning-rate and regularization parameter
+being the most instrumental, while activation functions and hidden layer sizes
+didn't matter all that much.
 
 \section{Introduction}
+In the last $10$ or so years, neural networks have really exploded in
+popularity (find source). They have proved to be very good for various tasks
+like image and speech recognition, natural language processing and other complex
+tasks. Often
 
 \section{Methods}
 \subsection{The Newton-Raphson method}

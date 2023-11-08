@@ -6,10 +6,20 @@ import pandas as pd
 import seaborn as sns
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-from p2libs import (NeuralNet, SchedulerAdagrad, SchedulerAdam,
-                    SchedulerConstant, SchedulerRMSProp, cross_entropy,
-                    cross_entropy_grad, lrelu, relu, sigmoid)
+from p2libs import (
+    NeuralNet,
+    SchedulerAdagrad,
+    SchedulerAdam,
+    SchedulerConstant,
+    SchedulerRMSProp,
+    cross_entropy,
+    cross_entropy_grad,
+    lrelu,
+    relu,
+    sigmoid,
+)
 
 # It is important to set the seed for reproducibility
 np.random.seed(1234)
@@ -21,9 +31,14 @@ y = y.reshape(len(y), 1)
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3)
 X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.4)
 
-# We first determine the amount of hidden layers by some greedy algorithm
-adam_learning_rate = 0.1
-scheduler = SchedulerAdam(adam_learning_rate)
+# Scale the data using standard-scaling
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_val = sc.transform(X_val)
+X_test = sc.transform(X_test)
+
+# We first determine the amount of hidden layers which gives fastest convergence on the training data.
+learning_rates = 10 ** (np.linspace(-7, 2, 10))
 n_hidden_layers_sizes = [
     (100,),
     (10, 10),
@@ -31,56 +46,51 @@ n_hidden_layers_sizes = [
     (50, 10),
     (10, 10, 10),
 ]
-accuracies = np.zeros(len(n_hidden_layers_sizes))
+accuracies = np.zeros((len(n_hidden_layers_sizes), len(learning_rates)))
 final_losses = np.zeros_like(accuracies)
 for i, hidden_layers_size in enumerate(n_hidden_layers_sizes):
-    nn = NeuralNet(
-        layer_sizes=(X.shape[1], *hidden_layers_size, 1),
-        cost=cross_entropy,
-        cost_grad=cross_entropy_grad,
-        scheduler=scheduler,
-        activation_functions=sigmoid,
-        output_function=sigmoid,
-    )
-    # We give each 100 epochs and see which one gives us the best classification accuracy
-    nn.fit(
-        X_train,
-        y_train,
-        epochs=500,
-        sgd=True,
-        sgd_size=16,
-    )
-    y_train_pred_prob = nn.predict(X_train)
-    y_train_pred = nn.predict(X_train, decision_boundary=0.5)
+    for j, learning_rate in enumerate(learning_rates):
+        scheduler = SchedulerAdam(learning_rate)
+        nn = NeuralNet(
+            layer_sizes=(X.shape[1], *hidden_layers_size, 1),
+            cost=cross_entropy,
+            cost_grad=cross_entropy_grad,
+            scheduler=scheduler,
+            activation_functions=sigmoid,
+            output_function=sigmoid,
+        )
+        # We give each 100 epochs and see which one gives us the best classification accuracy
+        nn.fit(
+            X_train,
+            y_train,
+            epochs=200,
+            sgd=True,
+            sgd_size=16,
+        )
+        y_train_pred_prob = nn.predict(X_train)
+        y_train_pred = nn.predict(X_train, decision_boundary=0.5)
 
-    # Calculate metrics and fill in.
-    accuracy = np.mean((y_train_pred == y_train))
-    accuracies[i] = accuracy
-    final_losses[i] = cross_entropy(y_train_pred_prob, y_train)
+        # Calculate metrics and fill in.
+        accuracy = np.mean((y_train_pred == y_train))
+        accuracies[i, j] = accuracy
+        final_losses[i, j] = cross_entropy(y_train_pred_prob, y_train)
 
-print(f"Accuracies:")
+# Show best accuracy/end of training loss for each layer size and which learning_rate this was acquired by.
+print("Best accuracies:")
 for n_hidden_layers, acc in zip(n_hidden_layers_sizes, accuracies):
-    print(f"{n_hidden_layers}: {acc}")
-print(f"\n\nEnd of training loss:")
+    print(
+        f"{n_hidden_layers}: {np.nanmax(acc)}, eta={learning_rates[np.nanargmax(acc)]}"
+    )
+
+print("End of training loss:")
 for n_hidden_layers, loss in zip(n_hidden_layers_sizes, final_losses):
-    print(f"{n_hidden_layers}: {loss}")
+    print(
+        f"{n_hidden_layers}: {np.nanmin(loss)}, eta={learning_rates[np.nanargmin(loss)]}"
+    )
 
-# What we can see is that we actually get the best results using only a single
-# layer with 100 neurons (out of the ones we tested), with this being the best
-# in terms of training loss at the end, and accuracy on the training data.
-#
-# We now set the sizes of the hidden layers here and move forward (this should
-# probably be set automatically by
-# n_hidden_layers_sizes[np.argmin(final_losses)], but I do it like this for the
-# sake of readability and debugability).
-best_hidden_layers = (X.shape[1], 100, 1)
+# We see that all of the models eventually are able to classify all the training-data correctly (though this is likely very overfitted). Looking at how quick the models have learnt however we see that the (100, 100) model has yielded the best result.
+best_hidden_layers = (X.shape[1], 100, 100, 1)
 
-
-# We define a grid of learning_rates and regularization parameters to perform a
-# grid-search on.
-n_params_each = 9
-learning_rates = 10 ** (np.linspace(-6, 2, n_params_each))
-regularization_parameters = 10 ** (np.linspace(-9, -1, n_params_each))
 
 # We now test some activation functions for the various learning_rates and only
 # using adam.
@@ -105,7 +115,7 @@ for i, activ_func in enumerate(activation_functions):
         nn.fit(
             X_train,
             y_train,
-            epochs=1000,
+            epochs=200,
             sgd=True,
             sgd_size=16,
         )
@@ -117,18 +127,25 @@ for i, activ_func in enumerate(activation_functions):
         accuracies[i, j] = accuracy
         final_losses[i, j] = cross_entropy(y_train_pred_prob, y_train)
 
-print(f"Accuracies:")
+print("Accuracies:")
 for activ_func, accs in zip(n_hidden_layers_sizes, accuracies):
-    print(f"{activ_func} max acc: {accs.max()}")
-print(f"\n\nEnd of training loss:")
+    print(
+        f"{activ_func} max acc: {np.nanmax(accs)}, lr={learning_rates[np.nanargmax(accuracies)]}"
+    )
+print("\n\nEnd of training loss:")
 for activ_func, losses in zip(n_hidden_layers_sizes, final_losses):
-    print(f"{activ_func}: {losses.max()}")
+    print(
+        f"{activ_func}: {np.nanmin(losses)}, lr={learning_rates[np.nanargmin(losses)]}"
+    )
 
 
 # After having chosen the hidden layers and activation function we now test the
 # different schedulers on the various learning-rates and
 # regularization_parameters.
 schedulers = [SchedulerConstant, SchedulerAdagrad, SchedulerAdam, SchedulerRMSProp]
+
+# We then have to define a grid of regularization parameters to test the accuracy on.
+regularization_parameters = 10 ** (np.linspace(-9, 0, len(learning_rates)))
 
 # These should be lists containing matrices with element (i, j) being the
 # accuracy achieved on learning_rate nr i and regularization_parameter j.
@@ -172,8 +189,8 @@ for Scheduler in schedulers:
 
 scheduler_names = ("SGD", "Adagrad", "Adam", "RMSProp")
 for i in range(len(train_accuracies)):
-    print(f"{scheduler_names[i]} max train accuracy: {train_accuracies[i].max()}")
-    print(f"{scheduler_names[i]} max validation accuracy: {val_accuracies[i].max()}")
+    print(f"{scheduler_names[i]} max train accuracy: {np.max(train_accuracies[i])}")
+    print(f"{scheduler_names[i]} max validation accuracy: {np.max(val_accuracies[i])}")
 
 # Create some heatmaps for the parameters.
 fig_train, ax_train = plt.subplots(2, 2)

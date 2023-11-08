@@ -71,17 +71,22 @@ def mse(y_pred: np.ndarray, y: np.ndarray) -> float:
     return sse(y_pred, y) / len(y)
 
 
-def cross_entropy(y_pred: np.ndarray, y: np.ndarray) -> float:
+def cross_entropy(y_pred: np.ndarray, y: np.ndarray, delta=1e-10) -> float:
     """
     The cross-entropy. Minimizing this is the equivalent of maximizing the
     likelihood. May be used as a cost-function when we have binary
     classification.
     """
-    return -np.sum(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
+    return -np.sum(y * np.log(y_pred + delta) + (1 - y) * np.log(1 - y_pred + delta))
 
 
-def cross_entropy_grad(y_pred: np.ndarray, y: np.ndarray) -> np.ndarray:
-    return (y_pred - y) / ((1 - y_pred) * y_pred)
+def cross_entropy_grad(y_pred: np.ndarray, y: np.ndarray, delta=1e-10) -> np.ndarray:
+    # When using relu/lrelu or other activation functions with the sigmoid some
+    # of the predictions can initially become very close to 0/1 in which case we
+    # could end up dividing by 0 in practice. To avoid this we simply clip the
+    # predictions to not become too close to 0/1.
+    y_pred_clipped = np.clip(y_pred, delta, 1 - delta)
+    return (y_pred_clipped - y) / ((1 - y_pred_clipped) * y_pred_clipped)
 
 
 def identity_output_function(x: np.ndarray) -> np.ndarray:

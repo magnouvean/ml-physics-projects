@@ -26,6 +26,7 @@ class NeuralNet:
         output_function_der: typing.Callable[[np.ndarray], np.ndarray] | None = None,
         lmbda: float = 0.0,
         regularizer: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer,
+        biases_init: float = 0.1,
     ):
         # Hidden layers is the sizes minus input and output layers
         self._n_hidden_layers = len(layer_sizes) - 2
@@ -100,7 +101,7 @@ class NeuralNet:
             # corresponding layer_size, so i is the index of the previous layer.
             prev_layer_size = layer_sizes[i]
             layer_weights = np.random.randn(prev_layer_size, layer_size)
-            layer_biases = np.zeros(layer_size)
+            layer_biases = np.zeros(layer_size) + biases_init
             self._weights.append(layer_weights)
             self._biases.append(layer_biases)
 
