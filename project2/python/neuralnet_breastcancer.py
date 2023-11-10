@@ -5,23 +5,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.datasets import load_breast_cancer
+from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import ConfusionMatrixDisplay
 
-from p2libs import (
-    NeuralNet,
-    SchedulerAdagrad,
-    SchedulerAdam,
-    SchedulerConstant,
-    SchedulerRMSProp,
-    cross_entropy,
-    cross_entropy_grad,
-    lrelu,
-    relu,
-    sigmoid,
-    fig_directory,
-)
+from p2libs import (NeuralNet, SchedulerAdagrad, SchedulerAdam,
+                    SchedulerConstant, SchedulerRMSProp, cross_entropy,
+                    cross_entropy_grad, fig_directory, lrelu, relu, sigmoid)
 
 # It is important to set the seed for reproducibility
 np.random.seed(1234)
@@ -228,8 +218,8 @@ for i in range(4):
     )
     for ax in (ax_train[r, c], ax_val[r, c]):
         ax.set_title(scheduler_names[i])
-        ax.set_xlabel("$log10(\eta)$")
-        ax.set_ylabel("$log10(\lambda)$")
+        ax.set_xlabel("log10($\eta$)")
+        ax.set_ylabel("log10($\lambda$)")
 
 # Adjust the margins between subplots so that the axis labels become readable.
 fig_train.subplots_adjust(hspace=0.8, wspace=0.5, bottom=0.15)

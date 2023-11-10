@@ -281,7 +281,7 @@ class NeuralNet:
                     )
                 )
             )
-            if not max_diff is None and max_diff < tol:
+            if max_diff is not None and max_diff < tol:
                 print(f"Convergence after {i} epochs")
                 break
             self._cost_history.append(current_cost)
