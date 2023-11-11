@@ -89,14 +89,14 @@ Something which often is problematic when using the Newton-Raphson method as
 described over is that we need to estimate the Hessian matrix and also invert
 it. First of all finding a way to calculate the second derivative can be a
 difficulty in and of itself, but it may also be computationally expensive to do
-so. Not only that we also need to invert this matrix which can also become very
+so. Not only that, we also need to invert this matrix which can also become very
 computationally expensive, and perhaps also numerically unstable with higher
-dimension hesse matrices. It's important to note that the Hessian matrix is a
-square matrix with the same dimensions as $\bm{\beta}$ in both width and height.
-Inverting this matrix then may not be a problem if we only have a few
-parameters, but for example when dealing with logistic regression with lots of
-features, or neural networks with lots of hidden nodes and layers this becomes
-unviable. We therefore will use various methods to approximate this hessian matrix.
+dimensional hesse matrices (remember that the Hessian matrix is a square matrix
+with the same dimensions as $\bm{\beta}$ in both width and height).  Inverting
+this matrix then may not be a problem if we only have a few parameters, but for
+example when dealing with logistic regression with lots of features, or neural
+networks with lots of hidden nodes and layers this becomes unviable. We
+therefore will use various methods to approximate this hessian matrix.
 
 \subsubsection{Ordinary gradient descent}
 Ordinary gradient descent is a very simple way of approximating the inverse of
@@ -115,7 +115,132 @@ simply set up a grid of learning-rates and fit to all of them, and simply choose
 the learning-rate which gives the best performance, but there are countless
 other more advanced way of tuning this parameter.
 
+\subsection{Momentum}
+One problem with gradient descent which one quickly sees is that is can be quite
+slow to learn. Ideally we would like the model to minimize the cost/loss as
+quick as possible, and therefore one might want to use methods designed to
+accelerate this learning process. One relatively simple such method is using a
+momentum, which often accelrates learning quite drastically especially in cases
+with high curvatures and small consistent or noisy gradients
+\cite[s.~8.3.2]{goodfellow2016deep}. This method introduces a variable $\bm{v}$
+which describes the direction and speed which the parameter $\theta$ is moving
+in parameter space \cite[s.~8.3.2]{goodfellow2016deep}, much like the role of
+velocity in physics. To calculate this $\bm{v}$ we need a hyperparameter $\alpha
+    \in [0, 1)$ and we initialize $\bm{v} = \bm{0}$. Then for each
+learning-iteration we update $\bm{v}$ the following way:
+$$\bm{v} = \alpha \bm{v}_{prev} - \eta \Delta_{\bm{\theta}} C(\bm{x}, \bm{y}, \bm{\theta})$$
+We then can simply update the $\bm{\theta}$ as follows:
+$$\bm{\theta} = \bm{\theta}_{prev} + \bm{v}$$
+We then see that the value of the $\bm{v}$ will depend on the current cost-gradient
+w.r.t. $\bm{\theta}$ as well as the previous $\bm{v}$, which again depends on
+the previous cost-gradient w.r.t. $\bm{\theta}$ and the previous previous
+$\bm{v}$ and so on. Therefore we see that $\bm{v}$ is influenced by all the
+previous cost-gradients, weighted differently, in contrast to just using the
+current cost-gradient, and granted they point in a somewhat similar direction,
+the $\bm{v}$ will grow bigger and bigger in size. It is therefore not that
+difficult to see that this can give quicker learning.
+
+
+Keep in mind that in theory there is nothing stopping us from combining momentum
+with any of the other methods we discuss here, however methods like adam already
+incorporates a form of momentum \cite[s.~8.5.3]{goodfellow2016deep}, so we might
+not get much quicker learning by using it, if any at all.
+
+\subsubsection{AdaGrad}
+AdaGrad is another way designed to give faster learning. This is an algorithm
+which uses adaptive learning-rates. These have a difference in that each axis of
+the parameter-space $\bm{\theta}$ essentially get a separate learning-rate
+\cite[s.~8.5]{goodfellow2016deep}, while these separate learning-rates change/adapt
+throughout the learning process, which is a different approach to using momentum.
+AdaGrad is a rather simple way of achieving a good such adaptive learning-rate.
+It scales the parameters with with big updates, and scales up the ones with
+small corresponding updates up. For AdaGrad we introduce one variable $\bm{r}$
+which we initially set to $\bm{0}$, as well as a small constant $\delta$ which
+we typically set to $10^{-7}$. The algorithms is as follows until the
+stopping-criterion is met:
+\begin{itemize}
+    \item Sample a minibatch of $m$ observations from the training-set
+          consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
+          variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
+    \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
+          this minibatch.
+    \item Update the $\bm{r}$ to become $\bm{r}_{prev} + \bm{g} \odot \bm{g}$
+          ($\odot$ being the Hadamard-product)
+    \item Calculate $\Delta \bm{\theta} = -\eta
+              \frac{1}{\delta + \sqrt{\bm{r}}} \odot \bm{g}$ and update
+          $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
+              \bm{\theta}_{prev} + \Delta \bm{\theta}$).
+
+\end{itemize}
+
+\subsubsection{RMSProp}
+RMSProp is much like AdaGrad, but is designed to be more robust for
+cost-functions with very complex structures like neural nets. Unlike AdaGrad
+where we shrink the learning-rates using the sizes of all the previous partial
+derivatives of the cost-function for all the axis RMSProp focuses less on the
+history of gradients from very long ago, but otherwise using much of the same
+approach. The RMSProp algorithm requires therefore a decay-rate $\rho$ as a
+hyperparameter as well, along the $\bm{r}$ which we again initialize to be
+$\bm{0}$, as well as a small constant $\delta$, which typically is set to
+$10^{-6}$. Then we do the following until the stopping-criterion is met:
+\begin{itemize}
+    \item Sample a minibatch of $m$ observations from the training-set
+          consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
+          variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
+    \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
+          this minibatch.
+    \item Update the $\bm{r}$ to become $\rho \bm{r}_{prev} + (1 - \rho) \bm{g} \odot \bm{g}$
+          ($\odot$ being the Hadamard-product)
+    \item Calculate $\Delta \bm{\theta} = -\eta \frac{1}{\sqrt{\delta + \bm{r}}}
+              \odot \bm{g}$ and update $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
+              \bm{\theta}_{prev} + \Delta \bm{\theta}$).
+\end{itemize}
+
 \subsubsection{Adam}
+Adam is a very popular learning-rate scheduler, which is probably the method we
+will tackle which most often gives the best results. Our implementation is
+essentially as described in algorithm 8.7 in \textit{Deep Learning}
+\cite[s.~8.6.1]{goodfellow2016deep}. We start the algorithm by initializing the
+parameter $\bm{\theta}$ which we would like to optimize the cost/loss w.r.t.
+(typically we initialize this by drawing it randomly from for example the normal
+distribution which is what we have done in this project). We also set beforehand
+$\bm{s} = \bm{0}$, $\bm{r} = \bm{0}$ and $t=0$. Here the algorithms is as
+follows until we meet the stopping criterion:
+\begin{itemize}
+    \item Sample a minibatch of $m$ observations from the training-set
+          consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
+          variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
+    \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
+          this minibatch.
+    \item Increment $t$ by $1$ (i.e. set $t=t_{prev}+1$).
+    \item Update $\bm{s}$ to become $\rho_1 \bm{s}_{prev} + (1 - \rho_1)\bm{g}$.
+    \item Update $\bm{r}$ to become $\rho_2 \bm{r}_{prev} + (1 - \rho_2)g \odot
+              g$ ($\odot$ again being the Hadamard-product).
+    \item Correct the bias in the first moment by: $\hat{\bm{s}} = \frac{\bm{s}}{1 - \rho_1^t}$.
+    \item Correct the bias in the second moment by: $\hat{\bm{r}} = \frac{\bm{r}}{1 - \rho_2^t}$.
+    \item Finally calculate $\Delta \bm{\theta} = -\eta
+              \frac{\hat{\bm{s}}}{\sqrt{\hat{\bm{r}}} + \delta}$ and update $\bm{\theta}$
+          accordingly (i.e. set $\bm{\theta} = \bm{\theta}_{prev} + \Delta
+              \bm{\theta}$).
+\end{itemize}
+Where $\eta$ is the step-size (or learning-rate as we will call it), $\rho_1$
+and $\rho_2$ are the decay-rate which must be in $[0, 1)$ (typically we set the
+defaults to $\rho_1 = 0.9$ and $\rho_2 = 0.999$), $\delta$ is just a small
+constant (we set it to $10^{-8}$). Note that we can in theory drop the minibatch
+sampling and still get a functioning algorithm, but this will often give much
+worse results.
+
+\subsection{Automatic differentiation}
+
+\subsection{Neural networks}
+There are many different implementations of neural networks out there. We will
+in this project focus on one of the simplest ones to implement, namely the
+multi-layer-perceptron.
+
+\subsubsection{Forward propagation algorithm}
+The forward propagation algorithm is rather simple.
+
+\subsubsection{Backward propagation algorithm}
 
 \section{Results}
 
