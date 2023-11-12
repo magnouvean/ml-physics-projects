@@ -56,16 +56,16 @@ $\bm{\beta}$, while keeping $\bm{X}$ and $\bm{y}$ fixed. We can then approximate
 the cost using a Taylor-expansion of second order around some value
 $\bm{\beta}^*$, in which case we get:
 \begin{align*}
-    C(\bm{\beta}, \bm{X}, \bm{y}) & \approx C(\bm{\beta}^*; \bm{X}, \bm{y}) + \frac{\partial C(\bm{\beta}^*; \bm{X}, \bm{y})}{\partial \beta}(\beta - \bm{\beta}^*) + \frac{1}{2} \frac{\partial^2 C(\bm{\beta}; \bm{X}, \bm{y})}{\partial^2 \bm{\beta}}(\bm{\beta} - \bm{\beta}^*)^2 \\
-                                  & = C(\bm{\beta}^*; \bm{X}, \bm{y}) + \nabla_{\bm{\beta}} C(\bm{\beta}^*) (\beta - \bm{\beta}^*) + \frac{1}{2} \bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*)^2
+      C(\bm{\beta}, \bm{X}, \bm{y}) & \approx C(\bm{\beta}^*; \bm{X}, \bm{y}) + \frac{\partial C(\bm{\beta}^*; \bm{X}, \bm{y})}{\partial \beta}(\beta - \bm{\beta}^*) + \frac{1}{2} \frac{\partial^2 C(\bm{\beta}; \bm{X}, \bm{y})}{\partial^2 \bm{\beta}}(\bm{\beta} - \bm{\beta}^*)^2 \\
+                                    & = C(\bm{\beta}^*; \bm{X}, \bm{y}) + \nabla_{\bm{\beta}} C(\bm{\beta}^*) (\beta - \bm{\beta}^*) + \frac{1}{2} \bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*)^2
 \end{align*}
 Where $\nabla_{\bm{\beta}} C$ is the gradient of $C$ w.r.t. $\bm{\beta}$ and
 $\bm{H}_{\bm{\beta}}$ is the Hesse-matrix (second derivative) of $C$ w.r.t.
 $\bm{\beta}$. This should be a good approximation for $C$ sufficiently close to
 $\bm{\beta}^*$. We then can find the derivative of this w.r.t. $\bm{\beta}$:
 \begin{align*}
-    \frac{\partial C(\bm{\beta}, \bm{X}, \bm{y})}{\partial \bm{\beta}} & \approx
-    \nabla_{\bm{\beta}} C(\bm{\beta}^*) + \bm{H}_{\bm{\beta}}(\bm{\beta}^*)(\bm{\beta} - \bm{\beta}^*) \\
+      \frac{\partial C(\bm{\beta}, \bm{X}, \bm{y})}{\partial \bm{\beta}} & \approx
+      \nabla_{\bm{\beta}} C(\bm{\beta}^*) + \bm{H}_{\bm{\beta}}(\bm{\beta}^*)(\bm{\beta} - \bm{\beta}^*) \\
 \end{align*}
 If we set this to $0$ we further get:
 $$\bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*) = -\nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
@@ -81,8 +81,8 @@ using this formula will not give us a global minimum. However it generally tends
 to bring us closer to the minimum we are looking after. What we then usually do
 is to start with some initial guess for the optimal $\bm{\beta}$, which we
 denote $\bm{\beta}^{(0)}$. We then for $k=1, \dots$ let $\bm{\beta}^{(k)} =
-    \bm{\beta}^{(k-1)} - \bm{H}_{\bm{\beta}}(\bm{\beta}^{(k-1)})^{-1}
-    \nabla_{\bm{\beta}} C(\bm{\beta}^{(k-1)})$ all the way until we have convergence.
+      \bm{\beta}^{(k-1)} - \bm{H}_{\bm{\beta}}(\bm{\beta}^{(k-1)})^{-1}
+      \nabla_{\bm{\beta}} C(\bm{\beta}^{(k-1)})$ all the way until we have convergence.
 
 \subsection{Learning-rate schedulers}
 Something which often is problematic when using the Newton-Raphson method as
@@ -126,7 +126,7 @@ with high curvatures and small consistent or noisy gradients
 which describes the direction and speed which the parameter $\theta$ is moving
 in parameter space \cite[s.~8.3.2]{goodfellow2016deep}, much like the role of
 velocity in physics. To calculate this $\bm{v}$ we need a hyperparameter $\alpha
-    \in [0, 1)$ and we initialize $\bm{v} = \bm{0}$. Then for each
+      \in [0, 1)$ and we initialize $\bm{v} = \bm{0}$. Then for each
 learning-iteration we update $\bm{v}$ the following way:
 $$\bm{v} = \alpha \bm{v}_{prev} - \eta \Delta_{\bm{\theta}} C(\bm{x}, \bm{y}, \bm{\theta})$$
 We then can simply update the $\bm{\theta}$ as follows:
@@ -159,17 +159,17 @@ which we initially set to $\bm{0}$, as well as a small constant $\delta$ which
 we typically set to $10^{-7}$. The algorithms is as follows until the
 stopping-criterion is met:
 \begin{itemize}
-    \item Sample a minibatch of $m$ observations from the training-set
-          consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
-          variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
-    \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
-          this minibatch.
-    \item Update the $\bm{r}$ to become $\bm{r}_{prev} + \bm{g} \odot \bm{g}$
-          ($\odot$ being the Hadamard-product)
-    \item Calculate $\Delta \bm{\theta} = -\eta
-              \frac{1}{\delta + \sqrt{\bm{r}}} \odot \bm{g}$ and update
-          $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
-              \bm{\theta}_{prev} + \Delta \bm{\theta}$).
+      \item Sample a minibatch of $m$ observations from the training-set
+            consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
+            variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
+      \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
+            this minibatch.
+      \item Update the $\bm{r}$ to become $\bm{r}_{prev} + \bm{g} \odot \bm{g}$
+            ($\odot$ being the Hadamard-product)
+      \item Calculate $\Delta \bm{\theta} = -\eta
+                  \frac{1}{\delta + \sqrt{\bm{r}}} \odot \bm{g}$ and update
+            $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
+                  \bm{\theta}_{prev} + \Delta \bm{\theta}$).
 
 \end{itemize}
 
@@ -184,16 +184,16 @@ hyperparameter as well, along the $\bm{r}$ which we again initialize to be
 $\bm{0}$, as well as a small constant $\delta$, which typically is set to
 $10^{-6}$. Then we do the following until the stopping-criterion is met:
 \begin{itemize}
-    \item Sample a minibatch of $m$ observations from the training-set
-          consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
-          variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
-    \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
-          this minibatch.
-    \item Update the $\bm{r}$ to become $\rho \bm{r}_{prev} + (1 - \rho) \bm{g} \odot \bm{g}$
-          ($\odot$ being the Hadamard-product)
-    \item Calculate $\Delta \bm{\theta} = -\eta \frac{1}{\sqrt{\delta + \bm{r}}}
-              \odot \bm{g}$ and update $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
-              \bm{\theta}_{prev} + \Delta \bm{\theta}$).
+      \item Sample a minibatch of $m$ observations from the training-set
+            consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
+            variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
+      \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
+            this minibatch.
+      \item Update the $\bm{r}$ to become $\rho \bm{r}_{prev} + (1 - \rho) \bm{g} \odot \bm{g}$
+            ($\odot$ being the Hadamard-product)
+      \item Calculate $\Delta \bm{\theta} = -\eta \frac{1}{\sqrt{\delta + \bm{r}}}
+                  \odot \bm{g}$ and update $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
+                  \bm{\theta}_{prev} + \Delta \bm{\theta}$).
 \end{itemize}
 
 \subsubsection{Adam}
@@ -207,21 +207,21 @@ distribution which is what we have done in this project). We also set beforehand
 $\bm{s} = \bm{0}$, $\bm{r} = \bm{0}$ and $t=0$. Here the algorithms is as
 follows until we meet the stopping criterion:
 \begin{itemize}
-    \item Sample a minibatch of $m$ observations from the training-set
-          consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
-          variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
-    \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
-          this minibatch.
-    \item Increment $t$ by $1$ (i.e. set $t=t_{prev}+1$).
-    \item Update $\bm{s}$ to become $\rho_1 \bm{s}_{prev} + (1 - \rho_1)\bm{g}$.
-    \item Update $\bm{r}$ to become $\rho_2 \bm{r}_{prev} + (1 - \rho_2)g \odot
-              g$ ($\odot$ again being the Hadamard-product).
-    \item Correct the bias in the first moment by: $\hat{\bm{s}} = \frac{\bm{s}}{1 - \rho_1^t}$.
-    \item Correct the bias in the second moment by: $\hat{\bm{r}} = \frac{\bm{r}}{1 - \rho_2^t}$.
-    \item Finally calculate $\Delta \bm{\theta} = -\eta
-              \frac{\hat{\bm{s}}}{\sqrt{\hat{\bm{r}}} + \delta}$ and update $\bm{\theta}$
-          accordingly (i.e. set $\bm{\theta} = \bm{\theta}_{prev} + \Delta
-              \bm{\theta}$).
+      \item Sample a minibatch of $m$ observations from the training-set
+            consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
+            variables and $\{\bm{y}^{(1)}, \dots, \bm{y}^{m}\}$.
+      \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
+            this minibatch.
+      \item Increment $t$ by $1$ (i.e. set $t=t_{prev}+1$).
+      \item Update $\bm{s}$ to become $\rho_1 \bm{s}_{prev} + (1 - \rho_1)\bm{g}$.
+      \item Update $\bm{r}$ to become $\rho_2 \bm{r}_{prev} + (1 - \rho_2)g \odot
+                  g$ ($\odot$ again being the Hadamard-product).
+      \item Correct the bias in the first moment by: $\hat{\bm{s}} = \frac{\bm{s}}{1 - \rho_1^t}$.
+      \item Correct the bias in the second moment by: $\hat{\bm{r}} = \frac{\bm{r}}{1 - \rho_2^t}$.
+      \item Finally calculate $\Delta \bm{\theta} = -\eta
+                  \frac{\hat{\bm{s}}}{\sqrt{\hat{\bm{r}}} + \delta}$ and update $\bm{\theta}$
+            accordingly (i.e. set $\bm{\theta} = \bm{\theta}_{prev} + \Delta
+                  \bm{\theta}$).
 \end{itemize}
 Where $\eta$ is the step-size (or learning-rate as we will call it), $\rho_1$
 and $\rho_2$ are the decay-rate which must be in $[0, 1)$ (typically we set the
@@ -231,16 +231,159 @@ sampling and still get a functioning algorithm, but this will often give much
 worse results.
 
 \subsection{Automatic differentiation}
+What is clear is that in our optimization it will be central to calculate the
+gradient of some loss function with respect to some parameter, however it is not
+always easy to find analytical gradients by hand. Automatic differentiation is
+an algorithmic approach to calculating of functions. This utilizes clever
+applications of the chain rule in order to calculate the gradients of functions
+without compromising on accuracy (it usually gives almost exactly the same
+results as an analytical expression). We will utilize this in some of our
+optimizations instead of calculating gradients by hand, and for adding support
+in our code so that users don't have to manually calculate gradients by hand,
+which can be time-consuming, and a potential for errors in the calculations.
 
 \subsection{Neural networks}
 There are many different implementations of neural networks out there. We will
 in this project focus on one of the simplest ones to implement, namely the
-multi-layer-perceptron.
+multi-layer-perceptron. The multi-layer perceptron consists of a input layer
+with $p$ nodes (granted we have $p$ covariates), as many hidden layers as we
+want, each of which can have also as many nodes as we want, and then an output
+layer of the same dimensionality as our response. Linking the layers together is
+a set of weights, where each node in the layer before is connected to each node
+in the next layer. Additionally each node has it's bias we add in for each node.
+This is then sent in to an activation function, which is set for each layer. The
+output of this becomes the values (also called activations) of the neurons in
+the next layer. Typical choices of activation functions are sigmoid, relu or
+leaky relu, which are the ones we will explore in this project. For the final
+layer we instead call this the output function. The output function is typically
+tailored to whichever data we have. If we for example want to do regression we
+often just set this to the identity-function, i.e. we do not transform the
+activations at all. In the case where we are doing classification we this choice
+is no longer a good one as the identity function is not bounded, and we in that
+case want the output to be a probability between $0$ and $1$, so then a
+sigmoid-function for example is a good choice.
 
 \subsubsection{Forward propagation algorithm}
-The forward propagation algorithm is rather simple.
+With the description of the model done the forward propagation is actually
+rather simple. We assume we have $L-1$ hidden layer, with index $L$ being the output layer. Then the following
 
 \subsubsection{Backward propagation algorithm}
+
+\subsubsection{Weight and bias initialization}
+We see that at the core of neural networks are these weigh-matrices and bias
+vectors, and seeing as we want to use an iterative method (namely the
+Newton-Raphson method) it becomes clear that we need to initialize the weights
+and biases to something. If we were to initialize all the weights/biases to be
+$0$ (or some other constant), all the weights/biases would have the same effect
+on the loss, and hence the backward-propagation algorithm. Our solution to this
+is to draw the weights randomly from the standard-normal distribution, this way
+we will be able to break the unwanted symmetry in our learning-process. For
+biases one don't always bother initializing these randomly (although there is
+nothing hindering us to do so). What we will do initialize all the biases to the
+same value in every layer (we will set then to $0.1$). Setting it to a small
+positive value will often activate the neurons when we are using a
+relu-function (see \ref{relu-desc}), which again hinders the derivative of the
+relu to be $0$, and this enables the network to learn
+\cite[s.~6.3.1]{goodfellow2016deep}.
+
+\subsection{Activation functions}
+For our experimentation we will use the following three activation functions for
+the hidden layers.
+\subsubsection{Sigmoid}
+The sigmoid activation function limits the activations of the neurons between
+$0$ and $1$. The sigmoid activation function is given as the following:
+$$\sigma(x) = \frac{1}{1 + \exp(-x)}$$
+With the derivative being (this is quite straightforward to calculate):
+$$\sigma'(x) = \sigma(x) (1 - \sigma(x))$$
+Additionally as mentioned this will also be used as an output-function when we
+are doing binary classification, due to the fact that the final neuron
+activations will be between $0$ and $1$.
+
+\subsubsection{Relu}
+\label{relu-desc}
+Another popular activation function we will use is the relu activation function.
+Unlike the sigmoid function this does not have a upper bound. Essentially the
+idea is to. The function then can be expressed by:
+$$\text{relu}(x) = \max(x, 0)$$
+The derivative then becomes:
+$$\text{relu}'(x) = \begin{cases}
+            0 \qquad & \text{if } x < 0 \\
+            1        & \text{if } x > 0
+      \end{cases}$$
+Keep in mind that the derivative is not defined for $x=0$. This however is
+usually unproblematic as we almost never get activations being exactly $0$. In
+our implementation we will just set the derivative to $0$ if the activation is
+exactly $0$ (but again this should more or less never happen).
+
+\subsubsection{Leaky relu}
+The leaky relu is a generalization of the relu-function which unlike the
+relu-function doesn't completely neutralize negative values.  Technically this
+makes this function not bounded below, however with $\delta$ being rather small
+severely limits the size of the negative activations, while no such shrinkage is
+applied for the positive activations of course. The leaky relu is given by:
+$$\text{lrelu}(x) = \begin{cases}
+            x \qquad & \text{if } x > 0    \\
+            \delta x & \text{if } x \leq 0
+      \end{cases}$$
+The derivative then becomes:
+$$\text{lrelu}'(x) = \begin{cases}
+            \delta \qquad & \text{if } x < 0 \\
+            1             & \text{if } x > 0
+      \end{cases}$$
+We see one major difference between this and the relu is that for negative
+activations, the derivative of this will not be $0$, but $\delta$. This means
+that the network will be able to learn on activations which are negative as
+well, albeit likely slower than the positive cases.
+
+\subsection{Cost functions}
+In this project we will use mainly two activation functions, namely mse/sse for
+regression and cross-entropy for binary-classification. We will now quickly go
+into these.
+
+\subsubsection{MSE/SSE}
+A natural choice of cost-function when dealing with regression tasks is the MSE.
+When the target dimensions are always $1$ (which they are in this project), the
+MSE is defined like:
+$$\text{mse}(\bm{h}^{(L)}, \bm{t}) = \frac{1}{n} \sum_{i=1}^n (h^{(L)}_i - t_i)^2 = \frac{1}{n}(\bm{h}^{(L)} - \bm{t})^T (\bm{h}^{(L)} - \bm{t})$$
+The derivative with respect to $\bm{h}^{(L)}$ when becomes:
+$$\frac{\partial \text{mse}}{\partial \bm{h}^{(L)}}(\bm{h}^{(L)}, \bm{t}) = \frac{2}{n} (\bm{h}^{(L)} - \bm{t})$$
+We will also use the total sum of squares (SSE). Minimizing this is the same as
+minimizing the MSE, but with one less floating-point operation. The SSE is given
+by:
+$$\text{sse}(\bm{h}^{(L)}, \bm{t}) = \sum_{i=1}^n (h^{(L)}_i - t_i)^2 = (\bm{h}^{(L)} - \bm{t})^T (\bm{h}^{(L)} - \bm{t})$$
+and its derivative then becomes:
+$$\frac{\partial \text{sse}}{\partial \bm{h}^{(L)}}(\bm{h}^{(L)}, \bm{t}) = 2(\bm{h}^{(L)} - \bm{t})$$
+The only potential problem with using SSE instead of MSE is that the gradient
+will then be dependent on the amount of observations we are using, which can be
+problematic with stochastic gradient descent. However in this project we will
+set a fixed size of each minibatch, which guarantees that each training-set sent
+into this cost/loss function will be of the same size, so this becomes
+unproblematic.
+
+\subsubsection{Cross-entropy}
+For binary classification we will use cross-entropy as out cost-function.
+Minimizing the cross-entropy is equivalent to maximizing the likelihood. We have
+the cross-validation given by:
+$$\text{cross-entropy}(\bm{h}^{(L)}, \bm{t}) = -\sum_{i=1}^{n} ( t_{i} \log(h^{(L)}_i) + (1 - y) \log(1 - h^{(L)}_i) )$$
+With the gradient w.r.t. $h^{(L)}$ then becoming:
+$$\frac{\partial \text{cross-entropy}}{\partial \bm{h}^{(L)}}(\bm{h}^{(L)}, \bm{t}) = (\bm{h}^{(L)} - \bm{t}) / ((1 - \bm{h}^{(L)}) \odot \bm{h}^{(L)})$$
+Here the division is element-wise. One thing to note is that we see that if one of
+our predictions $h^{(L)}_i$ is very close to $0$ while the target value is $1$
+or vice versa, which especially can happen in the first iterations, perhaps the
+most with some sort of unbounded activation function in the last layer, the
+gradient can become very big. If we get too big of a gradient this can be
+problematic for many reasons, with one being we can get values too big for the
+computer to calculate. In our code we will solve this by clipping the
+predictions in the cross-entropy-gradient, so that they don't become too close
+to $0$ or $1$ so that this doesn't become a problem. Additionally we will add a
+small $\delta$ inside the log of the cross-entropy for the same reason.
+
+\subsubsection{Notation in the code}
+Keep in mind that in the code the cost-functions often takes $\hat{y}$ and $y$
+instead of $\bm{h}^{(L)}$ and $\bm{t}$ respectively. This essentially means the
+same thing, but makes more sense with the notation for usage outside of neural
+networks.
+
 
 \section{Results}
 
