@@ -14,33 +14,41 @@
 
 \section{Abstract}
 In this project we tested out performances of neural networks for regression and
-binary classification purposes, and compared this with the models we explored in
-the previous project \cite{githubrepoproject1}, as well as our own
-implementation of logistic regression. We here implemented our own neural
-network code from scratch, basing the training on the backpropagation-algorithm.
-We also tested out various different optimization techniques for optimizing the
-loss, including stochastic gradient descent and the usage of different
-schedulers, like adam, rmsprop and adagrad. We tested out regression on the
-franke-function which we also studied in project 1 \cite{githubrepoproject1},
-while for classification we used breast cancer data from wisconsin
-\cite{sklearncancerdata} \cite{breastcancerwisconsin}. What we saw was that for
-the franke-function with regularization we did not get any major performance
-gains compared to the simpler linear models we tested in project 1
-\cite{githubrepoproject1}. For the cancer data we also saw that while the neural
-networks did perform well, so did logistic regression with some regularization,
-so there was little to no gain here either. Throughout the project we have
-manifested again that just because neural networks might be powerful and
-impressive in and of themselves, they are not necessarily the best anyhow. We
-also saw which parts of a neural net was most instrumental for good model
-performance, with especially the learning-rate and regularization parameter
-being the most instrumental, while activation functions and hidden layer sizes
-didn't matter all that much.
+binary classification purposes, and compared this with the linear models we
+explored in the previous project \cite{githubrepoproject1} (in the case of
+regression), as well as our own implementation of logistic regression (for
+classification). We here implemented our own neural network code from scratch,
+basing the training on the backpropagation-algorithm.  With gradient
+optimization being a central part of the development of both neural networks and
+logistic regression we also dove into various ways of optimizing the cost
+function through the Newton-Raphson method, in particular. We also explored what
+effect the various hyperparameters introduced in the methods have on how quick we
+are able to optimize the cost, and the performance of the final model. In
+particular we explored the effect of the learning-rate and
+regularization-parameter, and we looked at various methods for optimizing
+through the Newton-Raphson method, including ordinary gradient descent,
+stochastic gradient descent, adagrad, rmsprop and adam. For the regression we
+used the franke-function which we introduced in project 1
+\cite{githubrepoproject1}, while for classification we used breast cancer data
+from wisconsin \cite{sklearncancerdata} \cite{breastcancerwisconsin}. What we
+saw was that for the franke-function with regularization we did not get any
+major performance gains compared to the simpler linear models we tested in
+project 1 \cite{githubrepoproject1}. For the cancer data we also saw that while
+the neural networks did perform a little better than logistic regression,
+however the logistic regression also managed to give us very good results.
+Throughout the project we have manifested again that just because neural
+networks might be very powerful and impressive in certain tasks, there are still
+cases where simpler models will outperform them. We also saw which parts of a
+neural net was most instrumental for good model performance, with especially the
+learning-rate, regularization parameter, the learning-rate scheduler, and the
+amount of epochs being the most instrumental for cost-minimization, while
+activation functions and hidden layer sizes didn't matter all that much.
 
 \section{Introduction}
 In the last $10$ or so years, neural networks have really exploded in
-popularity (find source). They have proved to be very good for various tasks
-like image and speech recognition, natural language processing and other complex
-tasks. Often
+popularity. Various different types of neural networks have proved effective for
+various different applications all from speech-recognition, to image processing,
+to complex language tasks.
 
 \section{Methods}
 \subsection{The Newton-Raphson method}
@@ -384,8 +392,43 @@ instead of $\bm{h}^{(L)}$ and $\bm{t}$ respectively. This essentially means the
 same thing, but makes more sense with the notation for usage outside of neural
 networks.
 
+\subsection{Model complexities}
+One final thing to consider which will be very important for our results is the
+model-complexity of neural networks and logistic regression. Logistic regression
+requires just as many parameters as we have explanatory variables, so the model
+complexity is rather low, at least in the case where we don't have too many
+covariates. Neural networks however is very . In both cases we can however introduce regularization which can help
+reduce the model complexity.
+
+\subsection{Logistic regression}
+The logistic regression model is a commonly used, and rather simple, way to
+perform classification tasks. With logistic regression we assume a binary
+response $0$ and $1$ typically and model the probability the follwing way:
+$$Pr(Y_i = 1 | \bm{x}_i) = \frac{1}{1 + \exp(\bm{x}_i \bm{\beta})} = \sigma(\bm{x}_i \bm{\beta})$$
+, where $\sigma$ is obviously the sigmoid-function as already described. We then
+can do classification based on this, where we typically classify to $1$ if this
+probability is bigger than $0.5$ (this is the boundary we will use here) and $0$
+if lower than $0.5$. In order to estimate the $\beta$ parameters we use the
+likelihood such a model, given by \cite[s.~4.4]{hastie2009elements}:
+$$l(\bm{\beta}) = \sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - log(1 + \exp(\bm{x}_i \bm{\beta})))$$
+, where the estimates $\hat{\bm{\beta}}$ become the ones which maximize this
+likelihood. The cost-function then becomes:
+$$C(\bm{\beta}) = -\sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - log(1 + \exp(\bm{x}_i \bm{\beta}))).$$
+To minimize we find the gradient \cite[s.~4.4]{hastie2009elements}:
+$$\frac{\partial C(\bm{\beta})}{\partial \bm{\beta}} = -\sum_{i=1}^{n}\bm{x}_i^T(y_i - Pr(Y_i = 1 | \bm{x}_i)) = -\bm{X}^T(\bm{y} - \bm{p}).$$
+We then can use the Newton-Raphson method on this in order to estimate the $\bm{beta}$.
 
 \section{Results}
+
+\subsection{General optimization}
+
+\subsection{The franke-function}
+
+\subsection{Wisconsin Cancer data}
+
+\section{Analysis}
+
+\section{Conclusion}
 
 \bibliography{./sources.bib}
 
