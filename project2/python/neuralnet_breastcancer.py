@@ -1,17 +1,24 @@
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
 from sklearn.datasets import load_breast_cancer
 from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from p2libs import (NeuralNet, SchedulerAdagrad, SchedulerAdam,
-                    SchedulerConstant, SchedulerRMSProp, cross_entropy,
-                    cross_entropy_grad, fig_directory, lrelu, relu, sigmoid)
+from p2libs import (
+    NeuralNet,
+    SchedulerAdagrad,
+    SchedulerAdam,
+    SchedulerConstant,
+    SchedulerRMSProp,
+    cross_entropy,
+    cross_entropy_grad,
+    fig_directory,
+    lrelu,
+    relu,
+    sigmoid,
+)
 
 # It is important to set the seed for reproducibility
 np.random.seed(1234)
@@ -60,7 +67,7 @@ for i, hidden_layers_size in enumerate(n_hidden_layers_sizes):
             y_train,
             epochs=200,
             sgd=True,
-            sgd_size=16,
+            minibatch_size=16,
         )
         y_train_pred_prob = nn.predict(X_train)
         y_train_pred = nn.predict(X_train, decision_boundary=0.5)
@@ -116,7 +123,7 @@ for i, activ_func in enumerate(activation_functions):
             y_train,
             epochs=200,
             sgd=True,
-            sgd_size=16,
+            minibatch_size=16,
         )
         y_train_pred_prob = nn.predict(X_train)
         y_train_pred = nn.predict(X_train, decision_boundary=0.5)
@@ -181,7 +188,7 @@ for Scheduler in schedulers:
                 y_train,
                 epochs=200,
                 sgd=True,
-                sgd_size=32,
+                minibatch_size=32,
             )
             y_pred_train = nn.predict(X_train, decision_boundary=0.5)
             y_pred_val = nn.predict(X_val, decision_boundary=0.5)

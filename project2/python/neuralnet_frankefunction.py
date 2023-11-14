@@ -7,8 +7,17 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 
-from p2libs import (NeuralNet, SchedulerConstant, fig_directory, lrelu, mse,
-                    relu, sigmoid, sse, sse_grad)
+from p2libs import (
+    NeuralNet,
+    SchedulerConstant,
+    fig_directory,
+    lrelu,
+    mse,
+    relu,
+    sigmoid,
+    sse,
+    sse_grad,
+)
 
 np.random.seed(1234)
 
@@ -54,7 +63,7 @@ for i, learning_rate in enumerate(learning_rates_sigmoid):
             cost=sse,
             lmbda=regularization_parameter,
         )
-        nn.fit(X_train, y_train, epochs=n_epochs, sgd_size=16)
+        nn.fit(X_train, y_train, epochs=n_epochs, minibatch_size=16)
         y_train_pred = nn.predict(X_train)
         y_test_pred = nn.predict(X_test)
         nan_in_train_pred = np.any(np.isnan(y_train_pred))

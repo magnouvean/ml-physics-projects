@@ -347,26 +347,94 @@ in this project focus on one of the simplest ones to implement, namely the
 multi-layer-perceptron. The multi-layer perceptron consists of a input layer
 with $p$ nodes (granted we have $p$ covariates), as many hidden layers as we
 want, each of which can have also as many nodes as we want, and then an output
-layer of the same dimensionality as our response. Linking the layers together is
-a set of weights, where each node in the layer before is connected to each node
-in the next layer. Additionally each node has it's bias we add in for each node.
-This is then sent in to an activation function, which is set for each layer. The
-output of this becomes the values (also called activations) of the neurons in
-the next layer. Typical choices of activation functions are sigmoid, relu or
-leaky relu, which are the ones we will explore in this project. For the final
-layer we instead call this the output function. The output function is typically
-tailored to whichever data we have. If we for example want to do regression we
-often just set this to the identity-function, i.e. we do not transform the
-activations at all. In the case where we are doing classification we this choice
-is no longer a good one as the identity function is not bounded, and we in that
-case want the output to be a probability between $0$ and $1$, so then a
-sigmoid-function for example is a good choice.
+layer of the same dimensionality as our response. For our notation in this
+section we will assume we have $L$ total layers (excluding the input layer), or
+equivalently $L-1$ hidden layers. Linking the layers together is a set of
+weights, where each node in the layer before is connected to each node in the
+next layer. Additionally each layer has its own weight matrix $W^{(l)}$ and bias
+vector $b^{(l)}$ for $1 \leq l \leq L$. Additionally each layer has its own
+activation function, which we denote $f^{(l)}$, again for $1 \leq l \leq
+      L$. Typical choices of activation functions are sigmoid, relu or leaky relu,
+which are the ones we will explore in this project. For the final layer we
+instead call this the output function. The output function is typically tailored
+to whichever data we have. If we for example want to do regression we often just
+set this to the identity-function, i.e. we do not transform the activations at
+all. In the case where we are doing classification we this choice is no longer a
+good one as the identity function is not bounded, and we in that case want the
+output to be a probability between $0$ and $1$, so then a sigmoid-function for
+example is a good choice. Predictions are made using forward propagation which
+we forward through the network (this algorithm we describe in
+\ref{forwardprop}), calculating the next layer activations based on the layer
+activation in the layer before, until we are at the final layer. Here we will
+follow the notation of \textit{Deep Learning}\cite{goodfellow2016deep} by
+denoting $\bm{a}^{(l)}$ as the activations in layer $l$ before applying the
+activation functions and $\bm{h}^{(l)}$ as the final activations in layer $l$
+(i.e. after applying the activation functions). Keep in mind that the final
+predictions then will be $\bm{h}^{(L)}$, while the activations in the inputs
+(which is just the values of the features) are denoted $\bm{h}^{(0)}$. For
+fitting the networks we use the backpropagation algorithm, where we for some
+given some design matrix $\bm{X}$ we fit $\hat{\bm{y}} = \bm{h}^{(L)}$ to match
+some target output $\bm{y}$ for a given cost-function $C(\hat{\bm{y}}, \bm{y})$
+as good as possible.
+
+\subsubsection{Regularization}
+We will also implement basic support for regularization. This requires a
+regularization function $\Omega(\bm{\theta})$, where $\bm{\theta}$ in this case
+corresponds to all the parameters. Additionally we add a regularization parameter
+$\lambda$ which scales the extent of regularization we apply. Here we will only
+add $l_2$ regularization, so $\Omega(\bm{\theta}) = \frac{1}{2}\bm{\theta}^T
+      \bm{\theta}$. How the regularization is used we will go into mainly in
+\ref{backprop}, but we will also need the gradient of this regularizer with
+respect to the weights in each layer. For the $l_2$ regularization it is easy to
+see that this becomes:
+$$\Omega(\bm{\theta}) = \frac{1}{2} \left( \sum_{l = 1}^{L} \sum_{i = 1}^{n_{i-1}} \sum_{j = 1}^{n_i} {\bm{W}_{i j}^{(l)}}^2 + \sum_{l = 1}^{L} {\bm{b}^{(l)}}^T \bm{b} \right)$$.
+Taking gathering the derivative with respect to $W_{i j}^{(l)}$ we get:
+\begin{align*}
+      \frac{\partial \Omega(\bm{\theta})}{\partial \bm{W}_{i j}}^{(l)} & = \frac{1}{2} \frac{\partial {\bm{W}_{i j}^{(l)}}^2}{\partial \bm{W}_{i j}^{(l)}} \\
+                                                                       & = \bm{W}_{i j}^{(l)}
+\end{align*}
+Hence we get that $\nabla_{\bm{W}^{(l)}} \Omega(\bm{\theta}) = \bm{W}^{(l)}$.\\
+Keep in mind that we do not include regularization on biases.  This is because
+we usually are ok with having sizeable values for the biases, more so that we
+are with having big values for weights, which often results in high degree of
+overfitting. Seeing as there are a lot more weights than biases, more model
+complexity is also reduced by penalizing the weights than the biases.
 
 \subsubsection{Forward propagation algorithm}
+\label{forwardprop}
 With the description of the model done the forward propagation is actually
-rather simple. We assume we have $L-1$ hidden layer, with index $L$ being the output layer. Then the following
+rather simple. We assume we have $L-1$ hidden layers, with index $L$ being the
+output layer. We let us inspire by algorithm 6.3 in \textit{Deep Learning}
+\cite[p.~212]{goodfellow2016deep}, with some practical improvements for the code:
+\begin{itemize}
+      \item Set $\bm{h}^{(0)} = \bm{X}$
+      \item \textbf{for} $l = 1, \dots, L$ \textbf{do}
+      \item $\bm{a}^{(l)} = \bm{h}^{(l-1)} \bm{W}^{(l)} + \bm{b}^{(l)}$ (here $\bm{b}^{(l)}$ is added for every row).
+      \item $\bm{h}^{(l)} = f^{(l)}(\bm{a}^{(l)})$ (here we apply $f$ element-wise)
+      \item \textbf{end for}
+      \item $\hat{\bm{y}} = \bm{h}^{(l)}$
+\end{itemize}
+Keep in mind that here that $\bm{X}$, $\bm{y}$, $\bm{a}$-s, $\bm{h}$-s are
+allowed to be matrices. Here if $\bm{X}$ is a $n \times p$ matrix, it is easy to
+see that $\bm{a}^{(l)}$ and $\bm{h}^{(l)}$ are going to be $n \times n_l$
+matrices, i.e. we have that each row represents the activations in layer $l$ for
+each observation. Then as a consequence since $\hat{\bm{y}} = \bm{h}^{(L)}$, we
+have that each row in the prediction matrix corresponds perfectly to the
+prediction of each row of the design/feature matrix.
 
 \subsubsection{Backward propagation algorithm}
+\label{backprop}
+The backward propagation algorithm is a little more complicated. Again we take
+big inspiration from \textit{Deep Learning}, this time algorithm 6.4, with some
+tweaks. The backwards propagation algorithm then goes as follows:
+\begin{itemize}
+      \item Set $\bm{g} = \nabla_{\hat{\bm{y}}} C(\hat{\bm{y}}, \bm{y})$
+      \item \textbf{for} $l = L, \dots, 1$ \textbf{do}
+      \item Update $\bm{g}$ by setting $\bm{g} = \bm{g} \odot f^{(l)} \prime (\bm{a}^{(l)})$
+      \item Calculate $\nabla_{\bm{b}^{(l)}} L(\hat{\bm{y}}, \bm{y}) = \sum_{i=1}^n \bm{g}_{i *}$ (sum over all the rows)
+      \item Calculate $\nabla_{\bm{W}^{(l)}} L(\hat{\bm{y}}, \bm{y}) = {\bm{h}^{(l)}}^T \bm{g} + \lambda \nabla_{\bm{W}^{(l)}} \Omega(\bm{\theta})$
+      \item \textbf{end for}
+\end{itemize}
 
 \subsubsection{Weight and bias initialization}
 We see that at the core of neural networks are these weigh-matrices and bias
@@ -498,8 +566,8 @@ One final thing to consider which will be very important for our results is the
 model-complexity of neural networks and logistic regression. Logistic regression
 requires just as many parameters as we have explanatory variables, so the model
 complexity is rather low, at least in the case where we don't have too many
-covariates. Neural networks however is very . In both cases we can however introduce regularization which can help
-reduce the model complexity.
+covariates. Neural networks however is very . In both cases we can however
+introduce regularization which can help reduce the model complexity.
 
 \subsection{Logistic regression}
 The logistic regression model is a commonly used, and rather simple, way to

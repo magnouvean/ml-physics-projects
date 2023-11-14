@@ -2,8 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from p2libs import (Optimizer, SchedulerAdagrad, SchedulerAdam,
-                    SchedulerConstant, SchedulerRMSProp, fig_directory, mse)
+from p2libs import (
+    Optimizer,
+    SchedulerAdagrad,
+    SchedulerAdam,
+    SchedulerConstant,
+    SchedulerRMSProp,
+    fig_directory,
+    mse,
+)
 
 np.random.seed(1234)
 
@@ -47,7 +54,7 @@ def optimize_demo(
     learning_rates_plain_sgd,
     learning_rates_adagrad,
     epochs,
-    sgd_size,
+    minibatch_size,
 ) -> tuple[
     tuple[
         np.ndarray,
@@ -111,7 +118,7 @@ def optimize_demo(
         o_gd = Optimizer(X, y, scheduler_gd, cost, cost_grad)
         o_sgd = Optimizer(X, y, scheduler_sgd, cost, cost_grad)
         betas_gd[i, :] = o_gd.optimize(epochs)
-        betas_sgd[i, :] = o_sgd.optimize_stochastic(epochs, sgd_size)
+        betas_sgd[i, :] = o_sgd.optimize_stochastic(epochs, minibatch_size)
 
         # With momentum (both stochastic and non-stochastic).
         scheduler_gd_mom = SchedulerConstant(learning_rate_plain, use_momentum=True)
@@ -121,7 +128,7 @@ def optimize_demo(
         o_gd_mom = Optimizer(X, y, scheduler_gd_mom, cost, cost_grad)
         o_sgd_mom = Optimizer(X, y, scheduler_sgd_mom, cost, cost_grad)
         betas_gd_mom[i, :] = o_gd_mom.optimize(epochs)
-        betas_sgd_mom[i, :] = o_sgd_mom.optimize_stochastic(epochs, sgd_size)
+        betas_sgd_mom[i, :] = o_sgd_mom.optimize_stochastic(epochs, minibatch_size)
 
         # And lastly adagrad.
         scheduler_adagrad = SchedulerAdagrad(learning_rate_adagrad)
@@ -131,10 +138,10 @@ def optimize_demo(
         o_adagrad = Optimizer(X, y, scheduler_adagrad, cost, cost_grad)
         o_adagrad_mom = Optimizer(X, y, scheduler_adagrad_mom, cost, cost_grad)
         betas_adagrad_gd[i, :] = o_adagrad.optimize(epochs)
-        betas_adagrad_sgd[i, :] = o_adagrad.optimize_stochastic(epochs, sgd_size)
+        betas_adagrad_sgd[i, :] = o_adagrad.optimize_stochastic(epochs, minibatch_size)
         betas_adagrad_gd_mom[i, :] = o_adagrad_mom.optimize(epochs)
         betas_adagrad_sgd_mom[i, :] = o_adagrad_mom.optimize_stochastic(
-            epochs, sgd_size
+            epochs, minibatch_size
         )
 
         costs_gd[i] = cost(X, y, betas_gd[i, :])
@@ -188,10 +195,10 @@ learning_rates_adagrad = 10 ** (np.linspace(-5, 5, 11))
 
 # And we create an example decay function out of this.
 somedecayfunc = DecayFunctionExample(1.0, 10)
-# We keep the amount of epochs and sgd_size fixed when we compare the different
-# learning-rates/schedulers.
+# We keep the amount of epochs and minibatch_size fixed when we compare the
+# different learning-rates/schedulers.
 epochs = 100
-sgd_size = 16
+minibatch_size = 16
 
 (
     costs_gd,
@@ -210,7 +217,7 @@ sgd_size = 16
     learning_rates_plain_sgd,
     learning_rates_adagrad,
     epochs,
-    sgd_size,
+    minibatch_size,
 )
 
 # Generate figures for gd/sgd. Keep in mind that since we have created these so
@@ -236,7 +243,46 @@ fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.1)
 fig.savefig(f"{fig_directory}/optimizers_plot.png", dpi=196)
 
 
+#
+# We see what happens when we give it four times as many epochs
+#
+more_epochs = epochs * 4
+print("\n\n====Increaing amount of epochs====")
+scheduler = SchedulerConstant(0.01)
+o = Optimizer(X, y, scheduler, mse_ols, mse_ols_grad)
+
+beta_gd = o.optimize(epochs)
+beta_gd_more = o.optimize(more_epochs)
+beta_sgd = o.optimize_stochastic(epochs, minibatch_size)
+beta_sgd_more = o.optimize_stochastic(more_epochs, minibatch_size)
+
+cost_gd = mse_ols(X, y, beta_gd)
+cost_gd_more = mse_ols(X, y, beta_gd_more)
+cost_sgd = mse_ols(X, y, beta_sgd)
+cost_sgd_more = mse_ols(X, y, beta_sgd_more)
+
+print(f"COST GD {epochs} epochs: {cost_gd}, {more_epochs} epochs: {cost_gd_more}")
+print(f"COST SGD {epochs} epochs: {cost_sgd}, {more_epochs} epochs: {cost_sgd_more}")
+
+
+#
+# We may also do a quick check to see the effect minibatch_size has
+#
+print("\n\n====Varying the SGD size====")
+for minibatch_size in (8, 12, 16, 32):
+    costs = np.zeros_like(learning_rates_plain_sgd)
+    for i, learning_rate in enumerate(learning_rates_plain_sgd):
+        scheduler = SchedulerConstant(learning_rate)
+        o = Optimizer(X, y, scheduler, mse_ols, mse_ols_grad)
+        beta = o.optimize_stochastic(epochs, minibatch_size=minibatch_size)
+        costs[i] = mse_ols(X, y, beta)
+
+    print(f"MINIBATCH SIZE {minibatch_size}, best cost: {np.nanmin(costs)}")
+
+
+#
 # We now illustrate that we can also use jax
+#
 costs, betas = optimize_demo(
     mse_ols,
     "jax",
@@ -245,7 +291,7 @@ costs, betas = optimize_demo(
     learning_rates_plain_sgd,
     learning_rates_adagrad,
     epochs,
-    sgd_size,
+    minibatch_size,
 )
 
 # And we also then can gather the best beta for each of the different
@@ -319,7 +365,7 @@ for j, lmbda in enumerate(regularization_parameters):
         learning_rates_plain_sgd,
         learning_rates_adagrad,
         epochs,
-        sgd_size,
+        minibatch_size,
     )
     # We here use the fact that all the betas have the same shape (because all
     # the learning-rate grids are of the same size).

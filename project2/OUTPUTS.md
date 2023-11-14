@@ -62,9 +62,15 @@ mse, train (sklearn): 0.42066157941885995
 mse, test (sklearn): 0.08938620708289866
 
 Tensorflow
-1/4 [======>.......................] - ETA: 1s - loss: 104.4552 - mse: 0.29154/4 [==============================] - 1s 3ms/step - loss: 102.1417 - mse: 0.1994
-1/4 [======>.......................] - ETA: 0s4/4 [==============================] - 0s 1ms/step
-1/4 [======>.......................] - ETA: 0s4/4 [==============================] - 0s 2ms/step
+
+1/4 [======>.......................] - ETA: 1s - loss: 104.4552 - mse: 0.2915
+4/4 [==============================] - 1s 3ms/step - loss: 102.1417 - mse: 0.1994
+
+1/4 [======>.......................] - ETA: 0s
+4/4 [==============================] - 0s 1ms/step
+
+1/4 [======>.......................] - ETA: 0s
+4/4 [==============================] - 0s 2ms/step
 mse, train (tensorflow): 0.10751819997659595
 mse, test (tensorflow): 0.09749259779361634
 Convergence after 192 epochs
@@ -119,103 +125,59 @@ Convergence after 11 epochs
 
 ========Activation Functions========
 Accuracies:
-<function sigmoid at 0x7fb3901cc2c0> max acc: 1.0, lr=0.0001
-<function relu at 0x7fb3901cc400> max acc: 0.9773869346733668, lr=0.0001
-<function lrelu at 0x7fb3901cc540> max acc: 0.9723618090452262, lr=0.0001
+<function sigmoid at 0x7fb606648360> max acc: 1.0, lr=0.0001
+<function relu at 0x7fb6066484a0> max acc: 0.9773869346733668, lr=0.0001
+<function lrelu at 0x7fb6066485e0> max acc: 0.9723618090452262, lr=0.0001
 
 End of training loss:
-<function sigmoid at 0x7fb3901cc2c0>: 0.0012112684297163737, lr=0.01
-<function relu at 0x7fb3901cc400>: 207.23265815844144, lr=0.01
-<function lrelu at 0x7fb3901cc540>: 253.28463078624117, lr=0.001
-Convergence after 25 epochs
+<function sigmoid at 0x7fb606648360>: 0.0012112684297163737, lr=0.01
+<function relu at 0x7fb6066484a0>: 207.23265815844144, lr=0.01
+<function lrelu at 0x7fb6066485e0>: 253.28463078624117, lr=0.001
+Convergence after 37 epochs
 Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 30 epochs
-Convergence after 12 epochs
 Convergence after 13 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 22 epochs
-Convergence after 14 epochs
-Convergence after 14 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 16 epochs
-Convergence after 14 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
+Convergence after 15 epochs
+Convergence after 65 epochs
+Convergence after 39 epochs
 Convergence after 23 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
+Convergence after 29 epochs
+Convergence after 15 epochs
+Convergence after 17 epochs
+Convergence after 74 epochs
+Convergence after 38 epochs
+Convergence after 26 epochs
+Convergence after 31 epochs
+Convergence after 82 epochs
+Convergence after 29 epochs
+Convergence after 27 epochs
 Convergence after 27 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
+Convergence after 102 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
+Convergence after 54 epochs
+Convergence after 16 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
-Convergence after 68 epochs
-Convergence after 29 epochs
+Convergence after 12 epochs
+Convergence after 13 epochs
+Convergence after 116 epochs
+Convergence after 37 epochs
+Convergence after 81 epochs
+Convergence after 40 epochs
+Convergence after 45 epochs
+Convergence after 134 epochs
+Convergence after 39 epochs
 Convergence after 30 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 21 epochs
-Convergence after 20 epochs
-Convergence after 19 epochs
-Convergence after 11 epochs
+Convergence after 30 epochs
+Convergence after 33 epochs
+Convergence after 32 epochs
 Convergence after 170 epochs
 Convergence after 170 epochs
 Convergence after 170 epochs
 Convergence after 175 epochs
-Convergence after 144 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
@@ -223,36 +185,17 @@ Convergence after 11 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
 Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 19 epochs
-Convergence after 68 epochs
-Convergence after 84 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
-Convergence after 11 epochs
+Convergence after 139 epochs
+Convergence after 97 epochs
+Convergence after 63 epochs
+Convergence after 12 epochs
+Convergence after 12 epochs
+Convergence after 149 epochs
+Convergence after 100 epochs
+Convergence after 65 epochs
+Convergence after 12 epochs
+Convergence after 12 epochs
+Convergence after 12 epochs
 SGD max train accuracy: 1.0
 SGD max validation accuracy: 0.9509803921568627
 Adagrad max train accuracy: 1.0
@@ -263,19 +206,21 @@ RMSProp max train accuracy: 1.0
 RMSProp max validation accuracy: 0.9509803921568627
 Best learning_rate for adagrad: 0.1
 Best regularization parameter value for adagrad: 1e-07
-COST: 673.4357970077597
-COST: 1.5658682330123157
-COST: 0.6737539274105033
-COST: 0.370569062685966
-COST: 0.23459984652669397
-COST: 0.15673027211516977
-COST: 0.10982518616275075
-COST: 0.08582565255846378
-COST: 0.07099187623608744
-COST: 0.060671247086283915
+COST: 673.4364466838488
+COST: 1.5665315450805917
+COST: 0.6744193581437385
+COST: 0.3712362097292693
+COST: 0.23526834085242115
+COST: 0.15739974864159914
+COST: 0.11049545979862346
+COST: 0.08649659569121672
+COST: 0.07166338804913726
+COST: 0.06134325198070681
 Final model accuracy: 1.0
-1/3 [=========>....................] - ETA: 0s3/3 [==============================] - 0s 1ms/step
-Final model accuracy (tensorflow): 1.0
+
+1/3 [=========>....................] - ETA: 0s
+3/3 [==============================] - 0s 1ms/step
+Final model accuracy (tensorflow): 0.9855072463768116
 ```
 
 ## logisticregression_breastcancer.py

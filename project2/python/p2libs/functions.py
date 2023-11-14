@@ -103,6 +103,8 @@ def identity_output_function_der(x: np.ndarray) -> np.ndarray:
     """
     return np.ones_like(x)
 
+def l2regularizer(theta: np.ndarray) -> float:
+    return 0.5 * np.sum(theta**2)
 
-def l2regularizer(theta: np.ndarray) -> np.ndarray:
+def l2regularizer_der(theta: np.ndarray) -> np.ndarray:
     return theta

@@ -2,7 +2,7 @@ import typing
 
 import numpy as np
 
-from .functions import l2regularizer
+from .functions import l2regularizer_der
 from .neuralnet import sigmoid
 from .optimizer import Optimizer
 from .schedulers import Scheduler
@@ -20,7 +20,7 @@ class LogisticRegression:
         self,
         scheduler: Scheduler,
         lmbda: float = 0,
-        regularizer: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer,
+        regularizer: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer_der,
     ):
         """Constructor for the logistic regression model.
 
@@ -35,7 +35,7 @@ class LogisticRegression:
 
         self._scheduler = scheduler
         self._lmbda = lmbda
-        self._regularizer = l2regularizer
+        self._regularizer = l2regularizer_der
 
     def _cost_grad(self, X: np.ndarray, y: np.ndarray, beta: np.ndarray) -> np.ndarray:
         return logistic_regression_cost_grad(

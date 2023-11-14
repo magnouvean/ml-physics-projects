@@ -112,25 +112,25 @@ class Optimizer(abc.ABC):
 
         return self._theta
 
-    def optimize_stochastic(self, epochs: int, sgd_size: int) -> np.ndarray:
+    def optimize_stochastic(self, epochs: int, minibatch_size: int) -> np.ndarray:
         """Stochastic version of optimize. Functions exactly the same, but
         draws some amount of mini-batches for each epoch.
 
         Args:
             epochs (int): The max amount of epochs to allow.
-            sgd_size (int): The size of each mini-batch.
+            minibatch_size (int): The size of each mini-batch.
 
         Returns:
             np.ndarray: The parameter theta which minimizes the cost.
         """
         np.random.seed(self.random_seed)
         self._set_vars()
-        n_batches = int(self.X.shape[0] / sgd_size)
+        n_batches = int(self.X.shape[0] / minibatch_size)
         for _ in range(epochs):
             for _ in range(n_batches):
                 # Just choose some random indices
                 rand_indices = np.random.choice(
-                    self.X.shape[0], sgd_size, replace=False
+                    self.X.shape[0], minibatch_size, replace=False
                 )
                 X_sgd = self.X[rand_indices, :]
                 y_sgd = self.y[rand_indices]

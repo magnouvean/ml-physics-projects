@@ -26,6 +26,7 @@ class NeuralNet:
         output_function_der: typing.Callable[[np.ndarray], np.ndarray] | None = None,
         lmbda: float = 0.0,
         regularizer: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer,
+        regularizer_der: typing.Callable[[np.ndarray], np.ndarray] = l2regularizer_der,
         biases_init: float = 0.1,
     ):
         # Hidden layers is the sizes minus input and output layers
@@ -33,6 +34,7 @@ class NeuralNet:
         # Penalization variables
         self._lmbda = lmbda
         self._regularizer = regularizer
+        self._regularizer_der = regularizer_der
 
         # We need to have a separate scheduler for each of the weights/biases,
         # because of dimensionality and saved variables within the scheduler
@@ -133,7 +135,32 @@ class NeuralNet:
             # we want this to work on arrays as well so we use vmap.
             return jax.vmap(jax.vmap(jax.grad(activ_func, 0)))
 
-    def _forward_one(self, X: np.ndarray, i: int) -> tuple[np.ndarray, np.ndarray]:
+    @property
+    def _all_weights(self):
+        x = np.array([])
+        for w in self._weights:
+            x = np.append(x, w.flatten())
+        return x
+
+    def _cost(self, y_pred: np.ndarray, y: np.ndarray) -> float:
+        """The total cost including regularization
+
+        Args:
+            y_pred (np.ndarray): The prediction of the network.
+            y (np.ndarray): The target.
+
+        Returns:
+            float: The cost given the y_pred and y.
+        """
+        c = self._cost_function(y_pred, y)
+        # We check if lambda is not 0 because it is a waste of resources to
+        # compute the regularization term if we do not have regularization.
+        if self._lmbda != 0:
+            c += self._lmbda * self._regularizer(self._all_weights)
+
+        return c
+
+    def _forward_one(self, h: np.ndarray, i: int) -> tuple[np.ndarray, np.ndarray]:
         """
         Forward to hidden layer `i` (or the output layer if `i` = `number of
         hidden layer plus 1`)
@@ -143,7 +170,9 @@ class NeuralNet:
             if i <= self._n_hidden_layers
             else self._output_function
         )
-        a = np.array(X @ self._weights[i - 1])
+        # We have that the weight/bias indices start at 0, so the biases/weights
+        # for layer i will have index i-1.
+        a = np.array(h @ self._weights[i - 1])
         for j in range(a.shape[0]):
             a[j, :] += self._biases[i - 1]
         h = activation_func(a)
@@ -220,7 +249,7 @@ class NeuralNet:
                 else self._activation_functions_der[k - 1]
             )
             g = g * f_der(a_k)
-            weight_grads[k - 1] = h_k_1.T @ g + self._lmbda * self._regularizer(W_k)
+            weight_grads[k - 1] = h_k_1.T @ g + self._lmbda * self._regularizer_der(W_k)
             bias_grads[k - 1] = np.sum(g, axis=0)
             g = g @ W_k.T
 
@@ -236,7 +265,7 @@ class NeuralNet:
         y: np.array,
         epochs: int = 200,
         sgd=False,
-        sgd_size=10,
+        minibatch_size=10,
         print_every: int = 0,
         tol: float = 1e-4,
         n_iter_no_change: int = 10,
@@ -249,7 +278,7 @@ class NeuralNet:
             y (np.array): The response. Must be of compatible dimensions as X.
             epochs (int, optional): The max amount of epochs to allow. Defaults to 100.
             sgd (bool, optional): Wether to use stochastic gradient descent or not. Defaults to False.
-            sgd_size (int, optional): The size of each mini-batch when using stochastic gradient descent. Defaults to 10.
+            minibatch_size (int, optional): The size of each mini-batch when using stochastic gradient descent. Defaults to 10.
             print_every (int, optional): Print the cost every `print_every` epoch. If 0 do not print at all. Defaults to 0.
             tol (float, optional): Determines convergence if the maximum difference over the last `n_iter_no_change` is less than this. Defaults to 1e-4.
             n_iter_no_change (int, optional): The amount of iterations back we look for convergence over. Default to 10.
@@ -262,15 +291,15 @@ class NeuralNet:
             self._scheduler_biases[k].reset()
 
         # Fail if the sgd size is too big for the data
-        if sgd and X.shape[0] < sgd_size:
+        if sgd and X.shape[0] < minibatch_size:
             raise ValueError(
-                f"The size of a minibatch in stochastic gradient descent cannot be bigger than the amount of datapoints (datapoints: {X.shape[0]}, sgd_size: {sgd_size})"
+                f"The size of a minibatch in stochastic gradient descent cannot be bigger than the amount of datapoints (datapoints: {X.shape[0]}, minibatch_size: {minibatch_size})"
             )
 
         self._cost_history = []
         for i in range(epochs):
             y_pred = self.forward(X)
-            current_cost = self._cost_function(y_pred, y)
+            current_cost = self._cost(y_pred, y)
             max_diff = (
                 None
                 if len(self._cost_history) < n_iter_no_change
@@ -286,14 +315,16 @@ class NeuralNet:
                 break
             self._cost_history.append(current_cost)
 
-            n_iter_per_epoch = 1 if not sgd else int(X.shape[0] / sgd_size)
+            n_iter_per_epoch = 1 if not sgd else int(X.shape[0] / minibatch_size)
             for _ in range(n_iter_per_epoch):
                 X_data = X
                 y_data = y
-                # Pick random datapoints of size given by sgd_size if we want to
-                # use minibatches to train on.
+                # Pick random datapoints of size given by minibatch_size if we
+                # want to use minibatches to train on.
                 if sgd:
-                    rand_indices = np.random.choice(X.shape[0], sgd_size, replace=False)
+                    rand_indices = np.random.choice(
+                        X.shape[0], minibatch_size, replace=False
+                    )
                     X_data = X[rand_indices, :]
                     y_data = y[rand_indices]
 
