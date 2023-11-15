@@ -783,7 +783,92 @@ $\lambda$.
 \subsection{The franke-function}
 Experimentation of using neural network with the franke-function is determined
 in the \textbf{franke\_function.py} in the project codes
-\cite{githubrepoproject2code}.
+\cite{githubrepoproject2code}. We here tried to fit an neural network as good as
+possible to minimize the MSE. Doing a grid-search on both the learning-rate
+$\nu$ and the regularization parameter $\lambda$ for each method using only
+stochastic gradient descent in this case. Figure \ref{heatmapplot-franke} shows
+a heatmap of the MSE for some different values of both. Again here we see much
+of the same effect as we did in figure \ref{heatmapplot-lr-lambda-gd-sgd} and
+\ref{heatmapplot-lr-lambda-adagrad}, with the best performance being dependent
+on having a fitting learning-rate and regularization parameter, but we can also
+see that we have quite a lot of learning-rates which get get quite good results
+for both train and test seemingly. Table \ref{metrics-nn-franke} shows us some
+metrics we got when training neural networks on teh franke-function. We get
+quite good results here, and we also see that the MSE and $R^2$ scores for the
+train and test-data are quite similar, which does indicate that the
+regularization works quite well (though one of course need to take into account
+that they were achieved at different values of $\lambda$). If we compare this to
+what we got for the linear methods in project $1$ we had that for linear
+regression, ridge and lasso we had test MSEs of $0.0189$, $0.0173$ and $0.0165$
+respectively, with the corresponding $R^2$ scores being $0.8050$, $0.8210$ and
+$0.8303$ \cite[s.~4.1]{reportproject1}. We clearly see that we have indeed
+achieved better performance in this case than the simple linear models we
+tackled in project 1.
+
+We also compared our own results to those of ScikitLearn and tensorflow. Figure
+\ref{metrics-nn-franke-sklearn-tf} shows the MSE achieved using these two
+methods as well (here I have dropped the $R^2$ scores, but they will be closely
+related to the MSEs).  Interestingly we got quite a bit better results for our
+own code than these two libraries, however we have spent less time tweaking these
+models and their hyperparameters, so this is probably the reason for the worse
+performance here.
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{heatmap_frankefunction}
+      \caption{A heatmap showing the cost (MSE) for both train and test-data,
+            depending the the learning-rates $\eta$ and regularization parameters
+            $\lambda$.}
+      \label{heatmapplot-franke}
+\end{figure}
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c |}
+                         & Train  & Test   \\
+            MSE (best)   & 0.0068 & 0.0072 \\
+            $R^2$ (best) & 0.9244 & 0.9266
+      \end{tabular}
+      \caption{The final metrics achieved using the. Here the best learning-rate
+            giving best train MSE/$R^2$ score were $0.0001$, while for test MSE/$R^2$
+            score the best learning-rate was $0.001$}
+      \label{metrics-nn-franke}
+\end{table}
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c |}
+                        & sklearn & tensorflow \\
+            MSE (train) & 0.0984  & 0.0726     \\
+            MSE (test)  & 0.1091  & 0.0800
+      \end{tabular}
+      \caption{The MSEs when using SGD neural networks in sklearn/tensorflow,
+            and using the same optimal parameters we got for our own neural net
+            (though we had to use a different regularization for tensorflow). We see
+            we got a little better performance using tensorflow, but still much worse
+            than our own implementation (see table \ref{metrics-nn-franke})}
+      \label{metrics-nn-franke-sklearn-tf}
+\end{table}
+
+Lastly we also explored using different activation functions for the hidden
+layer. We here just used the same activation functions for all the hidden
+layers, with us testing out sigmoid, relu and leaky relu. Table
+\ref{franke-different-activ-funcs}. From this we can see that the sigmoid gave
+us the best performance by a little bit, so it was correct using this in our
+experiments above.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c |}
+                & sigmoid & relu   & lrelu  \\
+            MSE (test) & 0.0086  & 0.0178 & 0.0164
+      \end{tabular}
+      \caption{The test MSEs for three different activation functions. We see
+      that sigmoid in particular gave about twice as low MSE as the two others,
+      while relu and lrelu gave comparable results.}
+      \label{franke-different-activ-funcs}
+\end{table}
+
 
 \subsection{Wisconsin Cancer data}
 

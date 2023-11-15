@@ -20,7 +20,6 @@ from p2libs import (
 )
 
 
-
 def franke_function(x, y):
     term1 = 0.75 * np.exp(-(0.25 * (9 * x - 2) ** 2) - 0.25 * ((9 * y - 2) ** 2))
     term2 = 0.75 * np.exp(-((9 * x + 1) ** 2) / 49.0 - 0.1 * (9 * y + 1))
@@ -46,7 +45,8 @@ sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
-n_epochs = 200
+# We'll allow for some more epochs here.
+n_epochs = 500
 regularization_parameters = 10 ** (np.linspace(-6, 2, 9))
 learning_rates_sigmoid = 10 ** (np.linspace(-7, -2, 9))
 mses_train = np.zeros((len(learning_rates_sigmoid), len(regularization_parameters)))
@@ -57,13 +57,16 @@ r2_scores_test = np.zeros_like(mses_train)
 for i, learning_rate in enumerate(learning_rates_sigmoid):
     scheduler = SchedulerConstant(learning_rate, use_momentum=True)
     for j, regularization_parameter in enumerate(regularization_parameters):
+        # Keep in mind we may also just drop specifying the cost_grad to use jax
+        # to find this automatically.
         nn = NeuralNet(
             (2, 100, 100, 1),
             scheduler=scheduler,
             cost=sse,
+            cost_grad=sse_grad,
             lmbda=regularization_parameter,
         )
-        nn.fit(X_train, y_train, epochs=n_epochs, minibatch_size=16)
+        nn.fit(X_train, y_train, epochs=n_epochs, sgd=True, minibatch_size=16)
         y_train_pred = nn.predict(X_train)
         y_test_pred = nn.predict(X_test)
         nan_in_train_pred = np.any(np.isnan(y_train_pred))
@@ -85,16 +88,12 @@ sns.heatmap(
     ax=ax[0],
     xticklabels=np.log10(regularization_parameters),
     yticklabels=np.round(np.log10(learning_rates_sigmoid), 2),
-    vmax=5,
-    center=1,
 )
 sns.heatmap(
     mses_test,
     ax=ax[1],
     xticklabels=np.log10(regularization_parameters),
     yticklabels=np.round(np.log10(learning_rates_sigmoid), 2),
-    vmax=5,
-    center=1,
 )
 ax[0].set_title("Train")
 ax[1].set_title("Test")
@@ -126,35 +125,47 @@ eta = learning_rates_sigmoid[np.nanargmin(mses_test) // mses_test.shape[0]]
 lmbda = regularization_parameters[np.nanargmin(mses_test) % mses_test.shape[1]]
 
 print("\nSklearn")
-nn = MLPRegressor(hidden_layer_sizes=(100, 100), alpha=lmbda)
-nn.fit(X_train, y_train)
-y_pred_train = nn.predict(X_train)
-y_pred_test = nn.predict(X_test)
+nn = MLPRegressor(
+    hidden_layer_sizes=(100, 100),
+    alpha=lmbda,
+    activation="logistic",
+    solver="sgd",
+    learning_rate_init=eta,
+    random_state=1234,
+    max_iter=n_epochs,
+)
+nn.fit(X_train, y_train.ravel())
+y_pred_train = nn.predict(X_train).reshape(X_train.shape[0], 1)
+y_pred_test = nn.predict(X_test).reshape(X_test.shape[0], 1)
 print(f"mse, train (sklearn): {mse(y_pred_train, y_train)}")
 print(f"mse, test (sklearn): {mse(y_pred_test, y_test)}")
 
 print("\nTensorflow")
 tf.random.set_seed(1234)
+o = tf.keras.optimizers.SGD(learning_rate=eta)
+# There appears to be some differences between the scale of the tensorflow
+# regularization paramters, if this is set to the same as sklearn/our own
+# implementation, we get too much regularization.
+l2 = tf.keras.regularizers.l2(0.005)
 nn = tf.keras.Sequential(
     [
         tf.keras.layers.Dense(
             100,
             activation="sigmoid",
-            kernel_regularizer=tf.keras.regularizers.l2(lmbda),
+            kernel_regularizer=l2,
         ),
         tf.keras.layers.Dense(
             100,
             activation="sigmoid",
-            kernel_regularizer=tf.keras.regularizers.l2(lmbda),
+            kernel_regularizer=l2,
         ),
-        tf.keras.layers.Dense(1),
+        tf.keras.layers.Dense(1, kernel_regularizer=l2),
     ]
 )
-sgd = tf.keras.optimizers.SGD(learning_rate=0.005)
-nn.compile(loss="mse", optimizer=sgd, metrics=["mse"])
-nn.fit(X_train, y_train)
-y_pred_train = nn.predict(X_train)
-y_pred_test = nn.predict(X_test)
+nn.compile(loss="mse", optimizer=o, metrics=["mse"])
+nn.fit(X_train, y_train, batch_size=16, epochs=n_epochs, verbose=False)
+y_pred_train = nn.predict(X_train).reshape(X_train.shape[0], 1)
+y_pred_test = nn.predict(X_test).reshape(X_test.shape[0], 1)
 print(f"mse, train (tensorflow): {mse(y_pred_train, y_train)}")
 print(f"mse, test (tensorflow): {mse(y_pred_test, y_test)}")
 
@@ -181,12 +192,12 @@ for activ_func, mses_matrix, learning_rates in (
                 activation_functions=activ_func,
                 lmbda=regularization_parameter,
             )
-            nn.fit(X_train, y_train)
+            nn.fit(X_train, y_train, sgd=True, minibatch_size=16)
             y_test_pred = nn.predict(X_test)
             mses_matrix[i, j] = mse(y_test_pred, y_test)
 
 
-print("====Costs for different activation functions====")
+print("\n\n====Costs for different activation functions====")
 
 for activ_func_name, mses, learning_rates in (
     ("sigmoid", mses_sigmoid, learning_rates_sigmoid),

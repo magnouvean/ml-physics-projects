@@ -267,7 +267,7 @@ nn = NeuralNet(
 )
 # We now give the neural net more epochs just in case it needs it for
 # convergence (though it probably doesn't).
-nn.fit(X_train, y_train, epochs=2000, print_every=200)
+nn.fit(X_train, y_train, epochs=2000, print_every=200, sgd=True, minibatch_size=32)
 y_pred_test = nn.predict(X_test, decision_boundary=0.5)
 final_accuracy = np.mean(y_pred_test == y_test)
 print(f"Final model accuracy: {final_accuracy}")

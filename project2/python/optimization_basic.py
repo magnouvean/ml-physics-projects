@@ -237,7 +237,11 @@ for i, (title, cost, learning_rates) in enumerate(
     r = i // 2
     c = i % 2
     ax[r, c].plot(np.log10(learning_rates), cost)
-    ax[r, c].xaxis.set_ticks(np.arange(np.log10(np.min(learning_rates)), np.log10(np.max(learning_rates))+1, 1.0))
+    ax[r, c].xaxis.set_ticks(
+        np.arange(
+            np.log10(np.min(learning_rates)), np.log10(np.max(learning_rates)) + 1, 1.0
+        )
+    )
     ax[r, c].set_title(title)
     ax[r, c].set_xlabel("log($\\eta$)")
     ax[r, c].set_ylabel("MSE")
@@ -320,16 +324,16 @@ for method_name, cost, beta in zip(
     print(f"Best beta: {beta[best_cost_index,:]}")
 
 
-
 #
 # We now get in to ridge-regression, and we redefine some of the
-# learning-rate-grids (nu-s) and define some regularization parameters
+# learning-rate-grids (eta-s) and define some regularization parameters
 # (lambda-s)
 #
 learning_rates_plain = 10 ** (np.linspace(-4, 1, 11))
 learning_rates_plain_sgd = 10 ** (np.linspace(-4, 1, 11))
 learning_rates_adagrad = 10 ** (np.linspace(-5, 5, 11))
 regularization_parameters = 10 ** (np.linspace(-8, 1, 10))
+
 
 # We use a class which lets us save the regularization parameter within
 # functions.
@@ -342,6 +346,7 @@ class RidgeCost:
 
     def grad(self, X: np.ndarray, y: np.ndarray, beta: np.ndarray) -> np.ndarray:
         return mse_ols_grad(X, y, beta) + self._lmbda * beta
+
 
 # Collect a matrix of test mses which in (i, j) has the mse of the test data
 # with learning-rate i, regularization parameter j.
@@ -358,7 +363,7 @@ test_mses_adagrad_gd = np.zeros(
 test_mses_adagrad_sgd = np.zeros_like(test_mses_adagrad_gd)
 test_mses_adagrad_gd_mom = np.zeros_like(test_mses_adagrad_gd)
 test_mses_adagrad_sgd_mom = np.zeros_like(test_mses_adagrad_gd)
-    
+
 # We'll here generate some test data as well, as this is more natural to
 # determine the model performances on.
 np.random.seed(1234)
@@ -440,11 +445,12 @@ for i, (title, mse) in enumerate(
         ax=ax[r, c],
         xticklabels=np.round(np.log10(regularization_parameters), 2),
         yticklabels=np.round(np.log10(learning_rates_adagrad), 2),
+        center=1.0,
         vmax=10,
     )
     ax[r, c].set_title(title)
-    ax[r, c].set_xlabel("log10($\lambda$)")
-    ax[r, c].set_ylabel("log10($\nu$)")
+    ax[r, c].set_xlabel("log10($\\lambda$)")
+    ax[r, c].set_ylabel("log10($\\eta$)")
 
 fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.15)
 fig.savefig(f"{fig_directory}/optimizers_ridge_adagrad.png", dpi=196)
