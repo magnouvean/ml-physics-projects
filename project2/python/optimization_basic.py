@@ -22,7 +22,8 @@ def f(x):
 
 x = np.linspace(-2, 2, 201)
 X = np.c_[np.ones(len(x)), x, x**2, x**3, x**4]
-y = f(x)
+# Add normally distributed noise on top with sd=0.2
+y = f(x) + 0.2 * np.random.randn(len(x))
 
 # Analytical least squares solution.
 analytical = np.linalg.pinv(X.T @ X) @ X.T @ y
@@ -189,7 +190,7 @@ def mse_ols_grad(X, y, beta):
 
 # Make grids of learning rates we test. Here we have constructed these so that
 # the last cost will diverge, while the other will converge.
-learning_rates_plain = 10 ** (np.linspace(-5, -1, 11))
+learning_rates_plain = 10 ** (np.linspace(-6, -1, 11))
 learning_rates_plain_sgd = 10 ** (np.linspace(-5, 0, 11))
 learning_rates_adagrad = 10 ** (np.linspace(-5, 5, 11))
 
@@ -220,24 +221,27 @@ minibatch_size = 16
     minibatch_size,
 )
 
-# Generate figures for gd/sgd. Keep in mind that since we have created these so
-# that we ignore the last cost (in the case of gd the last 2 costs) as these
-# have diverged.
+#
+# Generate figures for gd/sgd where we plot the cost on the y-axis against the
+# corresponding learning-rate on the x-axis.
+#
 fig, ax = plt.subplots(2, 2)
 for i, (title, cost, learning_rates) in enumerate(
     (
-        ("GD", costs_gd[:-2], learning_rates_plain[:-2]),
-        ("SGD", costs_sgd[:-1], learning_rates_plain_sgd[:-1]),
-        ("GD (With momentum)", costs_gd_mom[:-1], learning_rates_plain[:-1]),
-        ("SGD (With momentum)", costs_sgd_mom[:-1], learning_rates_plain_sgd[:-1]),
+        ("GD", costs_gd, learning_rates_plain),
+        ("SGD", costs_sgd, learning_rates_plain_sgd),
+        ("GD (With momentum)", costs_gd_mom, learning_rates_plain),
+        ("SGD (With momentum)", costs_sgd_mom, learning_rates_plain_sgd),
     )
 ):
     r = i // 2
     c = i % 2
-    ax[r, c].plot(np.log(learning_rates), cost)
+    ax[r, c].plot(np.log10(learning_rates), cost)
+    ax[r, c].xaxis.set_ticks(np.arange(np.log10(np.min(learning_rates)), np.log10(np.max(learning_rates))+1, 1.0))
     ax[r, c].set_title(title)
     ax[r, c].set_xlabel("log($\\eta$)")
     ax[r, c].set_ylabel("MSE")
+    ax[r, c].set_ylim([0, 20])
 
 fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.1)
 fig.savefig(f"{fig_directory}/optimizers_plot.png", dpi=196)
@@ -247,7 +251,7 @@ fig.savefig(f"{fig_directory}/optimizers_plot.png", dpi=196)
 # We see what happens when we give it four times as many epochs
 #
 more_epochs = epochs * 4
-print("\n\n====Increaing amount of epochs====")
+print("\n\n====Increasing amount of epochs====")
 scheduler = SchedulerConstant(0.01)
 o = Optimizer(X, y, scheduler, mse_ols, mse_ols_grad)
 
@@ -316,6 +320,17 @@ for method_name, cost, beta in zip(
     print(f"Best beta: {beta[best_cost_index,:]}")
 
 
+
+#
+# We now get in to ridge-regression, and we redefine some of the
+# learning-rate-grids (nu-s) and define some regularization parameters
+# (lambda-s)
+#
+learning_rates_plain = 10 ** (np.linspace(-4, 1, 11))
+learning_rates_plain_sgd = 10 ** (np.linspace(-4, 1, 11))
+learning_rates_adagrad = 10 ** (np.linspace(-5, 5, 11))
+regularization_parameters = 10 ** (np.linspace(-8, 1, 10))
+
 # We use a class which lets us save the regularization parameter within
 # functions.
 class RidgeCost:
@@ -323,13 +338,11 @@ class RidgeCost:
         self._lmbda = lmbda
 
     def cost(self, X: np.ndarray, y: np.ndarray, beta: np.ndarray) -> float:
-        return mse_ols(X, y, beta) + self._lmbda * np.sum(beta**2)
+        return mse_ols(X, y, beta) + 0.5 * self._lmbda * np.sum(beta**2)
 
     def grad(self, X: np.ndarray, y: np.ndarray, beta: np.ndarray) -> np.ndarray:
         return mse_ols_grad(X, y, beta) + self._lmbda * beta
 
-
-regularization_parameters = 10 ** (np.linspace(-8, 1, 10))
 # Collect a matrix of test mses which in (i, j) has the mse of the test data
 # with learning-rate i, regularization parameter j.
 test_mses_gd = np.zeros((len(learning_rates_plain), len(regularization_parameters)))
@@ -345,17 +358,18 @@ test_mses_adagrad_gd = np.zeros(
 test_mses_adagrad_sgd = np.zeros_like(test_mses_adagrad_gd)
 test_mses_adagrad_gd_mom = np.zeros_like(test_mses_adagrad_gd)
 test_mses_adagrad_sgd_mom = np.zeros_like(test_mses_adagrad_gd)
+    
+# We'll here generate some test data as well, as this is more natural to
+# determine the model performances on.
+np.random.seed(1234)
+x_test = np.random.uniform(-2, 2, 51)
+X_test = np.c_[np.ones(len(x_test)), x_test, x_test**2, x_test**3, x_test**4]
+y_test = f(x_test) + 0.2 * np.random.randn(len(x_test))
 
 for j, lmbda in enumerate(regularization_parameters):
     ridge_cost = RidgeCost(lmbda)
     cost = ridge_cost.cost
     cost_grad = ridge_cost.grad
-
-    # We'll here generate some test data as well
-    np.random.seed(1234)
-    x_test = np.random.uniform(-2, 2, 51)
-    X_test = np.c_[np.ones(len(x_test)), x_test, x_test**2, x_test**3, x_test**4]
-    y_test = f(x_test)
 
     _, betas = optimize_demo(
         cost,
@@ -398,13 +412,14 @@ for i, (title, mse, learning_rates) in enumerate(
         ax=ax[r, c],
         xticklabels=np.round(np.log10(regularization_parameters), 2),
         yticklabels=np.round(np.log10(learning_rates), 2),
-        vmax=10,
+        vmax=10 if i <= 1 else 5,
+        center=3.0 if i <= 1 else 0.5,
     )
     ax[r, c].set_title(title)
     ax[r, c].set_xlabel("log10($\\lambda$)")
     ax[r, c].set_ylabel("log10($\\eta$)")
 
-fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.1)
+fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.15)
 fig.savefig(f"{fig_directory}/optimizers_ridge_gd_sgd.png", dpi=196)
 
 # And a corresponding one for adagrad.
@@ -428,6 +443,8 @@ for i, (title, mse) in enumerate(
         vmax=10,
     )
     ax[r, c].set_title(title)
+    ax[r, c].set_xlabel("log10($\lambda$)")
+    ax[r, c].set_ylabel("log10($\nu$)")
 
-fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.1)
+fig.subplots_adjust(hspace=0.6, wspace=0.3, bottom=0.15)
 fig.savefig(f"{fig_directory}/optimizers_ridge_adagrad.png", dpi=196)

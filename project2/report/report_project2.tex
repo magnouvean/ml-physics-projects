@@ -8,6 +8,8 @@
 \usepackage{bm}
 \usepackage{listings}
 
+\graphicspath{{../figures/}}
+
 
 \begin{document}
 \maketitle
@@ -86,6 +88,26 @@ multidimensional function to an arbitrary accuracy
 guarantee us a good model.
 
 \section{Methods}
+\subsection{Basic optimization data}
+\label{basicoptdesc}
+In part of our analysis we will explore the different parameters for the
+different gradient methods. For this we will just use some simple arbitrary data
+generated from a fourth order polynomial. The polynomial I have chosen to
+generate the data from is:
+$$f(x) = 4 - 6 x^2 + x^4.$$
+We then just generate a grid of values $\bm{x}$ on $[-2, 2]$ and generate the
+response as follows:
+$$\bm{y} = f(\bm{x}) + \bm{epsilon}$$
+, where $\epsilon_i \sim N(0, 0.2^2)$, and $f$ is applied element-wise.  We will
+use the linear regression (mse) and lasso regression (mse and $l_2$ norm), and a
+design matrix with fourth-order polynomial features. This way analytical
+least-squares solution should give us optimal parameters close to $(4, 0, -6, 0,
+      1)^T$. We will mainly explore the effect that the learning-rate and
+regularization terms have, and also quickly see the effect of the amount
+of epochs and minibatch-size can have. We wil also compare for a fixed
+amount of epochs, which of the methods perform the best, giving an
+indication to which extent the method of optimization is relevant.
+
 \subsection{The franke function}
 The franke-function is a $2$-dimensional function which we already have explored
 in project $1$ \cite{githubrepoproject1}, so I won't go too deeply into this
@@ -243,13 +265,14 @@ incorporates a form of momentum \cite[s.~8.5.3]{goodfellow2016deep}, so we might
 not get much quicker learning by using it, if any at all.
 
 \subsubsection{AdaGrad}
+\label{adagradsec}
 AdaGrad is another way designed to give faster learning. This is an algorithm
 which uses adaptive learning-rates. These have a difference in that each axis of
 the parameter-space $\bm{\theta}$ essentially get a separate learning-rate
 \cite[s.~8.5]{goodfellow2016deep}, while these separate learning-rates change/adapt
 throughout the learning process, which is a different approach to using momentum.
 AdaGrad is a rather simple way of achieving a good such adaptive learning-rate.
-It scales the parameters with with big updates, and scales up the ones with
+It scales down the parameters with with big updates, and scales up the ones with
 small corresponding updates up. For AdaGrad we introduce one variable $\bm{r}$
 which we initially set to $\bm{0}$, as well as a small constant $\delta$ which
 we typically set to $10^{-7}$. The algorithms is as follows until the
@@ -561,6 +584,25 @@ instead of $\bm{h}^{(L)}$ and $\bm{t}$ respectively. This essentially means the
 same thing, but makes more sense with the notation for usage outside of neural
 networks.
 
+\subsection{Accuracy score}
+For classification methods, after we have fitted the models and made predictions
+we may want to evaluate a metric of how good our model really is. One intuitive
+such metric we will use a lot is the accuracy score. The accuracy-score
+essentially is just the proportions of datapoints we have classified correctly
+on some data. The accuracy score can then be defined.
+Using numpy this can simply be written as:
+\begin{lstlisting}
+np.mean(y_pred == y)
+\end{lstlisting}
+, for some predictions \textit{y\_pred} and some target \textit{y}. Keep in mind
+that while this can tell us the overall successes/failures of classifications it
+does not tell us what kinds of prediction errors we have made. For example in a
+binary-classification problem we may be interested in finding the amount of
+predictions we have made to be $1$ while the target was $0$, or vice versa, as
+one of these predictions errors may be more severe than the other. For these
+cases we have a confusion-matrix plotting the predictions against the target in
+a heatmap. We will use some such plots in this project as well.
+
 \subsection{Model complexities}
 One final thing to consider which will be very important for our results is the
 model-complexity of neural networks and logistic regression. Logistic regression
@@ -590,6 +632,153 @@ We then can use the Newton-Raphson method on this in order to estimate the $\bm{
 \section{Results}
 
 \subsection{General optimization}
+The \textbf{optimization\_basic.py} in the project repo
+\cite{githubrepoproject2code} performs various experimentation on some generated
+data as described in \ref{basicoptdesc}, and explores the various effects the
+various parameters have when using gradient methods. For the amount of epochs we
+did a quick test by four-doubling the amount of epochs. Table
+\ref{epochs-varying} shows the results of optimizing using GD and SGD with
+different amount of epochs. What we clearly see is that in general the more
+amount of epochs we allow the smaller the cost will be (granted we have
+convergence for the learning-rate). This is intuitive as for each iteration we
+should get closer to the minimum of the cost, so doing more iterations must also
+naturally bring us closer to the minimum.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c |}
+            Epochs   & 100  & 400  \\
+            COST GD  & 4.51 & 1.56 \\
+            COST SGD & 0.13 & 0.04
+      \end{tabular}
+      \caption{The cost (mean-squared-error) of the model for plain gradient
+            descent and stochastic gradient descent, trained with $100$ epochs and
+            $400$ epochs. In both cases the model trained on more epochs is
+            substantially smaller.}
+      \label{epochs-varying}
+\end{table}
+
+For stochastic gradient descent we may also be interested in seeing if the size
+of the minibatches has an effect on the speed we are able to learn. Table
+\ref{minibatchsize-varying} shows the effect at which the minibatch-size
+influences how quick we are able to minimize the cost. Here we see that the
+lower minibatch-sizes seem to give a little quicker learning, but that  this
+effect is not that enormous (perhaps with the exception of the difference
+between the minibatch-sizes of $8$ and $32$, where there is quite a difference).
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c | c |}
+            Minibatch-size  & 8      & 12     & 16     & 32     \\
+            COST SGD (best) & 0.0421 & 0.0612 & 0.1315 & 0.7856
+      \end{tabular}
+      \caption{The cost (mean-squared-error) of the model for stochastic
+            gradient descent trained on a grad of learning-rates for each
+            minibatch-size with the learning-rate giving the lowest cost is chosen. We
+            see that in this case the lower minibatch-sizes seem give faster
+            learning. Here we have trained using $100$ epochs.}
+      \label{minibatchsize-varying}
+\end{table}
+
+We also trained the various methods using stochastic gradient descent on some
+learning-rate grid. The costs of these functions plotted against the
+learning-rates at which the cost was obtained is contained in figure
+\ref{learningrate-cost-plot}. We see that generally that the bigger the
+learning-rate is the better it is, however we also see that if it gets to high
+then we get that the cost diverges towards infinity. We also can see that in all
+the cases the learning-rate is very important, with higher learning-rates giving
+much quicker learning.
+
+Just from this plot we see quite a big difference between how quick the
+different optimization-methods work. Table \ref{gradmethods-comparison} shows
+the costs for the different methods of calculating the learning-rates. We see
+that in all cases adding momentum increases the speed of learning by quite a
+bit (perhaps less so with AdaGrad trained on stochastic minibatches, where this
+increase is quite marginal). We see that which method we use does impact the
+speed of learning by quite a lot, with the lowest cost (stochastic AdaGrad with
+momentum) having more than $100$ times smaller than the highest cost (GD without
+momentum). Overall we can see that AdaGrad did seem to perform the best out of
+the methods we tried out.
+
+We also check out the performance of each method under a different loss, which
+is the ridge-loss. For the previous cases we have explored how the performance
+depends some hyperparameters isolated. In ridge regression we introduce another
+hyperparameter, namely the regularization parameter $\lambda$. However we may
+also want to see how the performance. Since we are dealing with ridge regression
+here it makes sense to explore the mse on some test-data, which is what we have
+done in the program. This now doesn't only depend on the learning-rate $\nu$
+anymore as previously, but also the regularization parameter $\lambda$ (we keep
+the rest of the parameters fixed). Figure \ref{heatmapplot-lr-lambda-gd-sgd}
+shows a heatmap which tells us how this depends on both the $\nu$ and $\lambda$
+for GD and SGD.  What we see is that the best performance, but that a wrong
+$\nu$ or $\lambda$ alone can very much ruin the performance. Similarly
+\ref{heatmapplot-lr-lambda-adagrad} shows a corresponding plot for AdaGrad. Here
+we see that this is much more robust to higher learning-rates than the other
+methods, where it seems to take much more for this to diverge. This is probably
+related to the fact that AdaGrad vastly downscales the learning in directions
+with high historical updates (see \ref{adagradsec}) so this is able to combat
+the higher learning-rates.
+
+For both the figure \ref{heatmapplot-lr-lambda-gd-sgd} and
+\ref{heatmapplot-lr-lambda-adagrad}, focusing on the regularization parameter
+$\lambda$ we see much of the same as we did with normal ridge, where a too low
+$\lambda$ did not give that good results because of too little regularization,
+while a too high $\lambda$ also caused subpar results due to too much
+regularization. However, we also see that we now have another dimension on top
+determining the performance, namely that the learning-rate must also be optimal
+for the model to be any good. Picking a good model then requires us to do some
+kind of hyperparameter-tuning (like a grid-search for example) on both $\nu$ and
+$\lambda$.
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{optimizers_plot}
+      \caption{The costs trained on specific learning-rates. We see a general
+            downward-moving trend, until we get a learning-rate higher than
+            $\sqrt{10}$ for the SGD cases, and $10^{-2}$, and
+            $10^{-\frac{3}{2}}$ for the GD cases without and with momentum
+            respectively, in which case after this we get a diverging cost.}
+      \label{learningrate-cost-plot}
+\end{figure}
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c | c |}
+            Method name          & GD     & SGD    & AdaGrad (non-sgd) & AdaGrad (sgd) \\
+            COST (no momentum)   & 4.5150 & 4.1092 & 1.4655            & 0.0418        \\
+            COST (with momentum) & 0.0384 & 0.0488 & 0.0400            & 0.0385
+      \end{tabular}
+      \caption{Various different learning-rate scheduling methods, with the
+            methods being trained for a grid of learning-rates $\nu$, with the best
+            cost being selected. Here for the stochastic gradient descent, we
+            have used a timedecay for the learning-rate (plain gradient descent
+            only). AdaGrad (sgd) here refers to using AdaGrad and training on
+            stochastic mini-batches.}
+      \label{gradmethods-comparison}
+\end{table}
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{optimizers_ridge_gd_sgd}
+      \caption{A heatmap of the test MSEs for various learning-rates and
+            regularization paramters, using GD/SGD with and without momentum. Here we
+            see that the lowest test MSEs for all the methods are somewhere in the
+            middle of each heatmap. We also see that too low or high of a
+            learning-rate $\nu$ gives very poor or diverging costs, while too high or
+            low regularization parameter $\lambda$ also gives worse performance.}
+      \label{heatmapplot-lr-lambda-gd-sgd}
+\end{figure}
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{optimizers_ridge_adagrad}
+      \caption{A similar heatmap to \ref{heatmapplot-lr-lambda-gd-sgd}. We see
+            much of the same patterns here, with one difference being that apart
+            from the non-stochastic model without momentum, we are able to have
+            much higher learning-rates without the costs diverging.}
+      \label{heatmapplot-lr-lambda-adagrad}
+\end{figure}
+
 
 \subsection{The franke-function}
 
