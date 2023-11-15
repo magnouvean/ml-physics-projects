@@ -19,7 +19,6 @@ from p2libs import (
     sse_grad,
 )
 
-np.random.seed(1234)
 
 
 def franke_function(x, y):
@@ -30,6 +29,7 @@ def franke_function(x, y):
     return term1 + term2 + term3 + term4
 
 
+np.random.seed(1234)
 n = 200
 X = np.zeros((n, 2))
 Y = np.zeros_like(X)
@@ -39,7 +39,7 @@ X[:, 0] = (x_1 - np.mean(x_1)) / np.std(x_1)
 X[:, 1] = (x_2 - np.mean(x_2)) / np.std(x_2)
 y = franke_function(x_1, x_2).reshape((n, 1)) + 0.1 * np.random.randn(n, 1)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.5)
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8)
 
 # Scale the data:
 sc = StandardScaler()
@@ -184,6 +184,9 @@ for activ_func, mses_matrix, learning_rates in (
             nn.fit(X_train, y_train)
             y_test_pred = nn.predict(X_test)
             mses_matrix[i, j] = mse(y_test_pred, y_test)
+
+
+print("====Costs for different activation functions====")
 
 for activ_func_name, mses, learning_rates in (
     ("sigmoid", mses_sigmoid, learning_rates_sigmoid),
