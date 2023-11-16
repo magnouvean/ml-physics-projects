@@ -16,60 +16,66 @@
 \bibliographystyle{unsrt}
 
 \section{Abstract}
-In this project we tested out performances of neural networks for regression and
-binary classification purposes, and compared this with the linear models we
-explored in the previous project \cite{githubrepoproject1} (in the case of
-regression), as well as our own implementation of logistic regression (for
-classification). We here implemented our own neural network code from scratch,
-basing the training on the backpropagation-algorithm.  With gradient
-optimization being a central part of the development of both neural networks and
-logistic regression we also dove into various ways of optimizing the cost
-function through the Newton-Raphson method, in particular. We also explored what
-effect the various hyperparameters introduced in the methods have on how quick we
-are able to optimize the cost, and the performance of the final model. In
-particular we explored the effect of the learning-rate and
-regularization-parameter, and we looked at various methods for optimizing
-through the Newton-Raphson method, including ordinary gradient descent,
-stochastic gradient descent, adagrad, rmsprop and adam. For the regression we
-used the franke-function which we introduced in project 1
-\cite{githubrepoproject1}, while for classification we used breast cancer data
-from wisconsin \cite{sklearncancerdata} \cite{breastcancerwisconsin}. What we
-saw was that for the franke-function with regularization we did not get any
-major performance gains compared to the simpler linear models we tested in
-project 1 \cite{githubrepoproject1}. For the cancer data we also saw that while
-the neural networks did perform a little better than logistic regression,
-however the logistic regression also managed to give us very good results.
-Throughout the project we have manifested again that just because neural
-networks might be very powerful and impressive in certain tasks, there are still
-cases where simpler models will outperform them. We also saw which parts of a
-neural net was most instrumental for good model performance, with especially the
-learning-rate, regularization parameter, the learning-rate scheduler, and the
-amount of epochs being the most instrumental for cost-minimization, while
-activation functions and hidden layer sizes didn't matter all that much.
+For the last decade especially, neural networks have been used for more and
+more purposes, with them often doing very well in highly complex tasks, with
+regression and classification being two of its common applications.
+\\
+
+Motivated in exploring these two applications further, we have in this project
+tested out how well a basic neural network performs in a regression and a binary
+classification example. We then compared this with the linear models we explored
+in the previous project \cite{githubrepoproject1} (in the case of regression),
+as well as our own implementation of logistic regression (for classification).
+For this we have implemented our own neural network code from scratch, where we
+have used gradient methods paired with the backpropagation-algorithm.  With
+gradient optimization being a central part of the development of both neural
+networks and logistic regression we explored ways we can most effectively
+optimize the cost function through the Newton-Raphson method, with the various
+hyperparameters being central. We also looked at various learning-rate
+schedulers, namely Adam, AdaGrad and RMSProp, and also explored with using
+regularization for our networks.
+\\
+
+What we saw was that in the regression example (using the franke-function we
+explored in project 1 \cite{githubrepoproject1}), with regularization, we got some
+considerable performance gains compared to the linear models we tested in
+project 1, while for classification the neural network did emerge as better, but
+with a much finer margin. In the classification result we were able to predict
+$100\%$ of the observations in the test-set for our final model, with the
+AdaGrad learning-rate scheduler and the sigmoid activation function with two
+hidden layers giving us the best fit. Throughout the project we have manifested
+the power of neural networks, while simultaneously demystified its components
+and the effect that some important hyperparameters have. It comes out that the
+learning-rate (and learning-rate scheduler) and regularization parameter are
+especially central, while other parameters are less central, but still noticeable.
 
 \section{Introduction}
 In the last $10$ or so years, neural networks have really exploded in
 popularity. Various different types of neural networks have proved effective for
 various different applications all from speech-recognition, to image processing,
-to complex language tasks. But are they always the best option, and how do we
-get the most performance out of them?
+to complex language tasks. But how powerful are they really in comparison to
+linear models or logistic regression when it comes to basic
+regression/classification, and how do we get the most performance out of them?
+\\
 
-These are some of the things which we aim to answer here. To do this we will
-implement a rather simple multi-layer perceptron model from scratch using the
-backpropagation algorithm. We will then use this implementation in a
-regression-setting, generating data from the franke-function as we did in
-project $1$, and of course compare this to the results we got with the linear
-models we explored in project $1$. We will also use our neural network
-implementation in a classification setting, where we are trying to classify
-whether a patient has cancer or not based on various medical features.
-Additionally we will explore various methods of gradient optimizations, as both
-the methods we will deal with in this project (that is neural networks and
-logistic regression) have cost-functions which one would typically solve using
-some sort of gradient method.  As already mentioned we will implement and
-explore performances based on plain gradient descent, stochastic gradient
-descent, adagrad, rmsprop and adam. For all our different methods we will
-compare our own implementations against established libraries, namely tensorflow
-and scikit-learn.
+These are some of the things which we aim to tackle here. To do this we will
+implement a rather simple multi-layer perceptron model from scratch using
+gradient methods with the backpropagation algorithm for the training. We will
+then use our own neural network model for both regression and classification.
+For the regression we will be generating data from the franke-function as we did
+in project $1$, and of course compare this to the results we got with the linear
+models we explored there. For the classification data we will try to classify
+whether a patient has cancer or not based on various medical features, where the
+wisconsin breastcancer data \cite{breastcancerwisconsin} is the data we will be
+using for that.  Additionally we will explore various methods of gradient
+optimizations, as both the methods we will implement in this project (i.e.
+neural networks and logistic regression) have cost-functions which is typically
+minimized w.r.t. its parameters using some sort of gradient method.  As already
+mentioned we will implement and explore performances based on various
+optimization algorithms, with the ones we will look at in this project being
+plain gradient descent, stochastic gradient descent, momentum, AdaGrad, RMSProp
+and Adam.  For all our different methods we will compare our own implementations
+against established libraries, namely tensorflow and scikit-learn.
 
 There are mainly two reasons why we are specifically focusing on using neural
 networks in this project. One is, as already mentioned, that they have become
@@ -79,13 +85,21 @@ model works, and how we get the most amount of performance out of them by
 tweaking the various different parts of the network. Additionally since they, in
 comparison to a lot of other models, are quite computationally expensive it is
 important to realize which of the parameters are the most relevant to tweak, and
-which are not so relevant as this can save a lot of time. Another reason is
+which are not so relevant, as this can save a lot of time. Another reason is
 because of the universal approximation theorem applying to neural networks. We
 will go more deeply into this in \ref{univ-approx-thm}, but the essence is that
 a sufficiently big neural network should be able approximate any function
 multidimensional function to an arbitrary accuracy
-\cite[s.~13.5]{lecutenotes13}. We will see that this doesn't necessarily
-guarantee us a good model.
+\cite[s.~13.5]{lecutenotes13}. We will see if this property is able to give the
+neural networks good results for the regression/classification examples and if
+we then are able to outperform models not having this property (linear models /
+logistic regression).
+\\
+
+We will now get into the methods, before we represent our results, do some
+analysis on these results before we conclude. In both the methods and results we
+start by look deeper into the pure optimization parts, before going into the
+models themselves (i.e. neural networks and logistic regression).
 
 \section{Methods}
 \subsection{Basic optimization data}
@@ -1132,6 +1146,13 @@ logistic regression (with some regularization) could still be a perfectly good
 model, especially since logistic regression models are much easier to train, as
 well as the fact that they are much better for cases of inference, which is
 often relevant in the medical field.
+
+\section{Appendix}
+
+\subsection{Project code (github)}
+All the python programs described in the report and with the full source code can be
+found at:
+\url{https://github.com/magnouvean/ml-physics-projects/tree/main/project2/python}
 
 \bibliography{./sources.bib}
 
