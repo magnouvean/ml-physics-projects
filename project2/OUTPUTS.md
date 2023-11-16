@@ -133,14 +133,14 @@ Convergence after 11 epochs
 
 ========Activation Functions========
 Accuracies:
-<function sigmoid at 0x7fb606648360> max acc: 1.0, lr=0.0001
-<function relu at 0x7fb6066484a0> max acc: 0.9773869346733668, lr=0.0001
-<function lrelu at 0x7fb6066485e0> max acc: 0.9723618090452262, lr=0.0001
+<function sigmoid at 0x7f7d17df04a0> max acc: 1.0, lr=0.0001
+<function relu at 0x7f7d17df05e0> max acc: 0.9773869346733668, lr=0.0001
+<function lrelu at 0x7f7d17df0720> max acc: 0.9723618090452262, lr=0.0001
 
 End of training loss:
-<function sigmoid at 0x7fb606648360>: 0.0012112684297163737, lr=0.01
-<function relu at 0x7fb6066484a0>: 207.23265815844144, lr=0.01
-<function lrelu at 0x7fb6066485e0>: 253.28463078624117, lr=0.001
+<function sigmoid at 0x7f7d17df04a0>: 0.0012112684297163737, lr=0.01
+<function relu at 0x7f7d17df05e0>: 207.23265815844144, lr=0.01
+<function lrelu at 0x7f7d17df0720>: 253.28463078624117, lr=0.001
 Convergence after 37 epochs
 Convergence after 11 epochs
 Convergence after 13 epochs
@@ -215,28 +215,40 @@ RMSProp max validation accuracy: 0.9509803921568627
 Best learning_rate for adagrad: 0.1
 Best regularization parameter value for adagrad: 1e-07
 COST: 673.4364466838488
-COST: 1.5665315450805917
-COST: 0.6744193581437385
-COST: 0.3712362097292693
-COST: 0.23526834085242115
-COST: 0.15739974864159914
-COST: 0.11049545979862346
-COST: 0.08649659569121672
-COST: 0.07166338804913726
-COST: 0.06134325198070681
+COST: 0.09530791441591768
+COST: 0.03270464455050852
+COST: 0.017349715004354775
+COST: 0.0122125970688519
+Convergence after 804 epochs
 Final model accuracy: 1.0
 
 1/3 [=========>....................] - ETA: 0s
-3/3 [==============================] - 0s 1ms/step
+3/3 [==============================] - 0s 5ms/step
 Final model accuracy (tensorflow): 0.9855072463768116
 ```
 
 ## logisticregression_breastcancer.py
 ```
-Best accuracy (train): 0.9170854271356784, lambda=0.1
-Best accuracy (test): 0.9019607843137255, lambda=0.1
+Best accuracy (train): 0.9949748743718593, lambda=1e-10
+Best accuracy (validation): 0.9509803921568627, lambda=1.0
 
 
-Final model accuracy: 0.9565217391304348
-Final model accuracy sklearn: 0.9565217391304348
+Final model accuracy: 0.9710144927536232
+Final model accuracy sklearn: 0.9710144927536232
+
+
+====Sklearn vs own model betas====
+Own model:
+[-0.27508581 -0.42983966 -0.28427205 -0.39308309 -0.1989217   0.45048731
+ -0.78791301 -0.80778989 -0.02328845  0.40801365 -1.24382468  0.15647918
+ -0.63577011 -1.10139002 -0.23784676  0.71176435  0.11720188 -0.44150709
+  0.32063682  0.58570076 -0.97774223 -1.15315514 -0.77342976 -1.04002059
+ -0.61792775 -0.0162786  -0.7714178  -0.99387819 -0.76331796 -0.74551662]
+Sklearn model:
+[[-0.2751106  -0.42983294 -0.28429883 -0.3931299  -0.19891633  0.45046368
+  -0.78787807 -0.80776894 -0.02327573  0.40803569 -1.24385773  0.15647114
+  -0.63576983 -1.10138215 -0.23784667  0.71177714  0.11717816 -0.44151818
+   0.32062655  0.58571254 -0.97772824 -1.15315806 -0.77336696 -1.04003541
+  -0.61794445 -0.01628587 -0.77140349 -0.99384859 -0.76332908 -0.74554647]]
+
 ```

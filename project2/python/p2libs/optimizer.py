@@ -24,6 +24,8 @@ class Optimizer(abc.ABC):
         self.X = X
         self.y = y
         self.np = np if cost_grad != "jax" else jnp
+
+        self._cost = cost
         if callable(cost_grad):
             self.cost_grad = cost_grad
         elif cost_grad == "jax":
@@ -69,7 +71,7 @@ class Optimizer(abc.ABC):
         # is only used for printing out the amount of epochs it took before
         # convergence.
         self._n_epoch += 1
-        current_cost = self._cost(self._X, self._y, self._theta)
+        current_cost = self._cost(self.X, self.y, self._theta)
         max_diff = (
             None
             if len(self._cost_history) < self._n_iters_no_change

@@ -621,10 +621,10 @@ can do classification based on this, where we typically classify to $1$ if this
 probability is bigger than $0.5$ (this is the boundary we will use here) and $0$
 if lower than $0.5$. In order to estimate the $\beta$ parameters we use the
 likelihood such a model, given by \cite[s.~4.4]{hastie2009elements}:
-$$l(\bm{\beta}) = \sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - log(1 + \exp(\bm{x}_i \bm{\beta})))$$
+$$l(\bm{\beta}) = \sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - \log(1 + \exp(\bm{x}_i \bm{\beta})))$$
 , where the estimates $\hat{\bm{\beta}}$ become the ones which maximize this
 likelihood. The cost-function then becomes:
-$$C(\bm{\beta}) = -\sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - log(1 + \exp(\bm{x}_i \bm{\beta}))).$$
+$$C(\bm{\beta}) = -\sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - \log(1 + \exp(\bm{x}_i \bm{\beta}))).$$
 To minimize we find the gradient \cite[s.~4.4]{hastie2009elements}:
 $$\frac{\partial C(\bm{\beta})}{\partial \bm{\beta}} = -\sum_{i=1}^{n}\bm{x}_i^T(y_i - Pr(Y_i = 1 | \bm{x}_i)) = -\bm{X}^T(\bm{y} - \bm{p}).$$
 We then can use the Newton-Raphson method on this in order to estimate the $\bm{beta}$.
@@ -706,12 +706,12 @@ depends some hyperparameters isolated. In ridge regression we introduce another
 hyperparameter, namely the regularization parameter $\lambda$. However we may
 also want to see how the performance. Since we are dealing with ridge regression
 here it makes sense to explore the mse on some test-data, which is what we have
-done in the program. This now doesn't only depend on the learning-rate $\nu$
+done in the program. This now doesn't only depend on the learning-rate $\eta$
 anymore as previously, but also the regularization parameter $\lambda$ (we keep
 the rest of the parameters fixed). Figure \ref{heatmapplot-lr-lambda-gd-sgd}
-shows a heatmap which tells us how this depends on both the $\nu$ and $\lambda$
+shows a heatmap which tells us how this depends on both the $\eta$ and $\lambda$
 for GD and SGD.  What we see is that the best performance, but that a wrong
-$\nu$ or $\lambda$ alone can very much ruin the performance. Similarly
+$\eta$ or $\lambda$ alone can very much ruin the performance. Similarly
 \ref{heatmapplot-lr-lambda-adagrad} shows a corresponding plot for AdaGrad. Here
 we see that this is much more robust to higher learning-rates than the other
 methods, where it seems to take much more for this to diverge. This is probably
@@ -727,7 +727,7 @@ while a too high $\lambda$ also caused subpar results due to too much
 regularization. However, we also see that we now have another dimension on top
 determining the performance, namely that the learning-rate must also be optimal
 for the model to be any good. Picking a good model then requires us to do some
-kind of hyperparameter-tuning (like a grid-search for example) on both $\nu$ and
+kind of hyperparameter-tuning (like a grid-search for example) on both $\eta$ and
 $\lambda$.
 
 \begin{figure}
@@ -749,7 +749,7 @@ $\lambda$.
             COST (with momentum) & 0.0384 & 0.0488 & 0.0400            & 0.0385
       \end{tabular}
       \caption{Various different learning-rate scheduling methods, with the
-            methods being trained for a grid of learning-rates $\nu$, with the best
+            methods being trained for a grid of learning-rates $\eta$, with the best
             cost being selected. Here for the stochastic gradient descent, we
             have used a timedecay for the learning-rate (plain gradient descent
             only). AdaGrad (sgd) here refers to using AdaGrad and training on
@@ -764,7 +764,7 @@ $\lambda$.
             regularization paramters, using GD/SGD with and without momentum. Here we
             see that the lowest test MSEs for all the methods are somewhere in the
             middle of each heatmap. We also see that too low or high of a
-            learning-rate $\nu$ gives very poor or diverging costs, while too high or
+            learning-rate $\eta$ gives very poor or diverging costs, while too high or
             low regularization parameter $\lambda$ also gives worse performance.}
       \label{heatmapplot-lr-lambda-gd-sgd}
 \end{figure}
@@ -785,7 +785,7 @@ Experimentation of using neural network with the franke-function is determined
 in the \textbf{franke\_function.py} in the project codes
 \cite{githubrepoproject2code}. We here tried to fit an neural network as good as
 possible to minimize the MSE. Doing a grid-search on both the learning-rate
-$\nu$ and the regularization parameter $\lambda$ for each method using only
+$\eta$ and the regularization parameter $\lambda$ for each method using only
 stochastic gradient descent in this case. Figure \ref{heatmapplot-franke} shows
 a heatmap of the MSE for some different values of both. Again here we see much
 of the same effect as we did in figure \ref{heatmapplot-lr-lambda-gd-sgd} and
@@ -860,20 +860,222 @@ experiments above.
 \begin{table}
       \centering
       \begin{tabular}{| c | c | c | c |}
-                & sigmoid & relu   & lrelu  \\
+                       & sigmoid & relu   & lrelu  \\
             MSE (test) & 0.0086  & 0.0178 & 0.0164
       \end{tabular}
       \caption{The test MSEs for three different activation functions. We see
-      that sigmoid in particular gave about twice as low MSE as the two others,
-      while relu and lrelu gave comparable results.}
+            that sigmoid in particular gave about twice as low MSE as the two others,
+            while relu and lrelu gave comparable results.}
       \label{franke-different-activ-funcs}
 \end{table}
 
 
 \subsection{Wisconsin Cancer data}
+\subsubsection{Neural network}
+The \textbf{neuralnet\_breastcancer.py} in the project code performs analysis for
+fitting neural networks on the wisconsin breast cancer data, in a classification
+task. Here we again explored various hyperparameters of the neural network to
+see which yields the best result. Table \ref{breastcancer-nn-hidden-layers}
+shows us the accuracy and end-of-training loss for some trained on $200$ epochs.
+Here we see that all of the different layer sizes we tested are able to classify
+all of the training-data correctly, so it doesn't seem to matter all that the
+hidden layer sizes, however we do see that a model with two hidden layers, each
+of $100$ nodes did give the lowest end-of-training loss to this is the layer
+sizes we will be choosing for the rest of our analysis.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c | c | c |}
+                                 & (100)    & (10, 10) & (100, 100) & (50, 10) & (10, 10, 10) \\
+            Accuracy             & 1.0      & 1.0      & 1.0        & 1.0                     \\
+            End of training loss & 0.001246 & 0.017191 & 0.001211   & 0.007496 & 0.014259     \\
+      \end{tabular}
+      \caption{Accuracy and end-of-training loss metrics for neural networks
+            with different hidden layer sizes, trained using max $200$ epochs and
+            using the sigmoid activation function. Here we have tested on a grid of
+            learning-rates and picked the best accuracy/end-of-training loss. We see
+            that all of the models are able to classify $100\%$ of the training-data
+            correctly, but we see that the loss (cross-entropy) is a little lower for
+            some models than others. A lower end-of-training loss indicates that the
+            model learns quicker.}
+      \label{breastcancer-nn-hidden-layers}
+\end{table}
+
+It is also natural to explore which activation function we shall use for the
+hidden layers. Table \ref{breastcancer-nn-activ-funcs} shows the accuracy and
+end-of-training loss using the three activation functions we explore in this
+project. We see that all the methods perform quite well on the training-data
+(when looking at the accuracy), but that the sigmoid gives a much lower
+end-of-training loss, to we have much quicker learning in this case. Therefore
+we choose to use the sigmoid forwards.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c |}
+                                 & sigmoid & relu     & leaky relu \\
+            Accuracy             & 1.0     & 0.9774   & 0.9724     \\
+            End of training loss & 0.0012  & 207.2327 & 253.2846   \\
+      \end{tabular}
+      \caption{The accuracy and end-of-training loss (both on the training-data)
+            for a neural network with $2$ hidden layers, each with $100$ nodes and
+            training on $200$ epochs. We see that overall the sigmoid does give the
+            best results.}
+      \label{breastcancer-nn-activ-funcs}
+\end{table}
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c |}
+                                 & sigmoid & relu     & leaky relu \\
+            Accuracy             & 1.0     & 0.9774   & 0.9724     \\
+            End of training loss & 0.0012  & 207.2327 & 253.2846   \\
+      \end{tabular}
+      \caption{The accuracy and end-of-training loss (both on the training-data)
+            for a neural network with $2$ hidden layers, each with $100$ nodes and
+            training on $200$ epochs. We see that overall the sigmoid does give the
+            best results.}
+      \label{breastcancer-nn-activ-funcs}
+\end{table}
+
+With the hidden layer sizes and the activation function in check we just need to
+choose the learning-rate scheduler, along with the learning-rates and
+regularization parameters for each of these schedulers. Table
+\ref{breastcancer-nn-lr-schedulers} shows the performance of different
+learning-rate schedulers in terms of prediction accuracy on both the
+training-data and validation data (both for the best respective $\eta$ and
+$\lambda$). Here we see that all of the models managed to give $100\%$ accuracy
+on the training-data, but none of them managed it on the validation data. We see
+that AdaGrad gave us the best results in this case, with the best learning-rate
+being $10^{-1}$ and the best regularization parameter being $10^{-7}$. This will
+then be our final chosen model.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c | c |}
+            Method              & SGD    & AdaGrad & Adam   & RMSProp \\
+            Train-accuracy      & 1.0    & 1.0     & 1.0    & 1.0     \\
+            Valdiation-accuracy & 0.9510 & 0.9608  & 0.9510 & 0.9510  \\
+      \end{tabular}
+      \caption{Training and validation accuracy. We see that AdaGrad gave
+            slightly better results (one more correct prediction) than the other on
+            the validation-data, while for the training-data all the schedulers are
+            perfect.}
+      \label{breastcancer-nn-lr-schedulers}
+\end{table}
+
+Table \ref{breastcancer-nn-final-results} shows the final accuracy evaluated on
+a seperate test-set in order to not get too optimistic final metrics (we have
+trained a lot of models). We here have fitted on both the previous training and
+validation data. What we see is that our own neural network is able to classify
+$100\%$ of the observations correctly, while the tensorflow model is able to
+classify $98.55\%$ of the observations correctly. Both of these are very good
+results. Figure \ref{confusion-nn-final} and \ref{confusion-nn-tf} shows the
+confusion matrices for these two predictions. We see unsuprisingly that the
+confusion matrix for our own neural network is perfect, while the tensorflow
+version did make one wrong prediction, with it getting one false
+negative.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c | c |}
+            Model         & Project NN AdaGrad & Tensorflow AdaGrad \\
+            Test-accuracy & 1.0                & 0.9855             \\
+      \end{tabular}
+      \caption{The final accuracy on the test-data for our own custom neural
+            network built from scratch, and an equivalent model fitted in tensorflow.
+            Both these models use the optimal $\eta$ and $\lambda$ found previously.
+            We see that we get perfect, while almost perfect performance for the
+            tensorflow model.}
+      \label{breastcancer-nn-final-results}
+\end{table}
+
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{confusion_matrix_nn}
+      \caption{Confusion matrix for our own final AdaGrad model. We see that all the
+            predictions are correctly classified.}
+      \label{confusion-nn-final}
+\end{figure}
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{confusion_matrix_tensorflow}
+      \caption{Confusion matrix for the final AdaGrad model using tensorflow.}
+      \label{confusion-nn-tf}
+\end{figure}
+
+
+\subsubsection{Logistic regression}
+Finally we explored using logistic regression on the same model. Table
+\ref{breastcancer-logistic-results} shows the accuracy we got on the validation
+data. The results are very good with there being very few wrong predictions. We
+also see that the estimated parameters for the Scikit-learn model and our own
+model gave pretty much the same parameters. Lastly figure
+\ref{confusion-logistic-own} shows the confusion matrix for our own logistic
+regression implementation. We here see that we have one false positive and one
+false negative. The confusion matrix for the sklearn-model is exactly the same.
+
+\begin{table}
+      \centering
+      \begin{tabular}{| c | c | c | c | c |}
+            Model         & Project Logistic & Sklearn \\
+            Test-accuracy & 0.9710           & 0.9710  \\
+      \end{tabular}
+      \caption{The results of using logistic regression (Sklearn and own
+            implementation) on the cancer data. Here we have used $\lambda = 1.0$,
+            which we found out gave the best results on some validation data.
+            Furthermore for both models we allowed up to $2000$ epochs and for
+            the project model we used adam as the learning-rate scheduler with
+            $\eta = 0.05$. We see that we get the same accuracy for our own
+            model and the scikit-learn model.}
+      \label{breastcancer-logistic-results}
+\end{table}
+
+\begin{figure}
+      \centering
+      \includegraphics[scale=0.8]{confusion_matrix_tensorflow}
+      \caption{Confusion matrix for the final logistic regression model (using
+            our own implementation).}
+      \label{confusion-logistic-own}
+\end{figure}
 
 \section{Analysis}
-What we can see from the ...
+While exploring the hyperparameters in a neural network model that the perhaps
+most central part determining how well we are able to fit the models, are the
+learning-rate and regularization parameter, along with the learning-rate
+scheduling method. Less important, but still noticeable is the minibatch-size,
+the size and number of the hidden layers and the activation functions. This is
+of course granted that the network is reasonably big enough for the task, or else
+it could of course more severely impact performance (for example a very small
+network wouldn't perform well on complex tasks like image-recognition). We also
+clearly saw that in general the more epochs we train on the better the cost (at
+least on the training-data) will generally lead to better results. We also saw
+that using \textit{jax} instead of hand-computed gradients did not impact our
+results.
+
+Another thing to keep in mind is that in both the neural network for the
+franke-function and for the breastcancer classification the sigmoid
+activation-function gave us the best results, though in both cases relu and
+leaky relu did perform not that much worse. One thing to note is that the
+sigmoid activation function is more computationally heavy to use, as it involves
+taking an exponential, whereas relu and leaky relu just involve a conditional
+expression, each of which only contain a simple multiplication. This means that
+in general training models with the sigmoid will be more computationally
+expensive than the relu/lrelu versions. This way one would have to weight up if
+we then could train more epochs in the same time. Here we have not done this as
+we have just kept the amount of epochs the same for all these activation
+functions. If we then could train more epochs in the same time on a relu/lrelu
+this could very well become a better model.
+
+We also see that the neural network we built did manage to outperform all the
+linear models which we explored in project 1 (with the same amount of
+observations in the train/test-data). This is likely due to the fact that in
+project $1$ we mainly concentrated on fitting polynomial features up to order
+$5$ and using this for our model, however seeing as our actual data is not
+generated from a polynomial, but the franke-function we
+
+Another thing to notice is that we got in both cases the best results when using
+the sigmoid activation function for all the hidden layers. One thing
 
 For the franke-function one possible improvement would be to add some different
 regularizers, like for example seeing if we get improvement by using $l_1$
@@ -904,6 +1106,32 @@ running the programs would take much longer, and they already take quite a bit
 of time to run.
 
 \section{Conclusion}
+We see that when using gradient methods we have a lot of hyperparamters to tune,
+with some clearly being more important than others for how good of a model we
+are able to train. We have seen that especially important is the regularization
+parameter $\lambda$ and learning-rate $\nu$ as well as the type of learning-rate
+scheduler. Of course a high enough amount of epochs is also very important. Less
+important, but still noticable is the minibatch-size when using some sort of
+stochastic gradient descent, while the type of activation function and choice of
+hidden layer sizes also fall into this category.
+
+Training on the franke-function and wisconsin training-data we had that the
+neural network did perform better in both of these cases on the final test data,
+therefore manifesting how powerful these methods really can be. This is perhaps
+especially impressive since neither of these datasets were particularly
+data-heavy, which often such complex models as neural networks can struggle a
+bit with. In the case of the franke-function the performance was so much better
+that it seems like analysis on this, and perhaps also terrains or other
+terrain-like functions, is better suited for something like a neural network
+than the linear models we looked at in project 1. However in the logistic
+regression case, the logistic regression was able to closely compete against
+neural networks , with neural networks only just about coming out on top (also
+keep in mind that our test-data was quite limited, so the significance of how
+much better, if any better at all, is not all manifested). For this reason one
+logistic regression (with some regularization) could still be a perfectly good
+model, especially since logistic regression models are much easier to train, as
+well as the fact that they are much better for cases of inference, which is
+often relevant in the medical field.
 
 \bibliography{./sources.bib}
 
