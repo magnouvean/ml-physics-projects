@@ -118,9 +118,16 @@ design matrix with fourth-order polynomial features. This way analytical
 least-squares solution should give us optimal parameters close to $(4, 0, -6, 0,
       1)^T$. We will mainly explore the effect that the learning-rate and
 regularization terms have, and also quickly see the effect of the amount
-of epochs and minibatch-size can have. Lastly we will also compare, for a fixed
-amount of epochs, which of the optimization methods perform the best, and how
-relevant the method of choice is for the final performance.
+of epochs and minibatch-size can have. We will also try out some different
+optimization methods, more specifically gradient descent, stochastic gradient
+descent, momentum and AdaGrad (more about these later), and see which performs
+the best, as well as how much of a difference the choice of method makes. When
+exploring the stochastic gradient descent models (see \ref{sgddesc} for info on
+SGD) we will also utilize a time-decay function for the learning-rate (see
+\ref{gddesc} for info on time-decay), as this can potentially help convergence
+and speed of learning. For these cases we will use the following simple
+time-decay function:
+$$f(t) = \frac{1}{t + 10}.$$
 
 \subsection{The franke function}
 The franke-function is a $2$-dimensional function which we already have explored
@@ -230,6 +237,7 @@ networks with lots of hidden nodes and layers this becomes unviable. We
 therefore will use various methods to approximate this hessian matrix.
 
 \subsubsection{Ordinary gradient descent}
+\label{gddesc}
 Ordinary gradient descent is a very simple way which we can avoid calculating
 this hessian matrix. Here we simply approximate it with some numerical
 learning-rate, which we will throughout this report denote $\eta$. This way our
@@ -249,6 +257,7 @@ performance for some fixed amount of epochs, but there also exists other more
 advanced ways of tuning this parameter.
 
 \subsubsection{Stochastic gradient descent}
+\label{sgddesc}
 Stochastic gradient descent is very similar to ordinary gradient descent, except
 the fact that instead of training for each epoch on the whole dataset we split
 the data into $n$ randomly chosen mini-batches each of some specified size (this
@@ -737,10 +746,11 @@ various parameters have when using gradient methods. For exploring the effect
 the amount of epochs has, we did a quick test by four-doubling the amount of
 epochs from one model to another. Table \ref{epochs-varying} shows the results
 of optimizing using GD and SGD with different amount of epochs. What we clearly
-see is that in general the more amount of epochs we allow the smaller the cost
+see is that in general, the more amount of epochs we allow the smaller the cost
 will be (granted we have convergence for the specified learning-rate). This is intuitive
-as for each iteration we should get closer to the minimum of the cost, so doing
-more iterations must also naturally bring us closer to the minimum.
+as for each iteration we should get closer to the minimum of the cost (for the
+most part anyway), so doing more iterations must also naturally bring us closer
+to the minimum.
 
 \begin{table}
       \centering
@@ -758,10 +768,10 @@ more iterations must also naturally bring us closer to the minimum.
 
 For stochastic gradient descent we may also be interested in seeing if the size
 of the minibatches has an effect on the speed we are able to learn. Table
-\ref{minibatchsize-varying} shows the effect at which the minibatch-size
-influences how quick we are able to minimize the cost. Here we see that the
-lower minibatch-sizes seem to give a little quicker learning, but that  this
-effect is not that enormous (perhaps with the exception of the difference
+\ref{minibatchsize-varying} shows the costs of four different SGD models trained
+using equally many epochs, but with four different minibatch-sizes. Here we see
+that the lower minibatch-sizes seem to give a little quicker learning, but that
+this effect is not that enormous (perhaps with the exception of the difference
 between the minibatch-sizes of $8$ and $32$, where there is quite a difference).
 
 \begin{table}
@@ -778,19 +788,21 @@ between the minibatch-sizes of $8$ and $32$, where there is quite a difference).
       \label{minibatchsize-varying}
 \end{table}
 
-We also trained the various methods using stochastic gradient descent on some
-learning-rate grid. The costs of these functions plotted against the
+We also explored how the learning-rate influences the performance of GD, SGD, GD
+with momentum and SGD with momentum, by training various such models on a grid of
+learning-rate.  The costs of these functions plotted against the
 learning-rates at which the cost was obtained is shown in figure
-\ref{learningrate-cost-plot}. We see that generally that the bigger the
-learning-rate is the better it is, however we also see that if it gets too high
-then we get that the cost diverges towards infinity. We also can see that in all
-the cases the learning-rate is very important, with higher learning-rates giving
-much quicker learning.
+\ref{learningrate-cost-plot}. We see generally that the bigger the learning-rate
+is the better the model is, however we also see that if the learning-rate becomes
+too big that the cost diverges towards infinity. We also see that in all the
+cases the learning-rate is very important, with the difference between the cost
+of a good and bad learning-rate being very big, even more so for the cases with
+added momentum.
 
 Just from this plot we see quite a big difference between how quick the
 different optimization-methods work, with the momentum versions being much
 quicker to minimize the costs. Table \ref{gradmethods-comparison} shows the
-costs for the different methods of calculating the learning-rates. We see that
+costs for the different optimization methods. We see that
 in all cases adding momentum increases the speed of learning by quite a bit
 (perhaps less so with AdaGrad trained on stochastic minibatches, where this
 increase is quite marginal). We see that which method we use does impact the
@@ -808,7 +820,7 @@ explore the mse on some test-data, which is what we have done in the program.
 This now doesn't only depend on the learning-rate $\eta$ anymore as previously,
 but also the regularization parameter $\lambda$ (we keep the rest of the
 parameters fixed).  Figure \ref{heatmapplot-lr-lambda-gd-sgd} shows a heatmap
-which tells us how this depends on both the $\eta$ and $\lambda$ for GD and SGD.
+which tells us how the test MSE depends on both the $\eta$ and $\lambda$ for GD and SGD.
 What we see is that the best performance is quite sensetive to both the $\eta$
 and $\lambda$, and that a wrong $\eta$ or $\lambda$ alone can very much ruin the
 performance. Similarly figure \ref{heatmapplot-lr-lambda-adagrad} shows a corresponding
@@ -896,19 +908,21 @@ of the same effect as we did in figure \ref{heatmapplot-lr-lambda-gd-sgd} and
 on having a fitting learning-rate and regularization parameter, but we can also
 see that we have quite a lot of learning-rates which get get quite good results
 for both train and test seemingly. Table \ref{metrics-nn-franke} shows us some
-metrics we got when training neural networks on the franke-function. We get
-quite good results here, and we also see that the MSE and $R^2$ scores for the
-train and test-data are quite similar, which does indicate that the
-regularization works quite well (though one of course need to take into account
-that they were achieved at different values of $\lambda$). If we compare this to
-what we got for the linear methods in project $1$ we had that for linear
-regression, ridge and lasso we had test MSEs of $0.0189$, $0.0173$ and $0.0165$
-respectively, with the corresponding $R^2$ scores being $0.8050$, $0.8210$ and
-$0.8303$ \cite[s.~4.1]{reportproject1}. We clearly see that we have indeed
-achieved better performance in this case than the simple linear models we
-tackled in project 1.
+metrics we got when training neural networks on the franke-function, and
+choosing the best-performing model. In this case the best model (for the
+test-data) had $\eta \approx 0.00056$ and $\lambda = 0.001$. We get quite good
+results here, and we also see that the MSE and $R^2$ scores for the train and
+test-data are quite similar, which does indicate that the regularization works
+quite well (though one of course need to take into account that they were
+achieved at different values of $\lambda$). If we compare this to what we got
+for the linear methods in project $1$ we had that for linear regression, ridge
+and lasso we had test MSEs of $0.0189$, $0.0173$ and $0.0165$ respectively, with
+the corresponding $R^2$ scores being $0.8050$, $0.8210$ and $0.8303$
+\cite[s.~4.1]{reportproject1}. We clearly see that we have indeed achieved
+better performance in this case than the simple linear models we tackled in
+project 1.
 
-We also compared our own results to those of ScikitLearn and tensorflow. Figure
+We also compared our own results to those of Scikit-learn and tensorflow. Figure
 \ref{metrics-nn-franke-sklearn-tf} shows the MSE achieved using these two
 methods as well (here I have dropped the $R^2$ scores, but they will be closely
 related to the MSEs).  Interestingly we got quite a bit better results for our
@@ -932,16 +946,18 @@ performance here.
             MSE (best)   & 0.0068 & 0.0072 \\
             $R^2$ (best) & 0.9244 & 0.9266
       \end{tabular}
-      \caption{The final metrics achieved using the. Here the best learning-rate
-            giving best train MSE/$R^2$ score were $0.0001$, while for test MSE/$R^2$
-            score the best learning-rate was $0.001$}
+      \caption{The final metrics achieved for a neural network using SGD with
+            momentum as optimization method. Here the learning-rate giving best
+            train/test MSE/$R^2$ score were $\approx 0.00056$, while best
+            regularization-parameter was $0.0001$ for the training-data and $0.001$
+            for the test-data.}
       \label{metrics-nn-franke}
 \end{table}
 
 \begin{table}
       \centering
       \begin{tabular}{| c | c | c |}
-                        & sklearn & tensorflow \\
+            Library     & sklearn & tensorflow \\
             MSE (train) & 0.0984  & 0.0726     \\
             MSE (test)  & 0.1091  & 0.0800
       \end{tabular}
@@ -949,7 +965,7 @@ performance here.
             and using the same optimal parameters we got for our own neural net
             (though we had to use a different regularization for tensorflow). We see
             we got a little better performance using tensorflow, but still much worse
-            than our own implementation (see table \ref{metrics-nn-franke})}
+            than our own implementation (see table \ref{metrics-nn-franke}).}
       \label{metrics-nn-franke-sklearn-tf}
 \end{table}
 
@@ -963,8 +979,8 @@ little bit, so it was correct using this in our experiments above.
 \begin{table}
       \centering
       \begin{tabular}{| c | c | c | c |}
-                       & sigmoid & relu   & lrelu  \\
-            MSE (test) & 0.0086  & 0.0178 & 0.0164
+            Activation function & sigmoid & relu   & lrelu  \\
+            MSE (test)          & 0.0086  & 0.0178 & 0.0164
       \end{tabular}
       \caption{The test MSEs for three different activation functions. We see
             that sigmoid in particular gave about twice as low MSE as the two others,
@@ -989,7 +1005,7 @@ layer sizes we will be choosing for the rest of our experimentation.
 \begin{table}
       \centering
       \begin{tabular}{| c | c | c | c | c | c |}
-                                 & (100)    & (10, 10) & (100, 100) & (50, 10) & (10, 10, 10) \\
+            Hideen layer sizes   & (100)    & (10, 10) & (100, 100) & (50, 10) & (10, 10, 10) \\
             Accuracy             & 1.0      & 1.0      & 1.0        & 1.0                     \\
             End of training loss & 0.001246 & 0.017191 & 0.001211   & 0.007496 & 0.014259     \\
       \end{tabular}
@@ -1015,27 +1031,15 @@ we choose to use the sigmoid forwards.
 \begin{table}
       \centering
       \begin{tabular}{| c | c | c | c |}
-                                 & sigmoid & relu     & leaky relu \\
+            Activation function  & sigmoid & relu     & leaky relu \\
             Accuracy             & 1.0     & 0.9774   & 0.9724     \\
             End of training loss & 0.0012  & 207.2327 & 253.2846   \\
       \end{tabular}
       \caption{The accuracy and end-of-training loss (both on the training-data)
             for a neural network with $2$ hidden layers, each with $100$ nodes and
             training on $200$ epochs. We see that overall the sigmoid does give the
-            best results.}
-      \label{breastcancer-nn-activ-funcs}
-\end{table}
-\begin{table}
-      \centering
-      \begin{tabular}{| c | c | c | c |}
-                                 & sigmoid & relu     & leaky relu \\
-            Accuracy             & 1.0     & 0.9774   & 0.9724     \\
-            End of training loss & 0.0012  & 207.2327 & 253.2846   \\
-      \end{tabular}
-      \caption{The accuracy and end-of-training loss (both on the training-data)
-            for a neural network with $2$ hidden layers, each with $100$ nodes and
-            training on $200$ epochs. We see that overall the sigmoid does give the
-            best results.}
+            best results. Keep in mind that we have allowed for more epochs in
+            the final model ($2000$ vs $500$ epochs)}
       \label{breastcancer-nn-activ-funcs}
 \end{table}
 
@@ -1065,17 +1069,17 @@ then be our final chosen model.
       \label{breastcancer-nn-lr-schedulers}
 \end{table}
 
-Table \ref{breastcancer-nn-final-results} shows the final accuracy evaluated on
-a seperate test-set in order to not get too optimistic final metrics (we have
-trained a lot of models). We here have fitted on both the previous training and
-validation data. What we see is that our own neural network is able to classify
-$100\%$ of the observations correctly, while the tensorflow model is able to
-classify $98.55\%$ of the observations correctly. Both of these are very good
-results. Figure \ref{confusion-nn-final} and \ref{confusion-nn-tf} shows the
-confusion matrices for these two predictions. We see unsuprisingly that the
-confusion matrix for our own neural network is perfect, while the tensorflow
-version did make one wrong prediction, with it getting one false
-negative.
+Table \ref{breastcancer-nn-final-results} shows the final accuracy of our
+selected model evaluated on a separate test-set in order to not get too
+optimistic final metrics (we have trained a lot of models). We here have fitted
+on both the previous training and validation data. What we see is that our own
+neural network was able to classify $100\%$ of the observations correctly, while
+the tensorflow model was able to classify $98.55\%$ of the observations
+correctly. Both of these are very good results. Figure \ref{confusion-nn-final}
+and \ref{confusion-nn-tf} shows the confusion matrices for these two
+models. We unsurprisingly see that the confusion matrix for our own neural
+network is perfect, while the tensorflow version did make one wrong prediction,
+that being one false negative prediction.
 
 \begin{table}
       \centering
@@ -1109,14 +1113,14 @@ negative.
 
 
 \subsubsection{Logistic regression}
-Finally we explored using logistic regression on the same model. Table
+Finally we explored using logistic regression on this same data. Table
 \ref{breastcancer-logistic-results} shows the accuracy we got on the validation
 data. The results are very good with there being very few wrong predictions. We
 also see that the estimated parameters for the Scikit-learn model and our own
 model gave pretty much the same parameters. Lastly figure
 \ref{confusion-logistic-own} shows the confusion matrix for our own logistic
 regression implementation. We here see that we have one false positive and one
-false negative. The confusion matrix for the sklearn-model is exactly the same.
+false negative. The confusion matrix for the Scikit-learn model is exactly the same.
 
 \begin{table}
       \centering
@@ -1143,21 +1147,21 @@ false negative. The confusion matrix for the sklearn-model is exactly the same.
 \end{figure}
 
 \section{Analysis}
-While exploring the hyperparameters in a neural network model that the perhaps
-most central part determining how well we are able to fit the models, are the
+While exploring the hyperparameters in a neural network model, we saw that perhaps the
+most central part in determining how good our models were was the
 learning-rate and regularization parameter, along with the learning-rate
-scheduling method. Less important, but still noticeable is the minibatch-size,
-the size and number of the hidden layers and the activation functions. This is
-of course granted that the network is reasonably big enough for the task, or else
-it could of course more severely impact performance (for example a very small
-network wouldn't perform well on complex tasks like image-recognition). We also
-clearly saw that in general the more epochs we train on the better the cost (at
-least on the training-data) will generally lead to better results. We also saw
-that using \textit{jax} instead of hand-computed gradients did not impact our
-results.
+scheduling method. These findings agrees with the general optimization findings.
+Less important, but still noticeable were the minibatch-size, the size and number
+of the hidden layers and the activation functions. The hidden layer sizes not
+being that important is of course granted we are selecting between reasonably
+big neural networks - we would not expect a very small network to fit well to
+very complex data. We also clearly saw that, in general, the more epochs we train
+on the better the cost will generally be (at least on the training-data). We
+also saw that using \textit{jax} instead of hand-computed gradients did not
+impact our results.
 
-Another thing to keep in mind is that in both the neural network for the
-franke-function and for the breastcancer classification the sigmoid
+Another thing we saw was that in both the neural network for the
+franke-function, and for the breastcancer classification, the sigmoid
 activation-function gave us the best results, though in both cases relu and
 leaky relu did perform not that much worse. One thing to note is that the
 sigmoid activation function is more computationally heavy to use, as it involves
@@ -1173,68 +1177,88 @@ this could very well become a better model.
 We also see that the neural network we built did manage to outperform all the
 linear models which we explored in project 1 (with the same amount of
 observations in the train/test-data). This is likely due to the fact that in
-project $1$ we mainly concentrated on fitting polynomial features up to order
-$5$ and using this for our model, however seeing as our actual data is not
-generated from a polynomial, but the franke-function we
+project $1$ we mainly concentrated on fifth order polynomial features for our
+model, however seeing as our actual data is not generated from a polynomial, but
+the franke-function, the linear models can only do as well as a fifth-order
+polynomial (with interactions) can approximate the franke-function.  Neural
+networks are not limited in the same way due to the universal approximating
+theorem. Here we can just give the network enough nodes and the network should
+be able to fit the training-data arbitrarily well, unlike the linear models.
+Here it seems like this property was enough for the neural network to come out
+on top, even for quite little data.
 
-Another thing to notice is that we got in both cases the best results when using
-the sigmoid activation function for all the hidden layers. One thing
-
-For the franke-function one possible improvement would be to add some different
-regularizers, like for example seeing if we get improvement by using $l_1$
-regularization instead of $l_2$ regularization. Another thing that could be
-interesting to check out is to see how the amount of data here influences the
-performance of this neural network.  One would expect that as we increase the
-amount of data, that the neural network will eventually perform better than
-ridge/lasso. It could be interesting to study what the boundary for this is.
+For both experiments, one possible improvement would be to test some different
+regularizers, like for example seeing if we get improvements in any of the
+experiments by using $l_1$ regularization instead of $l_2$ regularization.
+Another thing that could be interesting is to check out to which extent the amount of
+data here influences the performance of the neural network, for example for the
+franke-function.  One would expect that as we increase the amount of data, that
+the neural network will eventually perform even better.
 
 Another possible improvement is that we have only tweaked some of the
 hyperparameters of a neural network. Perhaps the most natural parameter to tweak
 which we have left out is the momentum parameter, which we just kept fixed at
 $0.9$, but this is a parameter which can have some influence over the learning
 of the model. The different time-decays we have used has also been somewhat
-limited, as we have only used it with stochastic gradient descent, and only in
-this case used one quite basic time-decay. In general we have also used just
-simple grid-search for hyperparameter-tuning, while one could use more advanced
-techniques/libraries.
+limited, as we have only used it with stochastic gradient descent, and even in
+this case we used only one quite basic time-decay. In general we have also used
+just simple grid-search for hyperparameter-tuning, while one could use more
+advanced techniques/libraries.
 
 Lastly a potential problem I have already highlighted is how we have quite few
 observations in the cancer data case. This meant our validation data in
-particular became smaller than what we really wanted. One could perhaps try a
-bigger split. An even better approach would be to simply split into a train-test
+particular became smaller than what is ideal. One could perhaps try a
+bigger split. An even better approach would be to simply do a train-test split
 and then use cross-validation for selecting the hyperparameters and then
-evaluate on the final model. The reason why I opted to not take this approach in
-my case is mainly that cross-validation is much more computationally heavy, so
-running the programs would take much longer, and they already take quite a bit
-of time to run.
+evaluate the final model on the test-set. The reason why I opted to not take
+this approach was mainly that cross-validation is much more computationally
+heavy, so running the programs would take much longer, and they already take
+quite a bit of time to run. I also took the same approach for logistic
+regression, as I wanted the conditions to be as equal as possible, but
+especially in the logistic regression case, cross-validation wouldn't even be
+particularly computationally expensive.
 
 \section{Conclusion}
 We see that when using gradient methods we have a lot of hyperparamters to tune,
 with some clearly being more important than others for how good of a model we
-are able to train. We have seen that especially important is the regularization
-parameter $\lambda$ and learning-rate $\nu$ as well as the type of learning-rate
-scheduler. Of course a high enough amount of epochs is also very important. Less
-important, but still noticable is the minibatch-size when using some sort of
-stochastic gradient descent, while the type of activation function and choice of
-hidden layer sizes also fall into this category.
+are able to train. We have seen that especially important for models using
+gradient methods, neural networks included, is the learning-rate $\eta$,
+together with the learning-rate scheduling method, as well as the potential
+regularization parameter $\lambda$. Of course a high enough amount of epochs is
+also very important. Less important, but still noticeable is the minibatch-size
+(when using some sort of stochastic gradient descent), the type of
+activation function and the choice of hidden layer sizes.
+\\
 
-Training on the franke-function and wisconsin training-data we had that the
+Training on the franke-function and wisconsin cancer data we had that the
 neural network did perform better in both of these cases on the final test data,
 therefore manifesting how powerful these methods really can be. This is perhaps
 especially impressive since neither of these datasets were particularly
-data-heavy, which often such complex models as neural networks can struggle a
-bit with. In the case of the franke-function the performance was so much better
-that it seems like analysis on this, and perhaps also terrains or other
-terrain-like functions, is better suited for something like a neural network
-than the linear models we looked at in project 1. However in the logistic
-regression case, the logistic regression was able to closely compete against
-neural networks , with neural networks only just about coming out on top (also
-keep in mind that our test-data was quite limited, so the significance of how
-much better, if any better at all, is not all manifested). For this reason one
-logistic regression (with some regularization) could still be a perfectly good
-model, especially since logistic regression models are much easier to train, as
-well as the fact that they are much better for cases of inference, which is
-often relevant in the medical field.
+data-heavy, and often complex models such as neural networks can struggle a
+bit with small amounts of data. In the case of the franke-function the
+performance was so much better that it seems like analysis on this particular
+function, and perhaps also terrains or other terrain-like functions, is better
+suited for something like a neural network than the linear models we looked at
+in project 1. The best model we obtained for predictions on new data for the
+franke-function was a neural network with two hidden layers each of $100$ nodes,
+using SGD with momentum, and with $\eta \approx 0.00056$ and $\lambda = 0.001$.
+The corresponding test MSE for this model ended up at $\approx 0.0072$.
+\\
+
+In the logistic regression case, the logistic regression was able to
+closely compete with the neural networks in terms of prediction accuracy, with
+neural networks only just about coming out on top (also keep in mind that our
+test-data was quite limited, so the significance of how much better, if any
+better at all, is not clearly manifested). For this reason logistic regression
+(with some regularization) could still be a perfectly good model for this data,
+especially since logistic regression models are much easier and quicker to
+train, as well as the fact that they are better for inference, which is often
+relevant in the medical field. Incredibly though our neural network was able to
+classify all of the test-data correctly, so it was basically impossible to
+compete with this. The model which we were able to achieve this for was using
+AdaGrad (with stochastic minibatches), with $\eta = 0.1$ and $\lambda =
+      10^{-7}$, on a neural network with again two hidden layers, each with $100$
+nodes.
 
 \section{Appendix}
 
