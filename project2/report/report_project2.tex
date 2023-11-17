@@ -109,18 +109,18 @@ different gradient methods. For this we will just use some simple arbitrary data
 generated from a fourth order polynomial. The polynomial I have chosen to
 generate the data from is:
 $$f(x) = 4 - 6 x^2 + x^4.$$
-We then just generate a grid of values $\bm{x}$ on $[-2, 2]$ and generate the
-response as follows:
-$$\bm{y} = f(\bm{x}) + \bm{epsilon}$$
+We then just generate a grid of $201$ evenly spaced values $\bm{x}$ on $[-2, 2]$
+and generate the response as follows:
+$$\bm{y} = f(\bm{x}) + \bm{\epsilon}$$
 , where $\epsilon_i \sim N(0, 0.2^2)$, and $f$ is applied element-wise.  We will
-use the linear regression (mse) and lasso regression (mse and $l_2$ norm), and a
+use the linear regression and ridge regression for the models, and a
 design matrix with fourth-order polynomial features. This way analytical
 least-squares solution should give us optimal parameters close to $(4, 0, -6, 0,
       1)^T$. We will mainly explore the effect that the learning-rate and
 regularization terms have, and also quickly see the effect of the amount
-of epochs and minibatch-size can have. We wil also compare for a fixed
-amount of epochs, which of the methods perform the best, giving an
-indication to which extent the method of optimization is relevant.
+of epochs and minibatch-size can have. Lastly we will also compare, for a fixed
+amount of epochs, which of the optimization methods perform the best, and how
+relevant the method of choice is for the final performance.
 
 \subsection{The franke function}
 The franke-function is a $2$-dimensional function which we already have explored
@@ -146,8 +146,9 @@ breast cancer cases, with a response-variable indicating wether the patient has
 breast-cancer or not, with some corresponding medical features. This is clearly
 a binary classification case, which makes this suitable for both neural networks
 and logistic regression models. We will use the dataset included in
-\textit{sklearn.datasets} \cite{sklearncancerdata}. Loading it into python and
-splitting into train, validation and test we do by:
+\textit{sklearn.datasets} \cite{sklearncancerdata}. To load the data into python
+and splitting into train, validation and test sets, we can just use the
+following code:
 
 \begin{lstlisting}
 X, y = load_breast_cancer(return_X_y=True)
@@ -160,12 +161,12 @@ X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.4)
 
 We split into train, test and validation sets because we will evaluate a lot of
 models, and then it becomes increasingly important to evaluate the final
-selected model on some test set in order for us to get a reliable final metric.
-The data is limited to $569$ observations with each having $30$ explanatory
-variables. This makes both the validation set and test set rather small, so with
-around $100$ and $70$ observations in each respectively. We then need to be a
-little skeptical towards the final metrics, as the metrics may be a little
-specific to the split of data.
+selected model on some test set in order for us to not get too optimistic of a
+final metric \cite[s.~7.2]{hastie2009elements}.  The data is limited to $569$
+observations with each having $30$ explanatory variables. This makes both the
+validation set and test set rather small, so with around $100$ and $70$
+observations in each respectively. We then need to be a little skeptical towards
+the final metrics, as the metrics may be a little specific to the split of data.
 
 \subsection{The Newton-Raphson method}
 Very central to the numerical optimization we do is the Newton-Raphson method.
