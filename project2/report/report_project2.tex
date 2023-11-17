@@ -159,58 +159,63 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3)
 X_val, X_test, y_val, y_test = train_test_split(X_val, y_val, test_size=0.4)
 \end{lstlisting}
 
+, after importing \textit{load\_breast\_cancer} from \textit{sklearn.datasets}
+\cite{sklearncancerdata} that is.
+\\
+
 We split into train, test and validation sets because we will evaluate a lot of
-models, and then it becomes increasingly important to evaluate the final
-selected model on some test set in order for us to not get too optimistic of a
-final metric \cite[s.~7.2]{hastie2009elements}.  The data is limited to $569$
-observations with each having $30$ explanatory variables. This makes both the
-validation set and test set rather small, so with around $100$ and $70$
-observations in each respectively. We then need to be a little skeptical towards
-the final metrics, as the metrics may be a little specific to the split of data.
+models on the validation set, and then it becomes increasingly important to
+evaluate the final selected model on some test set in order for us to not get
+too optimistic of a final metric \cite[s.~7.2]{hastie2009elements}.  The data is
+limited to $569$ observations with each having $30$ explanatory variables. This
+makes both the validation set and test set rather small, so with around $100$
+and $70$ observations in each respectively. We then need to be a little
+skeptical towards the final metrics, as the metrics may be a little specific to
+the split of data.
 
 \subsection{The Newton-Raphson method}
 Very central to the numerical optimization we do is the Newton-Raphson method.
 This is a method which allows us to find the minimum of some function by using
 its gradient. The method has it's origins in the Taylor-expansion of the
 function we wish to minimize. In our case we use this to minimize cost-functions
-for the models we use. Let $C(\bm{\beta}; \bm{X}, \bm{y})$ be some general
+for the models we use. Let $C(\bm{\theta}; \bm{X}, \bm{y})$ be some general
 cost-function depending on some design matrix $\bm{X}$ and a response vector
-$\bm{y}$. We wish to find the $\bm{\beta}$ which minimizes this cost, given
-$\bm{X}$ and $\bm{y}$, i.e. we minimize $C$ with respect to $\bm{\beta}$, while
+$\bm{y}$. We wish to find the parameter $\bm{\theta}$ which minimizes this cost, given
+$\bm{X}$ and $\bm{y}$, i.e. we minimize $C$ with respect to $\bm{\theta}$, while
 $\bm{X}$ and $\bm{y}$ are obviously fixed. We can then approximate the cost using a
-Taylor-expansion of second order around some value $\bm{\beta}^*$, in which case
+Taylor-expansion of second order around some value $\bm{\theta}^*$, in which case
 we get:
 \begin{align*}
-      C(\bm{\beta}, \bm{X}, \bm{y}) & \approx C(\bm{\beta}^*; \bm{X}, \bm{y}) + \frac{\partial C(\bm{\beta}^*; \bm{X}, \bm{y})}{\partial \bm{\beta}}(\bm{\beta} - \bm{\beta}^*) + \frac{1}{2} \frac{\partial^2 C(\bm{\beta}; \bm{X}, \bm{y})}{\partial^2 \bm{\beta}}(\bm{\beta} - \bm{\beta}^*)^2 \\
-                                    & = C(\bm{\beta}^*; \bm{X}, \bm{y}) + \nabla_{\bm{\beta}} C(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*) + \frac{1}{2} \bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*)^2
+      C(\bm{\theta}, \bm{X}, \bm{y}) & \approx C(\bm{\theta}^*; \bm{X}, \bm{y}) + \frac{\partial C(\bm{\theta}^*; \bm{X}, \bm{y})}{\partial \bm{\theta}}(\bm{\theta} - \bm{\theta}^*) + \frac{1}{2} \frac{\partial^2 C(\bm{\theta}; \bm{X}, \bm{y})}{\partial^2 \bm{\theta}}(\bm{\theta} - \bm{\theta}^*)^2 \\
+                                     & = C(\bm{\theta}^*; \bm{X}, \bm{y}) + \nabla_{\bm{\theta}} C(\bm{\theta}^*) (\bm{\theta} - \bm{\theta}^*) + \frac{1}{2} \bm{H}_{\bm{\theta}}(\bm{\theta}^*) (\bm{\theta} - \bm{\theta}^*)^2
 \end{align*}
-Where $\nabla_{\bm{\beta}} C$ is the gradient of $C$ w.r.t. $\bm{\beta}$ and
-$\bm{H}_{\bm{\beta}}$ is the Hesse-matrix (second derivative) of $C$ w.r.t.
-$\bm{\beta}$. This should be a good approximation for $C$ sufficiently close to
-$\bm{\beta}^*$. We then can find the derivative of this w.r.t. $\bm{\beta}$:
+Where $\nabla_{\bm{\theta}} C$ is the gradient of $C$ w.r.t. $\bm{\theta}$ and
+$\bm{H}_{\bm{\theta}}$ is the Hesse-matrix of $C$ w.r.t.  $\bm{\theta}$. This
+should be a good approximation for $C$ sufficiently close to $\bm{\theta}^*$. We
+then can find the gradient of this w.r.t. $\bm{\theta}$:
 \begin{align*}
-      \frac{\partial C(\bm{\beta}, \bm{X}, \bm{y})}{\partial \bm{\beta}} & \approx
-      \nabla_{\bm{\beta}} C(\bm{\beta}^*) + \bm{H}_{\bm{\beta}}(\bm{\beta}^*)(\bm{\beta} - \bm{\beta}^*) \\
+      \frac{\partial C(\bm{\theta}, \bm{X}, \bm{y})}{\partial \bm{\theta}} & \approx
+      \nabla_{\bm{\theta}} C(\bm{\theta}^*) + \bm{H}_{\bm{\theta}}(\bm{\theta}^*)(\bm{\beta} - \bm{\theta}^*) \\
 \end{align*}
-If we set this to $0$ we further get:
-$$\bm{H}_{\bm{\beta}}(\bm{\beta}^*) (\bm{\beta} - \bm{\beta}^*) = -\nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
+If we set this to $0$ to find the minimum we further get:
+$$\bm{H}_{\bm{\theta}}(\bm{\theta}^*) (\bm{\theta} - \bm{\theta}^*) = -\nabla_{\bm{\theta}} C(\bm{\theta}^*)$$
 which leads to
-$$\bm{\beta} - \bm{\beta}^* = - \bm{H}_{\bm{\beta}}(\bm{\beta}^*)^{-1} \nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
+$$\bm{\theta} - \bm{\theta}^* = - \bm{H}_{\bm{\theta}}(\bm{\theta}^*)^{-1} \nabla_{\bm{\theta}} C(\bm{\theta}^*)$$
 and finally
-$$\bm{\beta} = \bm{\beta}^* - \bm{H}_{\bm{\beta}}(\bm{\beta}^*)^{-1} \nabla_{\bm{\beta}} C(\bm{\beta}^*)$$
+$$\bm{\theta} = \bm{\theta}^* - \bm{H}_{\bm{\theta}}(\bm{\theta}^*)^{-1} \nabla_{\bm{\theta}} C(\bm{\theta}^*)$$
 
 This tells us that the minimum of the Taylor-expansion of the cost-function,
-using any $\bm{\beta}^*$ is given as above. The problem with this is that this
-is using the Taylor-expansion, which is only reliable close to $\bm{\beta}^*$ so
+using any $\bm{\theta}^*$ is given as above. The problem with this is that this
+is using the Taylor-expansion, which is only reliable close to $\bm{\theta}^*$ so
 chances are that using this formula will not give us a global minimum. However
 it generally tends to bring us closer to the minimum we are looking after. What
 we then usually do is to start with some initial guess for the optimal
-$\bm{\beta}$, which we denote $\bm{\beta}^{(0)}$. We then for $k=1, \dots$ let
-$\bm{\beta}^{(k)} = \bm{\beta}^{(k-1)} -
-      \bm{H}_{\bm{\beta}}(\bm{\beta}^{(k-1)})^{-1} \nabla_{\bm{\beta}}
-      C(\bm{\beta}^{(k-1)})$ all the way until we have convergence.
+$\bm{\theta}$, which we denote $\bm{\theta}^{(0)}$. We then for $k=1, \dots$ let
+$\bm{\theta}^{(k)} = \bm{\theta}^{(k-1)} -
+      \bm{H}_{\bm{\theta}}(\bm{\theta}^{(k-1)})^{-1} \nabla_{\bm{\theta}}
+      C(\bm{\theta}^{(k-1)})$ all the way until we have convergence.
 
-\subsection{Learning-rate schedulers}
+\subsection{Model optimizers and learning-rate schedulers}
 Something which often is problematic when using the Newton-Raphson method as
 described over is that we need to estimate the Hessian matrix and also invert
 it. First of all finding a way to calculate the second derivative can be a
@@ -218,37 +223,40 @@ difficulty in and of itself, but it may also be computationally expensive to do
 so. Not only that, we also need to invert this matrix which can also become very
 computationally expensive, and perhaps also numerically unstable with higher
 dimensional hesse matrices (remember that the Hessian matrix is a square matrix
-with the same dimensions as $\bm{\beta}$ in both width and height).  Inverting
+with the same dimensions as $\bm{\theta}$ in both width and height).  Inverting
 this matrix then may not be a problem if we only have a few parameters, but for
 example when dealing with logistic regression with lots of features, or neural
 networks with lots of hidden nodes and layers this becomes unviable. We
 therefore will use various methods to approximate this hessian matrix.
 
 \subsubsection{Ordinary gradient descent}
-Ordinary gradient descent is a very simple way of approximating the inverse of
-the Hessian matrix. Here we simply approximate it with some numerical
-learning-rate, which we denote $\eta$. This way our algorithm becomes:
-$$\bm{\beta}^{(k)} = \bm{\beta}^{(k-1)} - \eta \nabla_{\bm{\beta}} C(\bm{\beta}^{(k-1)}).$$
-Often we may just keep this fixed, but we can also make it depend on $k$. For
-example one may wish to start with a higher learning-rate and make this decrease
-with the number of iterations. This method I will refer to as using time-decay.
-When using gradient descent for training our model $\eta$ then becomes a
-hyperparameter in our model. Often this hyperparameter is rather important in
-determining the fit of the model. We often want a rather high learning-rate as
-this will lead to faster convergence towards some optimum, however if we make it
-to big we may not get convergence at all. I will mainly throughout the code
-simply set up a grid of learning-rates and fit to all of them, and simply choose
-the learning-rate which gives the best performance, but there are countless
-other more advanced way of tuning this parameter.
+Ordinary gradient descent is a very simple way which we can avoid calculating
+this hessian matrix. Here we simply approximate it with some numerical
+learning-rate, which we will throughout this report denote $\eta$. This way our
+algorithm becomes:
+$$\bm{\theta}^{(k)} = \bm{\theta}^{(k-1)} - \eta \nabla_{\bm{\theta}} C(\bm{\theta}^{(k-1)}).$$
+Often we may just keep $\eta$  fixed throughout all the iterations, but we can
+also make it depend on $k$. For example one may wish to start with a higher
+learning-rate and make this decrease with the number of iterations. This method
+I will refer to as using time-decay.  When using gradient descent for training
+our model, $\eta$ then becomes a hyperparameter in this model. Often this
+hyperparameter is rather important in determining the fit of the model. We often
+want a rather high learning-rate as this will lead to faster convergence towards
+some optimum, however if we make it too big we may not get convergence at all. I
+will mainly throughout the code simply set up a grid of learning-rates and fit
+to all of them, and simply choose the learning-rate which gives the best
+performance for some fixed amount of epochs, but there also exists other more
+advanced ways of tuning this parameter.
 
 \subsubsection{Stochastic gradient descent}
 Stochastic gradient descent is very similar to ordinary gradient descent, except
 the fact that instead of training for each epoch on the whole dataset we split
 the data into $n$ randomly chosen mini-batches each of some specified size (this
-is what \textit{sgd\_size} in our code stands for). Then we do training over all
-of the $n$ mini-batches for each epoch, while the rest of the method is the same.
+is what \textit{minibatch\_size} in our code and report will refer to). Then we
+do training over all of the $n$ mini-batches for each epoch, while the rest of
+the method remains the same.
 
-\subsection{Momentum}
+\subsubsection{Momentum}
 One problem with gradient descent and stochastic gradient descent which one
 often can see is that it can be quite slow to learn. Ideally we would like the
 model to minimize the cost/loss as quickly as possible, and therefore one might
@@ -259,9 +267,10 @@ noisy gradients \cite[s.~8.3.2]{goodfellow2016deep}. This method introduces a
 variable $\bm{v}$ which describes the direction and speed which the parameter
 $\bm{\theta}$ is moving in parameter space \cite[s.~8.3.2]{goodfellow2016deep}, much
 like the role of velocity in physics. To calculate this $\bm{v}$ we need a
-hyperparameter $\alpha \in [0, 1)$ and we initialize $\bm{v} = \bm{0}$. Then for
-each learning-iteration we update $\bm{v}$ the following way:
-$$\bm{v} = \alpha \bm{v}_{prev} - \eta \Delta_{\bm{\theta}} C(\bm{x}, \bm{y}, \bm{\theta})$$
+hyperparameter $\alpha \in [0, 1)$ (we will use $\alpha = 0.9$ throughout this
+project) and we initialize $\bm{v} = \bm{0}$. Then for each learning-iteration
+we update $\bm{v}$ the following way:
+$$\bm{v} = \alpha \bm{v}_{prev} - \eta \Delta_{\bm{\theta}} C(\bm{x}, \bm{y}, \bm{\theta}).$$
 We then can simply update the $\bm{\theta}$ as follows:
 $$\bm{\theta} = \bm{\theta}_{prev} + \bm{v}$$
 We then see that the value of the $\bm{v}$ will depend on the current cost-gradient
@@ -275,7 +284,7 @@ difficult to see that this can give quicker learning.
 
 
 Keep in mind that in theory there is nothing stopping us from combining momentum
-with any of the other methods we discuss here, however methods like adam already
+with any of the other methods we discuss here, however methods like Adam already
 incorporates a form of momentum \cite[s.~8.5.3]{goodfellow2016deep}, so we might
 not get much quicker learning by using it, if any at all.
 
@@ -287,11 +296,12 @@ the parameter-space $\bm{\theta}$ essentially get a separate learning-rate
 \cite[s.~8.5]{goodfellow2016deep}, while these separate learning-rates change/adapt
 throughout the learning process, which is a different approach to using momentum.
 AdaGrad is a rather simple way of achieving a good such adaptive learning-rate.
-It scales down the parameters with with big updates, and scales up the ones with
-small corresponding updates up. For AdaGrad we introduce one variable $\bm{r}$
-which we initially set to $\bm{0}$, as well as a small constant $\delta$ which
-we typically set to $10^{-7}$. The algorithms is as follows until the
-stopping-criterion is met:
+It scales down the parameters with big historical updates, and scales up the
+ones with small corresponding historical updates up
+\cite[s.~8.5.1]{goodfellow2016deep}.  For AdaGrad we introduce one variable
+$\bm{r}$ which we initially set to $\bm{0}$, as well as a small constant
+$\delta$ which we typically set to $10^{-7}$. The algorithms is as follows until
+the stopping-criterion is met \cite[algorithm~8.4]{goodfellow2016deep}:
 \begin{itemize}
       \item Sample a minibatch of $m$ observations from the training-set
             consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
@@ -299,7 +309,7 @@ stopping-criterion is met:
       \item Calculate the gradient $\bm{g}$ of the cost w.r.t. $\bm{\theta}$ using
             this minibatch.
       \item Update the $\bm{r}$ to become $\bm{r}_{prev} + \bm{g} \odot \bm{g}$
-            ($\odot$ being the Hadamard-product)
+            ($\odot$ being the Hadamard-product).
       \item Calculate $\Delta \bm{\theta} = -\eta
                   \frac{1}{\delta + \sqrt{\bm{r}}} \odot \bm{g}$ and update
             $\bm{\theta}$ accordingly (i.e. set $\bm{\theta} =
@@ -309,14 +319,14 @@ stopping-criterion is met:
 
 \subsubsection{RMSProp}
 RMSProp is much like AdaGrad, but is designed to be more robust for
-cost-functions with very complex structures like neural nets. Unlike AdaGrad
-where we shrink the learning-rates using the sizes of all the previous partial
-derivatives of the cost-function for all the axis RMSProp focuses less on the
-history of gradients from very long ago, but otherwise using much of the same
-approach. The RMSProp algorithm requires therefore a decay-rate $\rho$ as a
-hyperparameter as well, along the $\bm{r}$ which we again initialize to be
-$\bm{0}$, as well as a small constant $\delta$, which typically is set to
-$10^{-6}$. Then we do the following until the stopping-criterion is met:
+non-convex cost-function settings \cite[s.~8.5.2]{goodfellow2016deep}, like
+typical neural nets. Unlike AdaGrad where we shrink the learning-rates using the
+sizes of all the previous updates, RMSProp focuses less on the history of
+updates from very long ago, but otherwise using much of the same approach. The
+RMSProp algorithm requires therefore a decay-rate $\rho$ as a hyperparameter as
+well, along the $\bm{r}$ which we again initialize to be $\bm{0}$. Here we also need a
+small constant $\delta$, which typically is set to $10^{-6}$. Then we do the
+following until the stopping-criterion is met \cite[algorithm~8.5]{goodfellow2016deep}:
 \begin{itemize}
       \item Sample a minibatch of $m$ observations from the training-set
             consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
@@ -331,15 +341,14 @@ $10^{-6}$. Then we do the following until the stopping-criterion is met:
 \end{itemize}
 
 \subsubsection{Adam}
-Adam is a very popular learning-rate scheduler, which is probably the method we
-will tackle which most often gives the best results. Our implementation is
-essentially as described in algorithm 8.7 in \textit{Deep Learning}
+Adam is a very popular learning-rate scheduler, and it is probably the method we
+will tackle here which most often gives the best results.
 \cite[s.~8.6.1]{goodfellow2016deep}. We start the algorithm by initializing the
 parameter $\bm{\theta}$ which we would like to optimize the cost/loss w.r.t.
 (typically we initialize this by drawing it randomly from for example the normal
 distribution which is what we have done in this project). We also set beforehand
 $\bm{s} = \bm{0}$, $\bm{r} = \bm{0}$ and $t=0$. Here the algorithms is as
-follows until we meet the stopping criterion:
+follows until we meet the stopping criterion \cite[algortihm~8.7]{goodfellow2016deep}:
 \begin{itemize}
       \item Sample a minibatch of $m$ observations from the training-set
             consisting of $\{\bm{x}^{(1)}, \dots, \bm{x}^{(m)}\}$ as the explanatory
@@ -357,12 +366,66 @@ follows until we meet the stopping criterion:
             accordingly (i.e. set $\bm{\theta} = \bm{\theta}_{prev} + \Delta
                   \bm{\theta}$).
 \end{itemize}
-Where $\eta$ is the step-size (or learning-rate as we will call it), $\rho_1$
-and $\rho_2$ are the decay-rate which must be in $[0, 1)$ (typically we set the
-defaults to $\rho_1 = 0.9$ and $\rho_2 = 0.999$), $\delta$ is just a small
-constant (we set it to $10^{-8}$). Note that we can in theory drop the minibatch
-sampling and still get a functioning algorithm, but this will often give much
-worse results.
+Here $\eta$ is referred to as the step-size (but we will use the term
+learning-rate instead), $\rho_1$ and $\rho_2$ are the decay-rate which must be
+in $[0, 1)$ (typically we set the defaults to $\rho_1 = 0.9$ and $\rho_2 =
+      0.999$), $\delta$ is just a small constant (we set it to $10^{-8}$). Note that
+we for all these three adaptive methods we can in theory just drop the minibatch
+sampling and still get a functioning algorithm, but this will often give worse
+results.
+
+\subsubsection{Object-oriented code for the learning-rate schedulers}
+Being one of the most central parts of the project, we have chosen to implement
+the learning-rate schedulers as an abstract base class in python. The abstract
+base class is implemented as follows:
+
+\begin{lstlisting}
+class Scheduler(abc.ABC):
+    def __init__(
+        self,
+        learning_rate: float,
+        timedecay: typing.Callable[[int], float] = lambda _: 1,
+        use_momentum=False,
+        momentum_alpha=0.9,
+    ):
+        self._learning_rate = learning_rate
+        self._momentum_alpha = momentum_alpha
+        self._timedecay = timedecay
+        self._update: np.ndarray | None = None
+        self._use_momentum = use_momentum
+        self.reset()
+
+    @property
+    def learning_rate(self):
+        return self._learning_rate * self._timedecay(self._current_epoch)
+
+    @abc.abstractmethod
+    def _update_no_momentum(self, grad):
+        pass
+
+    def update(self, grad) -> np.ndarray:
+        self._current_epoch += 1
+        if self._use_momentum:
+            if self._update is None:
+                self._update = np.zeros_like(grad)
+
+            self._update = self._update_no_momentum(grad) + self.momentum()
+        else:
+            self._update = self._update_no_momentum(grad)
+
+        return self._update
+
+    def momentum(self):
+        return self._momentum_alpha * self._update
+
+    def reset(self):
+        self._current_epoch = 0
+\end{lstlisting}
+
+This way to add support for more schedulers we can just implement a separate
+class for the scheduler with the algorithm implemented by overriding
+\textit{\_update\_no\_momentum}, and overriding other methods as necessary, and
+it should work well with the rest of our code.
 
 \subsection{Automatic differentiation}
 What is clear is that in our optimization it will be central to calculate the
@@ -371,13 +434,18 @@ always easy to find analytical gradients by hand. Automatic differentiation is
 an algorithmic approach to calculating the gradients of functions. We will take
 some usage of this in our code through the python-library jax
 \cite{githubrepojax}, but this is a somewhat minor part of the project so I
-won't go too much into detail about this. This utilizes clever applications of
-the chain rule in order to calculate the gradients of functions without
-compromising on accuracy (it usually gives almost exactly the same results as an
-analytical expression).  We will utilize this in some of our optimizations
-instead of calculating gradients by hand, and for adding support in our code so
-that users don't have to manually calculate gradients by hand, which can be
-time-consuming, and a potential for errors in the calculations.
+won't go too much into detail about how this algorithm works in detail. Broadly
+said, automatic differentiation utilizes clever applications of the chain rule
+in order to calculate the gradients of functions without compromising on
+accuracy (it usually gives almost exactly the same results as an analytical
+expression).  We will utilize this in some of our optimizations instead of
+calculating gradients by hand, and for adding support in our code so that users
+don't have to manually calculate gradients by hand, which can be time-consuming,
+and a potential for errors in the calculations. The reason we have not used it
+throughout all the codes is mainly due to the fact that using automatic
+differentiation often makes our code considerably more computationally
+expensive, and a lot of our programs are already computationally expensive
+enough.
 
 \subsection{Neural networks}
 There are many different implementations of neural networks out there. We will
@@ -389,25 +457,27 @@ layer of the same dimensionality as our response. For our notation in this
 section we will assume we have $L$ total layers (excluding the input layer), or
 equivalently $L-1$ hidden layers. Linking the layers together is a set of
 weights, where each node in the layer before is connected to each node in the
-next layer. Additionally each layer has its own weight matrix $W^{(l)}$ and bias
-vector $b^{(l)}$ for $1 \leq l \leq L$. Additionally each layer has its own
+next layer. Additionally each layer has its own weight matrix $\bm{W}^{(l)}$ and bias
+vector $\bm{b}^{(l)}$ for $1 \leq l \leq L$. Each layer also has its own
 activation function, which we denote $f^{(l)}$, again for $1 \leq l \leq
       L$. Typical choices of activation functions are sigmoid, relu or leaky relu,
 which are the ones we will explore in this project. For the final layer we
 instead call this the output function. The output function is typically tailored
 to whichever data we have. If we for example want to do regression we often just
 set this to the identity-function, i.e. we do not transform the activations at
-all. In the case where we are doing classification we this choice is no longer a
-good one as the identity function is not bounded, and we in that case want the
-output to be a probability between $0$ and $1$, so then a sigmoid-function for
-example is a good choice. Predictions are made using forward propagation which
-we forward through the network (this algorithm we describe in
+all. This is largely due to the fact that we then typically need an unbounded
+and continuous function when doing regression, and for most cases the identity
+function does the job well, while also being very simple. In the case where we
+are doing classification we this choice is no longer a good one as the identity
+function is not bounded, and we in that case want the output to be a probability
+between $0$ and $1$, so then a sigmoid-function for example is a good choice.
+Predictions are made using forward propagation (this algorithm we describe in
 \ref{forwardprop}), calculating the next layer activations based on the layer
 activation in the layer before, until we are at the final layer. Here we will
 follow the notation of \textit{Deep Learning}\cite{goodfellow2016deep} by
 denoting $\bm{a}^{(l)}$ as the activations in layer $l$ before applying the
 activation functions and $\bm{h}^{(l)}$ as the final activations in layer $l$
-(i.e. after applying the activation functions). Keep in mind that the final
+(i.e. after applying the activation function).  Keep in mind that the final
 predictions then will be $\bm{h}^{(L)}$, while the activations in the inputs
 (which is just the values of the features) are denoted $\bm{h}^{(0)}$. For
 fitting the networks we use the backpropagation algorithm, where we for some
@@ -423,10 +493,9 @@ $\lambda$ which scales the extent of regularization we apply. Here we will only
 add $l_2$ regularization, so $\Omega(\bm{\theta}) = \frac{1}{2}\bm{\theta}^T
       \bm{\theta}$. How the regularization is used we will go into mainly in
 \ref{backprop}, but we will also need the gradient of this regularizer with
-respect to the weights in each layer. For the $l_2$ regularization it is easy to
-see that this becomes:
+respect to the weights in each layer. For the $l_2$ regularization, we see that we have:
 $$\Omega(\bm{\theta}) = \frac{1}{2} \left( \sum_{l = 1}^{L} \sum_{i = 1}^{n_{i-1}} \sum_{j = 1}^{n_i} {\bm{W}_{i j}^{(l)}}^2 + \sum_{l = 1}^{L} {\bm{b}^{(l)}}^T \bm{b} \right)$$.
-Taking gathering the derivative with respect to $W_{i j}^{(l)}$ we get:
+Taking the derivative with respect to $\bm{W}_{i j}^{(l)}$ we get:
 \begin{align*}
       \frac{\partial \Omega(\bm{\theta})}{\partial \bm{W}_{i j}}^{(l)} & = \frac{1}{2} \frac{\partial {\bm{W}_{i j}^{(l)}}^2}{\partial \bm{W}_{i j}^{(l)}} \\
                                                                        & = \bm{W}_{i j}^{(l)}
@@ -440,56 +509,66 @@ complexity is also reduced by penalizing the weights than the biases.
 
 \subsubsection{Forward propagation algorithm}
 \label{forwardprop}
-With the description of the model done the forward propagation is actually
+With the description of the model out of the way, the forward propagation is actually
 rather simple. We assume we have $L-1$ hidden layers, with index $L$ being the
 output layer. We let us inspire by algorithm 6.3 in \textit{Deep Learning}
-\cite[p.~212]{goodfellow2016deep}, with some practical improvements for the code:
+\cite[p.~212]{goodfellow2016deep}, with some practical improvements for the
+code. Our algorithm becomes:
 \begin{itemize}
       \item Set $\bm{h}^{(0)} = \bm{X}$
       \item \textbf{for} $l = 1, \dots, L$ \textbf{do}
       \item $\bm{a}^{(l)} = \bm{h}^{(l-1)} \bm{W}^{(l)} + \bm{b}^{(l)}$ (here $\bm{b}^{(l)}$ is added for every row).
       \item $\bm{h}^{(l)} = f^{(l)}(\bm{a}^{(l)})$ (here we apply $f$ element-wise)
       \item \textbf{end for}
-      \item $\hat{\bm{y}} = \bm{h}^{(l)}$
+      \item $\hat{\bm{y}} = \bm{h}^{(L)}$
 \end{itemize}
 Keep in mind that here that $\bm{X}$, $\bm{y}$, $\bm{a}$-s, $\bm{h}$-s are
 allowed to be matrices. Here if $\bm{X}$ is a $n \times p$ matrix, it is easy to
 see that $\bm{a}^{(l)}$ and $\bm{h}^{(l)}$ are going to be $n \times n_l$
-matrices, i.e. we have that each row represents the activations in layer $l$ for
-each observation. Then as a consequence since $\hat{\bm{y}} = \bm{h}^{(L)}$, we
-have that each row in the prediction matrix corresponds perfectly to the
-prediction of each row of the design/feature matrix.
+matrices ($n_l$ being the amount of nodes in hidden layer $l$), i.e. we have
+that each row represents the activations in layer $l$ for each observation. Then
+as a consequence since $\hat{\bm{y}} = \bm{h}^{(L)}$, we have that each row in
+the prediction matrix corresponds perfectly to the prediction of each row of the
+design/feature matrix.
 
 \subsubsection{Backward propagation algorithm}
 \label{backprop}
-The backward propagation algorithm is a little more complicated. Again we take
-big inspiration from \textit{Deep Learning}, this time algorithm 6.4, with some
-tweaks. The backwards propagation algorithm then goes as follows:
+The backward propagation algorithm is a way for us to calculate the gradients of
+the weight and biases matrices/vectors. isn't all that much more complicated.
+Again we take big inspiration from \textit{Deep Learning}, this time algorithm
+6.4, with some tweaks. The backwards propagation algorithm then goes as follows:
 \begin{itemize}
       \item Set $\bm{g} = \nabla_{\hat{\bm{y}}} C(\hat{\bm{y}}, \bm{y})$
       \item \textbf{for} $l = L, \dots, 1$ \textbf{do}
-      \item Update $\bm{g}$ by setting $\bm{g} = \bm{g} \odot f^{(l)} \prime (\bm{a}^{(l)})$
+      \item Update $\bm{g}$ by setting $\bm{g} = \bm{g} \odot {f^{(l)}}' (\bm{a}^{(l)})$
       \item Calculate $\nabla_{\bm{b}^{(l)}} L(\hat{\bm{y}}, \bm{y}) = \sum_{i=1}^n \bm{g}_{i *}$ (sum over all the rows)
       \item Calculate $\nabla_{\bm{W}^{(l)}} L(\hat{\bm{y}}, \bm{y}) = {\bm{h}^{(l)}}^T \bm{g} + \lambda \nabla_{\bm{W}^{(l)}} \Omega(\bm{\theta})$
       \item \textbf{end for}
 \end{itemize}
+Then having gathered the gradients of the weights/biases from this we can then
+use whichever gradient-method we please to update the weights/biases, and
+continue this way until we have convergence (or the max amount of epochs is
+reached).
 
 \subsubsection{Weight and bias initialization}
-We see that at the core of neural networks are these weigh-matrices and bias
+We see that at the core of neural networks are the weight-matrices and bias
 vectors, and seeing as we want to use an iterative method (namely the
 Newton-Raphson method) it becomes clear that we need to initialize the weights
 and biases to something. If we were to initialize all the weights/biases to be
-$0$ (or some other constant), all the weights/biases would have the same effect
-on the loss, and hence the backward-propagation algorithm. Our solution to this
-is to draw the weights randomly from the standard-normal distribution, this way
-we will be able to break the unwanted symmetry in our learning-process. For
-biases one don't always bother initializing these randomly (although there is
-nothing hindering us to do so). What we will do initialize all the biases to the
-same value in every layer (we will set then to $0.1$). Setting it to a small
-positive value will often activate the neurons when we are using a
-relu-function (see \ref{relu-desc}), which again hinders the derivative of the
-relu to be $0$, and this enables the network to learn
-\cite[s.~6.3.1]{goodfellow2016deep}.
+$0$ (or some other constant) all of the neurons in the hidden layers will all
+have the same activations in the first iteration, and it becomes impossible for
+the model to learn properly. Our solution to this is to draw the weights randomly, for
+example from the standard-normal distribution as we have done in this project.
+This way we will be able to tackle the problem of the learning-process not
+starting properly. Another thing to take into consideration is that we ususally
+want the weights to be quite small initially, as very big weights can lead to
+overfitted models. For biases we often don't always bother initializing these
+randomly (although there is nothing hindering us to do so).  What we will do is to
+initialize all the biases to the same value in every layer (we will set all of them to
+$0.1$).  Setting it to a small positive value will ensure that all the neurons
+are activated in the first training-cycle, which will also ensure all the
+neurons have some output which will be backpropagated in the first
+training-cycle \cite[s.~Weights and biases]{week41}.
 
 \subsubsection{The universal approximation theorem}
 \label{univ-approx-thm}
@@ -517,8 +596,8 @@ activations will be between $0$ and $1$.
 \subsubsection{Relu}
 \label{relu-desc}
 Another popular activation function we will use is the relu activation function.
-Unlike the sigmoid function this does not have a upper bound. Essentially the
-idea is to. The function then can be expressed by:
+Unlike the sigmoid function this does not have a upper bound. The function then
+can be expressed by:
 $$\text{relu}(x) = \max(x, 0)$$
 The derivative then becomes:
 $$\text{relu}'(x) = \begin{cases}
@@ -548,7 +627,8 @@ $$\text{lrelu}'(x) = \begin{cases}
 We see one major difference between this and the relu is that for negative
 activations, the derivative of this will not be $0$, but $\delta$. This means
 that the network will be able to learn on activations which are negative as
-well, albeit likely slower than the positive cases.
+well, albeit likely slower than the positive cases. For this project we will be
+using $\delta = 10^{-3}$.
 
 \subsection{Cost functions}
 In this project we will use mainly two activation functions, namely mse/sse for
@@ -559,15 +639,15 @@ into these.
 A natural choice of cost-function when dealing with regression tasks is the MSE.
 When the target dimensions are always $1$ (which they are in this project), the
 MSE is defined like:
-$$\text{mse}(\bm{h}^{(L)}, \bm{t}) = \frac{1}{n} \sum_{i=1}^n (h^{(L)}_i - t_i)^2 = \frac{1}{n}(\bm{h}^{(L)} - \bm{t})^T (\bm{h}^{(L)} - \bm{t})$$
-The derivative with respect to $\bm{h}^{(L)}$ when becomes:
-$$\frac{\partial \text{mse}}{\partial \bm{h}^{(L)}}(\bm{h}^{(L)}, \bm{t}) = \frac{2}{n} (\bm{h}^{(L)} - \bm{t})$$
+$$\text{mse}(\hat{\bm{y}}, \bm{y}) = \frac{1}{n} \sum_{i=1}^n (\hat{\bm{y}}_i - \bm{y}_i)^2 = \frac{1}{n}(\hat{\bm{y}} - \bm{y})^T (\hat{\bm{y}} - \bm{y})$$
+The derivative with respect to $\hat{\bm{y}}$ then becomes:
+$$\frac{\partial \text{mse}}{\partial \hat{\bm{y}}}(\hat{\bm{y}}, \bm{y}) = \frac{2}{n} (\hat{\bm{y}} - \bm{y})$$
 We will also use the total sum of squares (SSE). Minimizing this is the same as
 minimizing the MSE, but with one less floating-point operation. The SSE is given
 by:
-$$\text{sse}(\bm{h}^{(L)}, \bm{t}) = \sum_{i=1}^n (h^{(L)}_i - t_i)^2 = (\bm{h}^{(L)} - \bm{t})^T (\bm{h}^{(L)} - \bm{t})$$
+$$\text{sse}(\hat{\bm{y}}, \bm{y}) = \sum_{i=1}^n (\hat{\bm{y}}_i - \bm{y}_i)^2 = (\hat{\bm{y}} - \bm{y})^T (\hat{\bm{y}} - \bm{y})$$
 and its derivative then becomes:
-$$\frac{\partial \text{sse}}{\partial \bm{h}^{(L)}}(\bm{h}^{(L)}, \bm{t}) = 2(\bm{h}^{(L)} - \bm{t})$$
+$$\frac{\partial \text{sse}}{\partial \hat{\bm{y}}}(\hat{\bm{y}}, \bm{y}) = 2(\hat{\bm{y}} - \bm{y})$$
 The only potential problem with using SSE instead of MSE is that the gradient
 will then be dependent on the amount of observations we are using, which can be
 problematic with stochastic gradient descent. However in this project we will
@@ -579,32 +659,28 @@ unproblematic.
 For binary classification we will use cross-entropy as out cost-function.
 Minimizing the cross-entropy is equivalent to maximizing the likelihood. We have
 the cross-validation given by:
-$$\text{cross-entropy}(\bm{h}^{(L)}, \bm{t}) = -\sum_{i=1}^{n} ( t_{i} \log(h^{(L)}_i) + (1 - y) \log(1 - h^{(L)}_i) )$$
-With the gradient w.r.t. $h^{(L)}$ then becoming:
-$$\frac{\partial \text{cross-entropy}}{\partial \bm{h}^{(L)}}(\bm{h}^{(L)}, \bm{t}) = (\bm{h}^{(L)} - \bm{t}) / ((1 - \bm{h}^{(L)}) \odot \bm{h}^{(L)})$$
+$$\text{cross-entropy}(\hat{\bm{y}}, \bm{y}) = -\sum_{i=1}^{n} ( \bm{y}_{i} \log(\hat{\bm{y}}_i) + (1 - \bm{y}) \log(1 - \hat{\bm{y}}_i) ).$$
+With the gradient w.r.t. $\hat{\bm{y}}$ then becoming:
+$$\frac{\partial \text{cross-entropy}}{\partial \hat{\bm{y}}}(\hat{\bm{y}}, \bm{y}) = (\hat{\bm{y}} - \bm{y}) / ((1 - \hat{\bm{y}}) \odot \hat{\bm{y}}).$$
 Here the division is element-wise. One thing to note is that we see that if one of
-our predictions $h^{(L)}_i$ is very close to $0$ while the target value is $1$
-or vice versa, which especially can happen in the first iterations, perhaps the
-most with some sort of unbounded activation function in the last layer, the
+our predictions $\hat{\bm{y}}_i$ is very close to $0$ while the target value is $1$
+or vice versa, which especially can happen in the first iterations when using
+some sort of unbounded activation function in the last hidden layer, the
 gradient can become very big. If we get too big of a gradient this can be
 problematic for many reasons, with one being we can get values too big for the
 computer to calculate. In our code we will solve this by clipping the
 predictions in the cross-entropy-gradient, so that they don't become too close
 to $0$ or $1$ so that this doesn't become a problem. Additionally we will add a
-small $\delta$ inside the log of the cross-entropy for the same reason.
-
-\subsubsection{Notation in the code}
-Keep in mind that in the code the cost-functions often takes $\hat{y}$ and $y$
-instead of $\bm{h}^{(L)}$ and $\bm{t}$ respectively. This essentially means the
-same thing, but makes more sense with the notation for usage outside of neural
-networks.
+small $\delta$ inside the log-expression in the cross-entropy function for the
+same reason.
 
 \subsection{Accuracy score}
-For classification methods, after we have fitted the models and made predictions
-we may want to evaluate a metric of how good our model really is. One intuitive
+For classification methods, after we have fitted the models and made predictions,
+we often want to evaluate a metric of how good our model really is. One intuitive
 such metric we will use a lot is the accuracy score. The accuracy-score
 essentially is just the proportions of datapoints we have classified correctly
-on some data. The accuracy score can then be defined.
+on some data. The accuracy score can then be defined as follows:
+$$\frac{1}{n} \sum_{i=1}^n I(\hat{\bm{y}}_i = \bm{y}_i).$$
 Using numpy this can simply be written as:
 \begin{lstlisting}
 np.mean(y_pred == y)
@@ -623,8 +699,10 @@ One final thing to consider which will be very important for our results is the
 model-complexity of neural networks and logistic regression. Logistic regression
 requires just as many parameters as we have explanatory variables, so the model
 complexity is rather low, at least in the case where we don't have too many
-covariates. Neural networks however is very . In both cases we can however
-introduce regularization which can help reduce the model complexity.
+covariates. Neural networks however contain a lot of parameters so naturally the
+model is also much more complex. In both cases however we can introduce
+regularization constraints, so we are able to control the model complexities in
+both cases.
 
 \subsection{Logistic regression}
 The logistic regression model is a commonly used, and rather simple, way to
@@ -634,30 +712,35 @@ $$Pr(Y_i = 1 | \bm{x}_i) = \frac{1}{1 + \exp(\bm{x}_i \bm{\beta})} = \sigma(\bm{
 , where $\sigma$ is obviously the sigmoid-function as already described. We then
 can do classification based on this, where we typically classify to $1$ if this
 probability is bigger than $0.5$ (this is the boundary we will use here) and $0$
-if lower than $0.5$. In order to estimate the $\beta$ parameters we use the
-likelihood such a model, given by \cite[s.~4.4]{hastie2009elements}:
+if lower than $0.5$. In order to estimate the $\bm{\beta}$ parameters we use the
+likelihood for such a model, given by \cite[s.~4.4]{hastie2009elements}:
 $$l(\bm{\beta}) = \sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - \log(1 + \exp(\bm{x}_i \bm{\beta})))$$
 , where the estimates $\hat{\bm{\beta}}$ become the ones which maximize this
 likelihood. The cost-function then becomes:
 $$C(\bm{\beta}) = -\sum_{i=1}^{n} (y_i \bm{x}_i \bm{\beta} - \log(1 + \exp(\bm{x}_i \bm{\beta}))).$$
-To minimize we find the gradient \cite[s.~4.4]{hastie2009elements}:
+To minimize we need the gradient given by \cite[s.~4.4]{hastie2009elements}:
 $$\frac{\partial C(\bm{\beta})}{\partial \bm{\beta}} = -\sum_{i=1}^{n}\bm{x}_i^T(y_i - Pr(Y_i = 1 | \bm{x}_i)) = -\bm{X}^T(\bm{y} - \bm{p}).$$
-We then can use the Newton-Raphson method on this in order to estimate the $\bm{beta}$.
+We then can use the Newton-Raphson method on this in order to estimate the $\bm{\beta}$.
+\\
+
+We may also want to add regularization. To do this we can simply add a term
+$\frac{1}{2}\lambda \bm{\beta}^T \bm{\beta}$ to the cost-function, and add a term
+$\lambda \bm{\beta}$ to its gradient, just as we did with neural networks.
 
 \section{Results}
 
 \subsection{General optimization}
 The \textbf{optimization\_basic.py} in the project repo
 \cite{githubrepoproject2code} performs various experimentation on some generated
-data as described in \ref{basicoptdesc}, and explores the various effects the
-various parameters have when using gradient methods. For the amount of epochs we
-did a quick test by four-doubling the amount of epochs. Table
-\ref{epochs-varying} shows the results of optimizing using GD and SGD with
-different amount of epochs. What we clearly see is that in general the more
-amount of epochs we allow the smaller the cost will be (granted we have
-convergence for the learning-rate). This is intuitive as for each iteration we
-should get closer to the minimum of the cost, so doing more iterations must also
-naturally bring us closer to the minimum.
+data as described in \ref{basicoptdesc}, and explores the effects the
+various parameters have when using gradient methods. For exploring the effect
+the amount of epochs has, we did a quick test by four-doubling the amount of
+epochs from one model to another. Table \ref{epochs-varying} shows the results
+of optimizing using GD and SGD with different amount of epochs. What we clearly
+see is that in general the more amount of epochs we allow the smaller the cost
+will be (granted we have convergence for the specified learning-rate). This is intuitive
+as for each iteration we should get closer to the minimum of the cost, so doing
+more iterations must also naturally bring us closer to the minimum.
 
 \begin{table}
       \centering
@@ -697,42 +780,43 @@ between the minibatch-sizes of $8$ and $32$, where there is quite a difference).
 
 We also trained the various methods using stochastic gradient descent on some
 learning-rate grid. The costs of these functions plotted against the
-learning-rates at which the cost was obtained is contained in figure
+learning-rates at which the cost was obtained is shown in figure
 \ref{learningrate-cost-plot}. We see that generally that the bigger the
-learning-rate is the better it is, however we also see that if it gets to high
+learning-rate is the better it is, however we also see that if it gets too high
 then we get that the cost diverges towards infinity. We also can see that in all
 the cases the learning-rate is very important, with higher learning-rates giving
 much quicker learning.
 
 Just from this plot we see quite a big difference between how quick the
-different optimization-methods work. Table \ref{gradmethods-comparison} shows
-the costs for the different methods of calculating the learning-rates. We see
-that in all cases adding momentum increases the speed of learning by quite a
-bit (perhaps less so with AdaGrad trained on stochastic minibatches, where this
+different optimization-methods work, with the momentum versions being much
+quicker to minimize the costs. Table \ref{gradmethods-comparison} shows the
+costs for the different methods of calculating the learning-rates. We see that
+in all cases adding momentum increases the speed of learning by quite a bit
+(perhaps less so with AdaGrad trained on stochastic minibatches, where this
 increase is quite marginal). We see that which method we use does impact the
 speed of learning by quite a lot, with the lowest cost (stochastic AdaGrad with
-momentum) having more than $100$ times smaller than the highest cost (GD without
+momentum) being more than $100$ times smaller than the highest cost (GD without
 momentum). Overall we can see that AdaGrad did seem to perform the best out of
 the methods we tried out.
 
-We also check out the performance of each method under a different loss, which
-is the ridge-loss. For the previous cases we have explored how the performance
-depends some hyperparameters isolated. In ridge regression we introduce another
-hyperparameter, namely the regularization parameter $\lambda$. However we may
-also want to see how the performance. Since we are dealing with ridge regression
-here it makes sense to explore the mse on some test-data, which is what we have
-done in the program. This now doesn't only depend on the learning-rate $\eta$
-anymore as previously, but also the regularization parameter $\lambda$ (we keep
-the rest of the parameters fixed). Figure \ref{heatmapplot-lr-lambda-gd-sgd}
-shows a heatmap which tells us how this depends on both the $\eta$ and $\lambda$
-for GD and SGD.  What we see is that the best performance, but that a wrong
-$\eta$ or $\lambda$ alone can very much ruin the performance. Similarly
-\ref{heatmapplot-lr-lambda-adagrad} shows a corresponding plot for AdaGrad. Here
-we see that this is much more robust to higher learning-rates than the other
-methods, where it seems to take much more for this to diverge. This is probably
-related to the fact that AdaGrad vastly downscales the learning in directions
-with high historical updates (see \ref{adagradsec}) so this is able to combat
-the higher learning-rates.
+We also check out the performance of each method under a different
+cost-function, namely using a ridge cost-function. Previously we have explored
+how the performance depends on the hyperparameters isolated. In ridge regression
+we introduce another hyperparameter, namely the regularization parameter
+$\lambda$. Since we are dealing with ridge regression here it makes sense to
+explore the mse on some test-data, which is what we have done in the program.
+This now doesn't only depend on the learning-rate $\eta$ anymore as previously,
+but also the regularization parameter $\lambda$ (we keep the rest of the
+parameters fixed).  Figure \ref{heatmapplot-lr-lambda-gd-sgd} shows a heatmap
+which tells us how this depends on both the $\eta$ and $\lambda$ for GD and SGD.
+What we see is that the best performance is quite sensetive to both the $\eta$
+and $\lambda$, and that a wrong $\eta$ or $\lambda$ alone can very much ruin the
+performance. Similarly figure \ref{heatmapplot-lr-lambda-adagrad} shows a corresponding
+plot for AdaGrad. Here we see that this is much more robust to higher
+learning-rates than the other methods, where it seems to take much more for this
+to diverge. This is probably related to the fact that AdaGrad vastly downscales
+the learning in directions with high historical updates (see \ref{adagradsec})
+so this is able to combat divergence for the cost for the higher learning-rates.
 
 For both the figure \ref{heatmapplot-lr-lambda-gd-sgd} and
 \ref{heatmapplot-lr-lambda-adagrad}, focusing on the regularization parameter
@@ -741,9 +825,13 @@ $\lambda$ did not give that good results because of too little regularization,
 while a too high $\lambda$ also caused subpar results due to too much
 regularization. However, we also see that we now have another dimension on top
 determining the performance, namely that the learning-rate must also be optimal
-for the model to be any good. Picking a good model then requires us to do some
-kind of hyperparameter-tuning (like a grid-search for example) on both $\eta$ and
-$\lambda$.
+for the model to be any good. Picking too low of a learning-rate will as seen
+already cause the cost to not converge, while picking a too big learning-rate
+will cause the cost to diverge. Picking a good model clearly requires us to do some
+kind of hyperparameter-tuning (like a grid-search for example) on both $\eta$
+and $\lambda$, as some $\eta$-values will cause a diverging cost for some, but
+not all, values of $\lambda$ (as can be seen for $\eta = 1$ for the SGD case in
+figure \ref{heatmapplot-lr-lambda-gd-sgd}).
 
 \begin{figure}
       \centering
@@ -796,8 +884,8 @@ $\lambda$.
 
 
 \subsection{The franke-function}
-Experimentation of using neural network with the franke-function is determined
-in the \textbf{franke\_function.py} in the project codes
+Experimentation of using a neural network with the franke-function is done
+in the \textbf{franke\_function.py} file in the project codes
 \cite{githubrepoproject2code}. We here tried to fit an neural network as good as
 possible to minimize the MSE. Doing a grid-search on both the learning-rate
 $\eta$ and the regularization parameter $\lambda$ for each method using only
@@ -808,7 +896,7 @@ of the same effect as we did in figure \ref{heatmapplot-lr-lambda-gd-sgd} and
 on having a fitting learning-rate and regularization parameter, but we can also
 see that we have quite a lot of learning-rates which get get quite good results
 for both train and test seemingly. Table \ref{metrics-nn-franke} shows us some
-metrics we got when training neural networks on teh franke-function. We get
+metrics we got when training neural networks on the franke-function. We get
 quite good results here, and we also see that the MSE and $R^2$ scores for the
 train and test-data are quite similar, which does indicate that the
 regularization works quite well (though one of course need to take into account
@@ -866,11 +954,11 @@ performance here.
 \end{table}
 
 Lastly we also explored using different activation functions for the hidden
-layer. We here just used the same activation functions for all the hidden
+layers. We here just used the same activation functions for all the hidden
 layers, with us testing out sigmoid, relu and leaky relu. Table
-\ref{franke-different-activ-funcs}. From this we can see that the sigmoid gave
-us the best performance by a little bit, so it was correct using this in our
-experiments above.
+\ref{franke-different-activ-funcs} shows the MSE for the different hidden
+layers. From this we can see that the sigmoid gave us the best performance by a
+little bit, so it was correct using this in our experiments above.
 
 \begin{table}
       \centering
@@ -890,13 +978,13 @@ experiments above.
 The \textbf{neuralnet\_breastcancer.py} in the project code performs analysis for
 fitting neural networks on the wisconsin breast cancer data, in a classification
 task. Here we again explored various hyperparameters of the neural network to
-see which yields the best result. Table \ref{breastcancer-nn-hidden-layers}
-shows us the accuracy and end-of-training loss for some trained on $200$ epochs.
-Here we see that all of the different layer sizes we tested are able to classify
-all of the training-data correctly, so it doesn't seem to matter all that the
-hidden layer sizes, however we do see that a model with two hidden layers, each
-of $100$ nodes did give the lowest end-of-training loss to this is the layer
-sizes we will be choosing for the rest of our analysis.
+see which hyperparameters yielded the best result. Table \ref{breastcancer-nn-hidden-layers}
+shows us the accuracy and end-of-training loss for some different hidden layer sizes trained on $200$ epochs.
+Here we see that all of the different layer sizes we tested were able to classify
+all of the training-data correctly, so it doesn't seem to matter all that much
+which of them we choose, however we do see that a model with two hidden layers,
+each of $100$ nodes did give the lowest end-of-training loss so this is the
+layer sizes we will be choosing for the rest of our experimentation.
 
 \begin{table}
       \centering
@@ -921,7 +1009,7 @@ hidden layers. Table \ref{breastcancer-nn-activ-funcs} shows the accuracy and
 end-of-training loss using the three activation functions we explore in this
 project. We see that all the methods perform quite well on the training-data
 (when looking at the accuracy), but that the sigmoid gives a much lower
-end-of-training loss, to we have much quicker learning in this case. Therefore
+end-of-training loss, so we have much quicker learning in this case. Therefore
 we choose to use the sigmoid forwards.
 
 \begin{table}
