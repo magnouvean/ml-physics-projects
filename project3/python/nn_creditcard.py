@@ -1,6 +1,7 @@
-from generate_data import load_data_creditcard
 import numpy as np
 import tensorflow as tf
+
+from generate_data import load_data_creditcard
 
 X_train, y_train, X_val, y_val, X_test, y_test = load_data_creditcard()
 
