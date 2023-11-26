@@ -26,3 +26,15 @@ RMSProp relu best hyperparams: eta=10^-2.5, lambda=10^-5.0
 ====Final model accuracy====
 0.9982554867754643
 ```
+
+## xgb_creditcard.py
+```
+====Best number of estimators====
+360, accuracy: 0.9945
+
+====Best max leaves====
+6, accuracy: 0.9955
+
+====Final accuracy====
+0.9994091164884638
+```
