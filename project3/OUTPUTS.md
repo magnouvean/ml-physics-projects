@@ -1,3 +1,12 @@
+## datainfo.py
+```
+Total observations: 568630
+Number of non-fraud: Class    284315
+dtype: int64
+Number of fraud: Class    284315
+dtype: int64
+```
+
 ## lr_creditcard.py
 ```
 Logistic regression (CV) with L1 regularization
