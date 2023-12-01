@@ -73,6 +73,18 @@ logistic regression, then we will go back to neural networks as we found that
 they performed very well in project 2 \cite{githubrepoproject2} and finally
 we'll look at a decision tree, more specifically a gradient boosting tree.
 
+A motivation behind using logistic regression is that as we have already seen,
+they often can perform rather well on less complex problems, due to their low
+complexity (low variance). On problems like these this usually can't compete
+with the other two models, but we will see how big of a gap we'll get between
+them, and this can also serve as some sort of benchmark for the other two
+models. Neural networks is a good choice for a lot of problems, with them being
+very general and often perform well when we have a lot of data. Boosting trees
+we have chosen to bring in here because they very often are a go-to for
+classification purposes, with them being the winner of many classification
+competitions. Additionally they are more intuitive than the neural network
+approach, and less computationally expensive.
+
 We'll first in the method introduce some of the models we'll use, and go
 through the data a bit closer, before we look at how the three different models
 perform, and from there on we will try to conclude which of the three models
@@ -130,6 +142,71 @@ of the features looks promising our classification.
 		transactions.}
 	\label{databoxplot}
 \end{figure}
+
+\subsection{Neural Networks}
+For the neural networks in this project we will use a basic multi-layer
+perceptron, this time using tensorflow. I will assume knowledge of the basic
+setup of training, and. For more details on the neural networks feel free to
+check out the report of project 2 \cite{githubrepoproject2}. We will spend some
+time tweaking the based on the performance based on what gives us good
+performance on the validation set. Luckily for us we have a lot of data, with
+the two classes being quite evenly distributed, so using this approach over
+something like corss-validation should be unproblematic.
+
+The main things we will be tweaking is the regularization parameter (we will
+limit ourselves to use $l_2$ regularization), the optimization method (with the
+corresponding learning-rate), the activation functions and the network size.
+The output function will be fixed to be the sigmoid function in this case as we
+are dealing with binary classification, while the cost-function will be binary
+cross-entropy, both just as in project 2.
+
+The optimization methods we will try in this case is just as in project 2, i.e.
+AdaGrad, Adam, RMSProp and SGD. We have dropped trying out normal gradient
+descent, because of it's uncompetitive performance in project 2, as well as the
+fact that our dataset now will be huge, meaning that the amount of epochs we
+are willing to give in the learning-process is severely limited, meaning it
+should have even worse prerequisites in this case. All these are built directly
+into tensorflow so the amount we need to implement here is quite limited.
+
+For the activation-functions we will try out the relu and sigmoid (which we
+already have explored in project 2), as well as some other activation functions
+built into tensorflow. Notably these are swish, tanh and elu. We will now go a
+little bit into these:
+\subsubsection{tanh}
+The tanh is given by:
+$$\text{tanh}(x) = \frac{\exp(x) - \exp(-x)}{\exp(x) + \exp(-x)}$$ \cite{wikihyperbolicfunctions}
+This looks much like the sigmoid function, in that is has the same s-shape, but
+is different in the sense that the sigmoid limits us between $0$ and $1$, while
+the tanh limits us between $-1$ and $1$. This can in some situations be
+preferable.
+
+\subsubsection{swish}
+The swish is given by:
+$$\text{swish}(x) = x \cdot \text{sigmoid}(x).$$ \cite{tensorflowdocswish}
+Using our knowledge about the sigmoid-function we see that as $x$ grows, the
+sigmoid will approach $1$ quite quickly. This means that for high values of
+$x$, the function will behave much like the relu. For negative values of $x$ we
+have that the sigmoid becomes very close to $0$, much quicker than the linear
+function $x$ grows towards $-\infty$, so the product will be very close to $0$,
+again much like the relu. However for small absolute values we will get a
+shrinking in absolute value of the activations. This function often works
+better than the ReLU on deep models on challenging datasets
+\cite{ramachandran2017searching}, so we will explore if this is one of those
+cases.
+
+\subsubsection{ELU}
+The exponential linear unit is given by:
+$$\text{elu}(x) = \begin{cases} x \qquad \qquad & \text{if}\ \ x > 0 \\ \alpha \cdot (\exp(x) - 1) & \text{if}\ \ x < 0 \end{cases}.$$ \cite{tensorflowdocelu}
+We will here just use $\alpha = 1$ (which is the default), but of course it is
+easy to test others as well. The ELU can lead to faster learning and better
+performance on neural nets with more than $5$ layers in particular
+\cite{clevert2016fast}, which is less than what we mainly will be using here,
+but we will try it anyway.
+
+\subsection{Boosting trees}
+This is a method we haven't been through earlier, so we'll go a little bit more
+into this here. At the core of a boosting-tree is a normal classification-tree.
+Often gradient boosted trees are very good for classification purposes.
 
 \section{Results}
 
