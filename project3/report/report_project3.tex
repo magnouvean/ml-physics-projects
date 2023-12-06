@@ -200,13 +200,83 @@ $$\text{elu}(x) = \begin{cases} x \qquad \qquad & \text{if}\ \ x > 0 \\ \alpha \
 We will here just use $\alpha = 1$ (which is the default), but of course it is
 easy to test others as well. The ELU can lead to faster learning and better
 performance on neural nets with more than $5$ layers in particular
-\cite{clevert2016fast}, which is less than what we mainly will be using here,
-but we will try it anyway.
+\cite{clevert2016fast}, which is less than what we will be using here,
+but we will try it anyway because including this takes essentially no code.
 
 \subsection{Boosting trees}
 This is a method we haven't been through earlier, so we'll go a little bit more
-into this here. At the core of a boosting-tree is a normal classification-tree.
-Often gradient boosted trees are very good for classification purposes.
+into this here. At the core of a boosting-tree is a normal classification-tree
+which we will use as a so-called weak classifier. We will first look a little bit into how this method works.
+
+\subsubsection{Classification trees}
+A classification tree is a rather simple. Like other decision trees they are
+typically divided into a root node, interior nodes and leaf nodes. The nodes
+are connected via branches, where the branch we move along with being dependent
+on a test on the node we are in, where the test has only two outcomes. Each of
+the leaf nodes contains the classification we should make
+\cite{lecturesweek46}. To make predictions on a tree we start at the root
+node and then move along the branch according to the test at the root-node
+until we come to a new node, where we do the same procedure until we end up at
+a leaf node, in which case we have our prediction.
+
+For finding appropriate structure of the tree (that is the appropriate tests
+and nodes), perhaps the most popular algorithm is the CART algorithm. This uses
+what is called the Gini index, which we will denote $G$. Let $p_{m 1}$ be the
+proportion of observations of credit card fraud (i.e. with $y_i = 1$) within a
+region $R_m$ and $p_{m 0} = 1 - p_{m 1}$ be the proportion of non-fraud cases
+within $R_m$. More formally we have:
+$$p_{m 1} = \frac{1}{N_m} \sum_{x_i \in R_m} I(y_i = 1).$$
+The Gini index is then:
+$$G = \sum_{i=0}^{1} (p_{m i} (1 - p_{m i})) = 2 p_{m 1} (1 - p_{m 1}).$$
+This Gini index gives us a metric of how good each split is. A higher
+Gini-index means that region $R_m$ contains a higher proportion of one class,
+which means we have managed to find criterion which hopefully accurately is
+able to classify observations of the classes. The Cart algorithm is one way of
+optimizing with regards to this gini-factor. This algorithm splits the data
+into two subsets by doing a split on a single feature $k$ and a threshold $t_k$
+\cite[s.~The CART algorithm for Classification]{lecturesweek46}. This is done
+by searching for the $(k, t_{k})$ which minimizes the cost:
+$$C(k, t_k) = \frac{m_{left}}{m} G_{left} + \frac{m_right}{m} G_{right}$$
+, where $m_{left}$ is the amount of observations in the left region $m_{right}$
+is the amount of observations in the right region, $m$ is the amount of
+observations in the region we are doing the split on, and $G_{left}$ and
+$G_{right}$ is the Gini in left and right subregion. A lower value of $C(k,
+	t_k)$ essentially means that the overall split results in more pure regions.
+Finding this exact $(k, t_k)$ may involve searching through all the features
+and then for each feature find the $t_k$ by searching through a lot of
+thresholds and then choosing the optimal pair $(k, t_k)$.
+
+\subsubsection{Gradient Boosting}
+While normal classification trees will be able to fit the training data well,
+they often will lead to overfitted trees if we fit the training-data too well,
+and many of the techniques to combat overfitting will often lead to trees not
+giving that good performance. Predictions on new data often will not be very
+good because of this. However, they will often be able to pick up some
+underlying patterns in the data, more so than just making random predictions
+anyway. This enables its use as a weak learner for a boosting setting. In
+gradient boosting we combine many weak learners, adding them together to create
+a good learner. For gradient boosting, assume we have a cost-function function
+$C(f) = \sum_{i=0}^{n-1} L(y_i, f(x_i))$, where $f$ is our classifier. We then
+have the following algorithm \cite[s.~Gradient Boosting,
+	algorithm]{lecturesweek46}:
+\begin{itemize}
+	\item Initialize our estimate $f_0(x)$ (this will be our classification tree)
+	\item for $m = 1, 2, \dots, M$ do:
+	      \begin{itemize}
+		      \item Compute the negative gradient vector $\bm{u}_m = -\frac{\partial C(\bm{y}, \bm{f})}{\partial \bm{f}(x)}$ at $f(x) = f_{m - 1}(x)$.
+		      \item Fit the base-learner (again is this is a classification tree) to this negative gradient $h_m(u_m, x)$.
+		      \item Update the estimate $f_m(x) = f_{m-1}(x) + h_m(u_m, x)$.
+	      \end{itemize}
+\end{itemize}.
+We then will get a final classifier $f_M$. For our loss-function in a
+binary classification case we could for example use:
+$$C(\bm{y}, \bm{f}) = \sum_{i=0}^{n-1} \exp(-y_i (f_{m-1}(x_i) + \beta G(x_i))) = \sum_{i=0}^{n-1} w_i^m \exp(-y_i \beta G(x_i))$$
+, where $y_i$ is $-1$
+if we do not have fraud and $1$ if we do have fraud, $\beta$ is the weighted
+parameter which we want to optimize and $G$ is our weak classifier. The XGBoost
+(Extreme Gradient Boosting) python library, builds upon the idea of gradient
+boosting and makes optimizations on top of this in many ways. Often gradient
+boosted trees are very good for classification purposes.
 
 \section{Results}
 
