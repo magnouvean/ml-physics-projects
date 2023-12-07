@@ -1,6 +1,7 @@
 import xgboost as xgb
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from generate_data import load_data_creditcard
 from sklearn.metrics import ConfusionMatrixDisplay
@@ -50,7 +51,7 @@ print(f"\n====Best max leaves====\n{best_max_leaves}, accuracy: {np.max(accuraci
 # set together for the final model.
 del X_train_smaller
 del y_train_smaller
-X_train = np.concatenate([X_train, X_val])
+X_train = pd.concat([X_train, X_val])
 y_train = np.concatenate([y_train, y_val])
 
 # Train final model.
@@ -65,4 +66,12 @@ print(f"\n====Final accuracy====\n{final_accuracy}")
 
 # Also create a confusion matrix for the final predictions.
 ConfusionMatrixDisplay.from_predictions(y_test, y_test_pred)
-plt.savefig("../figures/xgb_final_confusion_mat.png")
+plt.savefig("../figures/xgb_final_confusion_mat.png", dpi=196)
+
+# Plot one of the trees in the ensemble
+xgb.plot_tree(clf)
+plt.savefig("../figures/xgb_final_tree_plot.png", dpi=196)
+
+# And finally plot the model feature importance
+xgb.plot_importance(clf)
+plt.savefig("../figures/xgb_final_importance.png", dpi=196)

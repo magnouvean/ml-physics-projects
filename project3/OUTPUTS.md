@@ -13,27 +13,29 @@ Logistic regression (CV) with L1 regularization
 Accuracy: 0.9652569675994316
 Logistic regression (CV) with L2 regularization
 Accuracy: 0.9654539315409615
+Logistic regression (CV) with polynomial features
+Accuracy: 0.9972073326861661
 ```
 
 ## nn_creditcard.py
 ```
 ====Model performances====
-AdaGrad best: 0.9831
-Adam best: 0.98275
-RMSProp best: 0.9826
-SGD best: 0.98305
+AdaGrad best: 0.98345
+Adam best: 0.98265
+RMSProp best: 0.9824
+SGD best: 0.98335
 ====Activation functions====
-relu: 0.98245
-sigmoid: 0.96595
-swish: 0.9814
-tanh: 0.9714
-elu: 0.9733
+relu: 0.9842
+sigmoid: 0.9659
+swish: 0.98055
+tanh: 0.97105
+elu: 0.9724
 
 
-RMSProp relu best hyperparams: eta=10^-2.5, lambda=10^-5.0
-{(10,): 0.95695, (10, 10, 10): 0.9631, (100, 100): 0.97695, (50, 50): 0.973, (100, 100, 100, 100): 0.97625, (10, 10, 10, 10): 0.96785, (100, 100, 100, 100, 100): 0.97575, (1000, 100, 10): 0.9829, (1000, 1000): 0.9847, (1000, 1000, 1000): 0.97905, (40, 100, 30): 0.97895}
+RMSProp relu best hyperparams (100, 100): eta=10^-2.0, lambda=10^-8.0
+{(10,): 0.9721, (10, 10, 10): 0.97, (100, 100): 0.9845, (50, 50): 0.9795, (100, 100, 100, 100): 0.98345, (10, 10, 10, 10): 0.972, (100, 100, 100, 100, 100): 0.98215, (1000, 100, 10): 0.97935, (1000, 1000): 0.9792, (1000, 1000, 1000): 0.97815, (40, 100, 30): 0.97825}
 ====Final model accuracy====
-0.9982554867754643
+0.998564997186269
 ```
 
 ## xgb_creditcard.py

@@ -13,12 +13,12 @@ def load_data_creditcard(val_split=True):
 
     # Scale the features
     sc = StandardScaler()
-    X_train = sc.fit_transform(X_train)
-    X_test = sc.transform(X_test)
+    X_train = pd.DataFrame(sc.fit_transform(X_train), columns=X_train.columns)
+    X_test = pd.DataFrame(sc.transform(X_test), columns=X_test.columns)
 
     if val_split:
         X_val, X_test, y_val, y_test = train_test_split(X_test, y_test)
-        X_val = sc.transform(X_val)
+        X_val = pd.DataFrame(sc.transform(X_val), columns=X_val.columns)
         return X_train, y_train, X_val, y_val, X_test, y_test
     else:
         return X_train, y_train, X_test, y_test

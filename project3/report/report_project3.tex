@@ -143,6 +143,22 @@ of the features looks promising our classification.
 	\label{databoxplot}
 \end{figure}
 
+
+\subsection{Logistic regression}
+The first and most simple method we will explore is the logistic regression. I
+will not go into detail on this method here, as this already has been presented
+in project 2 \cite{githubrepoproject2}. We will here simply do a train-test
+split and train a logistic regression on the training-set and evaluate the
+performance on a test-set. For the features we will first try a model with just
+the features directly from the dataset, and then try with polynomial features
+of second degree polynomials (with interactions). We will not add a higher
+polynomial-degree than this due to the fact that we have $29$ features already and
+a high polynomial order will give us considerably more features, which can both
+lead to overfitting, and to problems with memory (keep in mind that the dataset
+here is quite big). For finding the appropriate regularization parameter we
+will here take use of cross-validation. Here we will simply use the
+LogisticRegressionCV which does most of the job for us.
+
 \subsection{Neural Networks}
 For the neural networks in this project we will use a basic multi-layer
 perceptron, this time using tensorflow. I will assume knowledge of the basic
@@ -156,9 +172,15 @@ something like corss-validation should be unproblematic.
 The main things we will be tweaking is the regularization parameter (we will
 limit ourselves to use $l_2$ regularization), the optimization method (with the
 corresponding learning-rate), the activation functions and the network size.
-The output function will be fixed to be the sigmoid function in this case as we
-are dealing with binary classification, while the cost-function will be binary
-cross-entropy, both just as in project 2.
+For this we will use a greedy method, starting with determining the optimal by
+testing a grid of learning-rates and regularization parameters, before we then
+explore the activation functions using this method, again testing with a grid
+of learning-rates and regularization parameters, before we lastly try different
+hidden layer sizes for the chosen method and activation function now testing on
+a grid of different learning-rates and keeping the best learning-rate
+previously determined. The output function will be fixed to be the sigmoid
+function in this case as we are dealing with binary classification, while the
+cost-function will be binary cross-entropy, both just as in project 2.
 
 The optimization methods we will try in this case is just as in project 2, i.e.
 AdaGrad, Adam, RMSProp and SGD. We have dropped trying out normal gradient
@@ -279,8 +301,222 @@ boosting and makes optimizations on top of this in many ways. Often gradient
 boosted trees are very good for classification purposes.
 
 \section{Results}
+\subsection{Logistic regression}
+In \textbf{lr\_creditcard.py} in the project codes \cite{githubrepoproject3} we
+have tested three different models, two of whom are fitted with the ordinary
+features, with $l_1$ and $l_2$ regularization, and then a logistic
+regression-model with polynomial features. Table \ref{lrresults} shows the
+results for the three different models. Here we can see that the choice of
+regularization type does not give any meaningful difference for performance,
+but that the model with second degree polynomial features performing a lot
+better. Figure \ref{lrconfusionmats} and \ref{lrpolyconfusionmat} shows
+the confusion matrices for the models without polynomial features and with
+polynomial features respectively. We see that for the polynomial feature model
+this gave , which is overall quite good, but perhaps not as good as what we
+would wish for as this means around $\frac{249}{70903+249} \approx 0.35\%$ of
+non-fraud cases are detected as fraud, while $\frac{148}{70858 + 148} \approx
+	0.21\%$ of actual fraud cases are not detected as such. Furthermore figure
+\ref{lrroccurves} shows a ROC-curve for the models not using polynomial
+features. Here we see that the ROC-curve is quite good, so we could adjust the
+classification-boundary to minimize the false positives without getting too
+many true negatives and vice versa. If we were to look at the ROC-curve for the
+polynomial model this would be near perfect, which allows for the same
+possibility of adjusting the classification boundary here as well.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{lr_confusion_mat}
+	\caption{Shows the confusion matrices for a logistic-regression with
+		$l_1$ and $l_2$ regularization, with the regularization-parameter
+		determined through cross-validation.}
+	\label{lrconfusionmats}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{lr_roc_curve}
+	\caption{Shows the ROC-curve for a logistic-regression with
+		$l_1$ and $l_2$ regularization, with the regularization-parameter
+		determined through cross-validation.}
+	\label{lrroccurves}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{lr_poly_confusion_mat}
+	\caption{Shows the confusion matrix for a logistic-regression with
+		$l_2$ regularization, with the regularization-parameter
+		determined through cross-validation, and using polynomial
+		features of degree $2$.}
+	\label{lrpolyconfusionmat}
+\end{figure}
+
+\subsection{Neural networks}
+The \textbf{nn\_creditcard.py} program explores fitting neural networks to the
+credit-card data. Table \ref{nnmethodres} shows the accuracy on the
+training-data ran on a single epoch over some smaller training-dataset. Here we
+see that the different methods give essentially the same results. The
+optimization method here therefore doesn't seem to matter all that much for the
+performance on new data. Which optimizer we choose will therefore not matter
+too much. To see more about how the accuracy variaes depending on the
+learning-rate and regularization-parameters, see figure \ref{nntestacchm}. For
+the results afterwards we therefore have just moved picked RMSProp as our
+method of choice forwards. Looking at the results this may seem odd as this
+didn't give the absolute highest accuracy for our results, but keep in mind
+that tensorflow is not built with complete determinism in mind, so the results
+will vary from each time you run the program, and on another occasion this
+performed the best. After choosing this model we explored the different
+activation functions. Table \ref{nnactivres} shows the accuracy on the
+test-data for the different models. Here we see a more substantial difference,
+where relu did seem to perform the best by a little margin. Our model then
+becomes a RMSProp with relu activation functions, with the optimal
+regularization parameter occurring at $\lambda = 10^{-5}$ and the best
+learning-rate being $\eta = 10^{-\frac{5}{2}}$. Having found this we also try
+some different layer-sizes for the neural network. Table \ref{nnsizeres} shows
+the metrics on the test-data for the different sizes of hidden layers. Here we
+see that the bigger networks do seem to give better results. Figure
+\ref{nnconfusionmat} shows the confusion matrix for the final model. Here we
+see that we get $46$ false positives and $5$ true negatives, which is a lot
+better than the logistic regression model.
+
+\begin{table}
+	\centering
+	\begin{tabular}{| c | c |}
+		Optimization method & Test-accuracy \\
+		AdaGrad             & 0.98345       \\
+		Adam                & 0.98265       \\
+		RMSProp             & 0.9824        \\
+		SGD                 & 0.98335
+	\end{tabular}
+	\caption{The test-accuracies after training various neural networks
+		using $10 000$ datapoints trained on $1$ epoch, where we for each
+		method have optimized the learning-rate and regularization parameters.}
+	\label{nnmethodres}
+\end{table}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{nn_test_accuracy_hm}
+	\caption{Shows heatmaps for the test-accuracies for the different
+		models, detailing how the performance varies depending on the
+		learning-rate and regularization parameter.}
+	\label{nntestacchm}
+\end{figure}
+
+\begin{table}
+	\centering
+	\begin{tabular}{| c | c |}
+		Activation function & Test-accuracy \\
+		relu                & 0.9842        \\
+		sigmoid             & 0.9659        \\
+		swish               & 0.98055       \\
+		tanh                & 0.97105       \\
+		elu                 & 0.9724
+	\end{tabular}
+	\caption{The test-accuracies after training various neural networks on
+		$10 000$ datapoints using $1$ epoch, where we for each activation
+		function have optimized the learning-rate and regularization parameter.}
+	\label{nnactivres}
+\end{table}
+\begin{table}
+	\centering
+	\begin{tabular}{| c | c |}
+		Hidden layer sizes        & Test-accuracy \\
+		(10)                      & 0.9721        \\
+		(10, 10, 10)              & 0.97          \\
+		(100, 100)                & 0.9845        \\
+		(50, 50)                  & 0.9795        \\
+		(100, 100, 100, 100)      & 0.98345       \\
+		(10, 10, 10, 10)          & 0.972         \\
+		(100, 100, 100, 100, 100) & 0.98215       \\
+		(1000, 100, 10)           & 0.97935       \\
+		(1000, 1000)              & 0.9792        \\
+		(1000, 1000, 1000)        & 0.97815       \\
+		(40, 100, 30)             & 0.97825
+	\end{tabular}
+	\caption{The test-accuracies after training various neural networks on
+		$10 000$ datapoints using $1$ epoch, where we for each layer
+		size have optimized the regularization parameter.}
+	\label{nnsizeres}
+\end{table}
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{nn_final_confusion_mat}
+	\caption{Shows the final confusion matrix of our chosen neural network
+		trained on all the training-data.}
+	\label{nnconfusionmat}
+\end{figure}
+
+
+\subsection{Gradient boosting}
+The last of our three methods was one based on gradient boosting using the
+XGBoost python-library. The code for our analysis is contained in
+\textbf{xgb\_creditcard.py}. Here we only tweaked the number of estimators and
+the number of leaves. After optimizing these on a smaller subset of our
+training and test data we get the amount of estimators giving the best results
+being $360$ (giving an accuracy of $0.9945$ with the default max leaves), and
+the best value of max-leaves being $6$ (yielding an accuracy of $0.9955$ with
+the $360$ estimators). Figure \ref{xgbconfusionmat} shows the final confusion
+matrix. We see that we are able to classify all the fraud-cases as fraud, while
+also only getting $21$ false positives. Figure \ref{xgbimportance} shows the
+importance-plot of each of the features. We can here see that a lot of the
+features which appears to have differing distributions for the fraud and
+non-fraud (looking at figure \ref{databoxplot}) cases appear to be some of the
+most important, which is not particularly surprising. Finally for a
+visualization of one of the weak classifiers, see figure \ref{xgbtreeplot}.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{xgb_final_confusion_mat}
+	\caption{Shows the confusion matrix for a XGBoost gradient boosting
+		model with $360$ estimators and $6$ as the max-leaves.}
+	\label{xgbconfusionmat}
+\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{xgb_final_importance}
+	\caption{Shows the feature importance for our gradient boosting model.}
+	\label{xgbimportance}
+\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{xgb_final_tree_plot}
+	\caption{A tree plot for one of our weak classifiers.}
+	\label{xgbtreeplot}
+\end{figure}
 
 \section{Analysis}
+After exploring various models and tweaking their respective hyperparameters we
+then trained final models on all the training-data and evaluated the
+performance on all the test-data. Table \ref{finalmodelscomparison} shows the
+final accuracies of our models. As we can see, the gradient boosted trees gave
+the best results for the final model. Not only that, looking at the confusion
+matrices, this was also the only model which with a $0.5$ classification
+threshold was able to classify all the fraud cases as fraud. Keep in mind if we
+want to make sure that more or less all of the fraud cases are detected as
+fraud, this is probably possible to more or less get on the neural network
+model as well due by lowering the probability required for us to classify as
+fraud.
+\begin{table}
+	\centering
+	\begin{tabular}{| c | c |}
+		Model                         & Test-accuracy \\
+		Logistic regression (sklearn) & 0.9972        \\
+		Neural network (tensorflow)   & 0.9986        \\
+		Gradient boosting (XGBoost)   & 0.9994
+	\end{tabular}
+	\caption{The accuracy scores on the test-data for our final models.}
+	\label{finalmodelscomparison}
+\end{table}
+
+One thing to keep in mind here though was that we have had to take some
+shortcuts here, especially when it comes to neural networks, mostly due to the
+fact that such models can become very computationally expensive. We for example
+saw that some of the bigger models seemed to perform better in the neural
+network case, so exploring bigger sized neural nets could change this outcome,
+though such a model could take potentially hours to train properly even on
+powerful hardware, which is why I have chosen to not do this here.
 
 \section{Conclusion}
 

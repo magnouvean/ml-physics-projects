@@ -85,7 +85,7 @@ ax[0, 0].set_title("AdaGrad")
 ax[0, 1].set_title("Adam")
 ax[1, 0].set_title("RMSProp")
 ax[1, 1].set_title("SGD")
-fig.savefig("../figures/nn_test_accuracy_hm.png")
+fig.savefig("../figures/nn_test_accuracy_hm.png", dpi=196)
 
 print("====Model performances====")
 print(f"AdaGrad best: {np.nanmax(val_accuracies[0])}")
@@ -127,7 +127,7 @@ best_lmbda_index = np.nanargmax(val_accuracies[0]) % len(lmbda_grid)
 best_eta = lr_grid[best_eta_index]
 best_lmbda = lmbda_grid[best_lmbda_index]
 print(
-    f"\n\nRMSProp relu best hyperparams: eta=10^{np.log10(best_eta)}, lambda=10^{np.log10(best_lmbda)}"
+    f"\n\nRMSProp relu best hyperparams (100, 100): eta=10^{np.log10(best_eta)}, lambda=10^{np.log10(best_lmbda)}"
 )
 
 # We then try a couple different activation functions and network sizes. We
@@ -145,23 +145,24 @@ hidden_layers_sizes = (
     (1000, 1000, 1000),
     (40, 100, 30),
 )
-val_accuracies = np.zeros(len(hidden_layers_sizes))
+val_accuracies = np.zeros((len(hidden_layers_sizes), len(lmbda_grid)))
 
 for i, hidden_layers_size in enumerate(hidden_layers_sizes):
-    o = tf.keras.optimizers.RMSprop(best_eta)
-    clf = generate_model(
-        activation="relu",
-        hidden_layer_sizes=hidden_layers_size,
-        optimizer=o,
-        regularizer=tf.keras.regularizers.L2(best_lmbda),
-    )
-    clf.fit(X_train_smaller, y_train_smaller, verbose=False)
-    y_val_pred = np.array(clf.predict(X_val_smaller, verbose=0) > 0.5, dtype=int)
-    val_accuracies[i] = np.mean(y_val_pred == y_val_smaller)
+    for j, lmbda in enumerate(lmbda_grid):
+        o = tf.keras.optimizers.RMSprop(best_eta)
+        clf = generate_model(
+            activation="relu",
+            hidden_layer_sizes=hidden_layers_size,
+            optimizer=o,
+            regularizer=tf.keras.regularizers.L2(lmbda),
+        )
+        clf.fit(X_train_smaller, y_train_smaller, verbose=False)
+        y_val_pred = np.array(clf.predict(X_val_smaller, verbose=0) > 0.5, dtype=int)
+        val_accuracies[i, j] = np.mean(y_val_pred == y_val_smaller)
 
 print(
     {
-        hidden_layers_size: val_accuracy
+        hidden_layers_size: np.max(val_accuracy)
         for hidden_layers_size, val_accuracy in zip(hidden_layers_sizes, val_accuracies)
     }
 )
@@ -201,7 +202,7 @@ print(final_accuracy)
 
 # Confusion matrix and roc curve models
 ConfusionMatrixDisplay.from_predictions(y_test, y_test_pred, colorbar=False)
-plt.savefig("../figures/nn_final_confusion_mat.png")
+plt.savefig("../figures/nn_final_confusion_mat.png", dpi=196)
 
 RocCurveDisplay.from_predictions(y_test, y_test_pred_proba)
-plt.savefig("../figures/nn_final_roc_curve.png")
+plt.savefig("../figures/nn_final_roc_curve.png", dpi=196)
