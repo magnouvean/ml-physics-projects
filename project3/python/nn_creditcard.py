@@ -6,6 +6,11 @@ from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay
 
 from generate_data import load_data_creditcard
 
+# Set seeds to enhance reproducibility
+tf.random.set_seed(11235)
+np.random.seed(11235)
+
+
 X_train, y_train, X_val, y_val, X_test, y_test = load_data_creditcard()
 
 
@@ -79,12 +84,20 @@ fig, ax = plt.subplots(2, 2)
 for i, val_accuracy_mat in enumerate(val_accuracies):
     r = i // 2
     c = i % 2
-    sns.heatmap(val_accuracy_mat, ax=ax[r, c])
+    sns.heatmap(
+        val_accuracy_mat,
+        ax=ax[r, c],
+        xticklabels=np.log10(lmbda_grid),
+        yticklabels=np.log10(lr_grid),
+    )
+    ax[r, c].set_xlabel("log10($\\lambda$)")
+    ax[r, c].set_ylabel("log10($\\eta$)")
 
 ax[0, 0].set_title("AdaGrad")
 ax[0, 1].set_title("Adam")
 ax[1, 0].set_title("RMSProp")
 ax[1, 1].set_title("SGD")
+fig.subplots_adjust(hspace=0.8, wspace=0.5, bottom=0.15)
 fig.savefig("../figures/nn_test_accuracy_hm.png", dpi=196)
 
 print("====Model performances====")
