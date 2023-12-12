@@ -17,7 +17,9 @@ def load_data_creditcard(val_split=True):
     X_test = pd.DataFrame(sc.transform(X_test), columns=X_test.columns)
 
     if val_split:
-        X_val, X_test, y_val, y_test = train_test_split(X_test, y_test)
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_train, y_train, test_size=0.1
+        )
         X_val = pd.DataFrame(sc.transform(X_val), columns=X_val.columns)
         return X_train, y_train, X_val, y_val, X_test, y_test
     else:
