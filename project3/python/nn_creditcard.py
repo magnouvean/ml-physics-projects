@@ -87,6 +87,8 @@ for i, val_accuracy_mat in enumerate(val_accuracies):
     sns.heatmap(
         val_accuracy_mat,
         ax=ax[r, c],
+        annot=True,
+        fmt=".2f",
         xticklabels=np.log10(lmbda_grid),
         yticklabels=np.log10(lr_grid),
     )
@@ -97,7 +99,9 @@ ax[0, 0].set_title("AdaGrad")
 ax[0, 1].set_title("Adam")
 ax[1, 0].set_title("RMSProp")
 ax[1, 1].set_title("SGD")
-fig.subplots_adjust(hspace=0.8, wspace=0.5, bottom=0.15)
+fig.subplots_adjust(hspace=0.6, wspace=0.4, bottom=0.15)
+fig.set_figwidth(10)
+fig.set_figheight(8)
 fig.savefig("../figures/nn_test_accuracy_hm.png", dpi=196)
 
 print("====Model performances====")
