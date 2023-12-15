@@ -16,52 +16,41 @@
 \bibliographystyle{unsrt}
 
 \section{Abstract}
-Machine learning classifiers have many important uses, from spam classification
-of emails, to image classification in the medical sector and much more. They
-also have found use for quite important and high-risk tasks like credit-card
-fraud detection \cite{creditcardfraud}, where a good classifier is important
-for as many credit-card frauds to be stopped as possible, while at the same
-time legitimate payments going through.
-
-In this project we explored how different models performed on a data-rich
-credit-card fraud dataset \cite{kaggleccdata}. For this we looked at three
-different types of models, one being a simple logistic regression, another one
-being neural networks and finally we looked at gradient-boosted decision trees.
-Unlike the previous projects we have just used established machine-learning
-libraries namely sklearn, tensorflow and xgboost for the models and done
-parameter tuning on each of the models. What we found was that the logistic
-regression did manage to classify most predictions at $96\%$ overall accuracy
-on the test-data, however it still performed considerably worse than the other
-two models. For the neural network we ended up with a model with two hidden
-layers, each with $100$ nodes, using the RMSProp optimizer, with some $l_2$
-regularization and relu activation functions. The neural network did give us
-quite good classification with it being able to correctly classify all the
-fraud cases, and only giving $62$ false positives out of more than $35 000$
-observations. The best performance though was the gradient boosted decision
-tree, also correctly classifying all the fraud cases and only giving $21$ false
-positives.
+In this project we explored how different models performed for a binary
+classification of credit-card fraud-data. For this we looked at three different
+types of models, one being a simple logistic regression, another one being
+neural networks and lastly gradient-boosted decision trees.  What we found was
+that the logistic regression without any polynomial features did manage to
+classify most predictions at $96\%$ overall accuracy on the test-data, and when
+we added second order polynomial features this grew to $99.7\%$ accuracy. The
+neural network was only marginally able to outperform this with $99.8\%$ final
+accuracy.  The best performance by quite a bit was the gradient boosted decision
+tree, ending up with more than $99.9\%$ accuracy on the test-data, with this
+method having only $2$ of the fraud-cases wrongly classified.
 
 Overall this project has shown that for credit card fraud detection, gradient
-boosting especially, but also neural networks, are both very good classifiers
-for this task. This effect likely translates into other data-rich binary
-classification cases as well.
+boosting is especially well suited, but also neural networks and logistic
+regression are able to do quite a good job.
 
 \section{Introduction}
-Credit card fraud detection is one of many application where machine learning
-binary-classification models are widely used. Furthermore it is a case where
-having a good classifier is essential for the credit-card system to work in the
-first place. It is important that the vast majority of legitimate purchases are
-detected as legitimate as reliability of use of credit cards is quite important
-if you want people to use your credit cards. For example, when going to the
-store and buying something you shouldn't have to worry at all about the card being
-declined. At the same time it is perhaps even more important that the actual
-frauds are detected as such, as the credit-card company can then take action to
-block the payments and maybe even the card. This is both important for the user
-of the credit card and the issuer, as it can be a huge hurdle for the owner if
-fraud payments are not detected and go through normally, which is both
-uncomfortable and time-consuming. Additionally for the issuer, the more fraud
-payments they let go through, the more payments they potentially have to cover
-themselves.
+Machine learning classifiers have many important uses, from spam classification
+of emails, to image classification in the medical sector and much more.
+Credit card fraud detection is one of many applications where machine learning
+binary-classification models are widely used \cite{creditcardfraud}. Furthermore
+it is a case where having a good classifier is essential for the credit-card
+system to work in the first place. It is important that the vast majority of
+legitimate purchases are detected as legitimate, as the reliability of the credit
+cards is important if you want people to use your credit cards. For example,
+when going to the store and buying something you shouldn't have to worry
+about the card being declined. At the same time it is perhaps even more
+important that the actual frauds are detected as such, as the credit-card
+company can then take action to block the payments and maybe even the card. This
+is both important for the user of the credit card and the issuer, as it can be a
+huge hurdle for the owner if fraud payments are not detected and go through
+normally, which is both uncomfortable and time-consuming. Additionally for the
+issuer, the more fraud payments they let go through, the more payments they
+potentially have to cover themselves.
+\\
 
 What is clear is then that a very good classifier is needed in order to limit
 these situations discussed. We will here try to explore some different models
@@ -71,28 +60,30 @@ features plus the amount spent, and a binary response representing fraud or not
 fraud. We will focus mainly on three types of models. The simplest one being
 logistic regression, then we will go back to neural networks as we found that
 they performed very well in project 2 \cite{githubrepoproject2} and finally
-we'll look at a decision tree, more specifically a gradient boosting tree.
+we'll look at a decision tree, more specifically a gradient boosted
+decision-tree.
+\\
 
-A motivation behind using logistic regression is that as we have already seen,
-they often can perform rather well on less complex problems, due to their low
-complexity (low variance). On problems like these this usually can't compete
-with the other two models, but we will see how big of a gap we'll get between
-them, and this can also serve as some sort of benchmark for the other two
-models. Neural networks is a good choice for a lot of problems, with them being
-very general and often perform well when we have a lot of data. Boosting trees
-we have chosen to bring in here because they very often are a go-to for
-classification purposes, with them being the winner of many classification
-competitions. Additionally they are more intuitive than the neural network
-approach, and less computationally expensive.
+A motivation behind using logistic regression is that it is quite a simple model
+which works well given that a more or less linear decision-boundary makes sense
+\cite[s.~4.1]{hastie2009elements}. Additionally it is easy to extend logistic
+regression models by adding more features. Neural networks is a good choice for
+a lot of problems, with them being very general and often perform well when we
+have a lot of data, which we do in this case.  Boosting trees we have chosen to
+bring in here because they very often perform good in classification-problems.
+Additionally they are more intuitive than the neural network approach, and less
+computationally expensive.
+\\
 
-We'll first in the method introduce some of the models we'll use, and go
-through the data a bit closer, before we look at how the three different models
-perform, and from there on we will try to conclude which of the three models
-performs the best for this data and try to put into perspective just how good
-they perform, and if it is good enough.
+We'll start this report with the method, where we introduce some of the models
+we'll use, and go through the data a bit closer. Thereafter, we'll look at how
+the three different models perform, and from there conclude which of the three
+models performs the best for this data and try to put into perspective just how
+good they perform, and if it is good enough.
 
 \section{Methods}
 \subsection{The credit card fraud data}
+\label{methoddata}
 At the heart of all our experimentation is the credit-card fraud detection
 data from 2023 \cite{kaggleccdata}. This is a dataset where each observation
 corresponds to one transaction. Luckily for our predictions as well, this is
@@ -105,30 +96,30 @@ transaction.
 
 The data is collected using transactions from European credit card holders in
 the year $2023$ \cite{kaggleccdata}. The fact that we only have data collected
-from Europeans does perhaps limit the performances of our models on
-non-european card holders. If for example in another part of the world a
-legitimate credit-card transaction typically looks different, or likewise with
-fraud, our models are not guaranteed to be as good classifiers as the ones we
-will get from this dataset, so this is something we will need to keep in mind.
-Each transaction contains a unique identifier (labeled id), $28$ anonymized
-features (labeled $\text{V}1$ to $\text{V}28$), the transaction amount (labeled
-as Amount) and a categorical variable indicating whether we have a fraudulent
-transaction (labeled as Class). For the Class we have that $1$ constitutes
-fraud while $0$ constitutes a legitimate transaction. We will obviously not use
-id id for training here, as this should not impact whether a transaction is
-fraudulent, but we will use all the other variables in our models, with Class
-as the binary response. Another thing which makes this data quite convenient is
-that all of the features are numerical, with there being no NA/NULL values as
-all, which makes the required preprocessing here very small (the only
-preprocessing I'll do is scaling the rows with StandardScaler).
+from Europeans does perhaps limit the performances of our models on non-european
+card holders. If for example in another part of the world a legitimate
+credit-card transaction typically looks different, or likewise with fraud, our
+models will probably struggle with predictions.  Each transaction contains a
+unique identifier (labeled \textit{id}), $28$ anonymized features (labeled
+$\mathit{V1}$ to $\mathit{V28}$), the transaction amount (labeled as
+\textit{Amount}) and a categorical variable indicating whether we have a
+fraudulent transaction (labeled as \textit{Class}). For \textit{Class} we have
+that $1$ constitutes fraud while $0$ constitutes a legitimate transaction. We
+will obviously not use \textit{id} for training here, as this should not impact
+whether a transaction is fraudulent or not, but we will use all the other
+variables in our models, with \textit{Class} as the response. Another thing
+which makes this data quite convenient is that all of the features are
+numerical, with there being no NA/NULL values as all, which makes the required
+preprocessing here very small (the only preprocessing we'll do is scaling the
+features with StandardScaler \cite{sklearnstandardscaler}).
 \\
 
 To see some dependencies of the response for each explanatory variable we can
-create a box-plot for each feature. Figure \ref{databoxplot} shows exactly
-this. As we can see there are quite a few of the anonymized features especially
-which looks to be distributed slightly differently for the fraudulent
-transactions than the legitimate ones. This difference in distribution of some
-of the features looks promising our classification.
+create a box-plot for each combination of feature and response value. Figure
+\ref{databoxplot} shows exactly this. As we can see it looks like especially a
+few of the anonymized features are distributed considerably differently for the
+fraudulent transactions than the legitimate ones.  This difference in
+distribution of features looks promising for our classifications.
 
 
 \begin{figure}
@@ -146,39 +137,57 @@ of the features looks promising our classification.
 
 \subsection{Logistic regression}
 The first and most simple method we will explore is the logistic regression. I
-will not go into detail on this method here, as this already has been presented
-in project 2 \cite{githubrepoproject2}. We will here simply do a train-test
+will not go into detail on how this method works here, as this already has been
+presented in project 2 \cite{githubrepoproject2}, but I will give some details
+about our application of this method. In our code we will use the scikit-learn
+python-library for creating our models. We will here simply do a train-test
 split and train a logistic regression on the training-set and evaluate the
 performance on a test-set. For the features we will first try a model with just
-the features directly from the dataset, and then try with polynomial features
-of second degree polynomials (with interactions). We will not add a higher
-polynomial-degree than this due to the fact that we have $29$ features already and
-a high polynomial order will give us considerably more features, which can both
-lead to overfitting, and to problems with memory (keep in mind that the dataset
-here is quite big). For finding the appropriate regularization parameter we
-will here take use of cross-validation. Here we will simply use the
-LogisticRegressionCV which does most of the job for us.
+the plain features as described previously in \ref{methoddata}, and thereafter
+try to extend this with polynomial features of second degree polynomials (with
+interactions). We will not add a higher polynomial-degree than this due to the
+fact that we have $29$ features already and a high polynomial order will give us
+considerably more features, which can both lead to overfitting, and to problems
+with memory (keep in mind that the dataset here is quite big). We will also add
+some regularization for our models where we will try both a $l_1$ and $l_2$
+penalty for the model with the plain features, and just a $l_2$ penalty for the
+model with second order polynomial features. For finding the appropriate
+regularization parameter we will here take use of cross-validation.  Here we
+will simply use the LogisticRegressionCV in scikit-learn which does this job for us.
 
 \subsection{Neural Networks}
 For the neural networks in this project we will use a basic multi-layer
-perceptron, this time using tensorflow. I will assume knowledge of the basic
-setup of training, and. For more details on the neural networks feel free to
-check out the report of project 2 \cite{githubrepoproject2}. We will spend some
-time tweaking the based on the performance based on what gives us good
-performance on the validation set. Luckily for us we have a lot of data, with
-the two classes being quite evenly distributed, so using this approach over
-something like corss-validation should be unproblematic.
+perceptron, this time using only tensorflow. I will assume knowledge of how
+this method works as we already went through this in project 2. For a more
+in-depth explanation of this method more details on the neural networks feel
+free to check out the report of project 2 \cite[s.~3.7]{reportproject2}. Most of
+our experimentation here will go towards optimizing the various hyperparameters
+in the network. Our strategy here will be to split the data into a train,
+validation and test datasets, and then pick the hyperparameters based on what
+gives us the best performance on the validation set.  Therefore, unlike logistic
+regression, we will not use cross-validation here. The reason for this is that
+it would make the programs even more computationally expensive. Luckily for us
+though we have a lot of data, with the two classes being quite evenly
+distributed, so using this approach over something like cross-validation should
+be unproblematic.
 
 The main things we will be tweaking is the regularization parameter (we will
 limit ourselves to use $l_2$ regularization), the optimization method (with the
 corresponding learning-rate), the activation functions and the network size.
-For this we will use a greedy method, starting with determining the optimal by
-testing a grid of learning-rates and regularization parameters, before we then
-explore the activation functions using this method, again testing with a grid
-of learning-rates and regularization parameters, before we lastly try different
-hidden layer sizes for the chosen method and activation function now testing on
-a grid of different learning-rates and keeping the best learning-rate
-previously determined. The output function will be fixed to be the sigmoid
+For this we will use a greedy method, starting with determining the optimal
+optimization method, where we for each method test on a grid of learning-rates
+and regularization parameters and picking the best one, while keeping the
+activation function and network-size fixed (we will use $2$ hidden layers with
+each $100$ neurons and the relu activation function). After we have done this we
+explore the activation functions using this method and the same hidden layer
+sizes, again testing with a grid of learning-rates and regularization
+parameters. Lastly we will try different hidden layer sizes for the chosen
+method and activation function now testing on a grid of different learning-rates
+and keeping the best learning-rate previously determined. We will not search for
+the optimal learning-rate as well for each of the hidden layers, but we assume
+that this optimal learning-rate is more or less the same for the different sizes
+of hidden layers (the reason for taking this approach is to drastically reduce
+the computational cost).  The output function will be fixed to be the sigmoid
 function in this case as we are dealing with binary classification, while the
 cost-function will be binary cross-entropy, both just as in project 2.
 
@@ -193,32 +202,46 @@ into tensorflow so the amount we need to implement here is quite limited.
 For the activation-functions we will try out the relu and sigmoid (which we
 already have explored in project 2), as well as some other activation functions
 built into tensorflow. Notably these are swish, tanh and elu. We will now go a
-little bit into these:
+little bit into these.
+
 \subsubsection{tanh}
 The tanh is given by:
-$$\text{tanh}(x) = \frac{\exp(x) - \exp(-x)}{\exp(x) + \exp(-x)}$$ \cite{wikihyperbolicfunctions}
+\[
+	\text{tanh}(x) = \frac{\exp(x) - \exp(-x)}{\exp(x) + \exp(-x)}. \cite{wikihyperbolicfunctions}
+\]
 This looks much like the sigmoid function, in that is has the same s-shape, but
 is different in the sense that the sigmoid limits us between $0$ and $1$, while
-the tanh limits us between $-1$ and $1$. This can in some situations be
-preferable.
+the tanh limits us between $-1$ and $1$. This may be preferable in some situations.
 
 \subsubsection{swish}
-The swish is given by:
-$$\text{swish}(x) = x \cdot \text{sigmoid}(x).$$ \cite{tensorflowdocswish}
-Using our knowledge about the sigmoid-function we see that as $x$ grows, the
-sigmoid will approach $1$ quite quickly. This means that for high values of
-$x$, the function will behave much like the relu. For negative values of $x$ we
-have that the sigmoid becomes very close to $0$, much quicker than the linear
-function $x$ grows towards $-\infty$, so the product will be very close to $0$,
-again much like the relu. However for small absolute values we will get a
-shrinking in absolute value of the activations. This function often works
-better than the ReLU on deep models on challenging datasets
-\cite{ramachandran2017searching}, so we will explore if this is one of those
-cases.
+The swish activation-function is given by:
+\[
+	\text{swish}(x) = x \cdot \text{sigmoid}(x). \cite{tensorflowdocswish}
+\]
+Using our knowledge about the sigmoid-function it's clear that as $x$ grows, the
+sigmoid will approach $1$ quite quickly. This means that for high values of $x$,
+the function behaves pretty much be the same as the relu. For negative values of
+$x$ we have that the sigmoid quickly approaches $0$, much quicker than the
+linear part $x$ approaches $-\infty$, so the product will again quite quickly
+approach $0$, again much like the relu. However for small values in absolute
+value we will get a shrinking in absolute value of the activations, as can be
+seen in figure \ref{swishillustration}. This does differentiate this from the
+ordinary relu. The swish activation-function often works better than the ReLU on
+deep models on challenging datasets \cite{ramachandran2017searching}, so we will
+explore if this is one of those cases.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.8]{swish_plot}
+	\caption{Shows how the swish-function behaves on $[-5, 5]$.}
+	\label{swishillustration}
+\end{figure}
 
 \subsubsection{ELU}
 The exponential linear unit is given by:
-$$\text{elu}(x) = \begin{cases} x \qquad \qquad & \text{if}\ \ x > 0 \\ \alpha \cdot (\exp(x) - 1) & \text{if}\ \ x < 0 \end{cases}.$$ \cite{tensorflowdocelu}
+\[
+	\text{elu}(x) = \begin{cases} x \qquad \qquad & \text{if}\ \ x > 0 \\ \alpha \cdot (\exp(x) - 1) & \text{if}\ \ x < 0 \end{cases}. \cite{tensorflowdocelu}
+\]
 We will here just use $\alpha = 1$ (which is the default), but of course it is
 easy to test others as well. The ELU can lead to faster learning and better
 performance on neural nets with more than $5$ layers in particular
@@ -226,20 +249,21 @@ performance on neural nets with more than $5$ layers in particular
 but we will try it anyway because including this takes essentially no code.
 
 \subsection{Boosting trees}
-This is a method we haven't been through earlier, so we'll go a little bit more
-into this here. At the core of a boosting-tree is a normal classification-tree
-which we will use as a so-called weak classifier. We will first look a little bit into how this method works.
+This is a method we have not been through earlier, so we will go a little bit
+more into detail on this here. At the core of a boosting-tree is a normal
+classification-tree which we will use as a so-called weak classifier. We will
+first look a little bit into how this method works.
 
 \subsubsection{Classification trees}
 A classification tree is a rather simple. Like other decision trees they are
 typically divided into a root node, interior nodes and leaf nodes. The nodes
 are connected via branches, where the branch we move along with being dependent
-on a test on the node we are in, where the test has only two outcomes. Each of
-the leaf nodes contains the classification we should make
-\cite{lecturesweek46}. To make predictions on a tree we start at the root
-node and then move along the branch according to the test at the root-node
-until we come to a new node, where we do the same procedure until we end up at
-a leaf node, in which case we have our prediction.
+on a test on the node we are in, where the test has only two outcomes (for
+binary trees that is). Each of the leaf nodes contains the classification we
+should make \cite{lecturesweek46}. To make predictions on a tree we start at the
+root node and then move along the branch according to the test at the root-node
+until we come to a new node, where we do the same procedure until we end up at a
+leaf node, in which case we have our prediction.
 
 For finding appropriate structure of the tree (that is the appropriate tests
 and nodes), perhaps the most popular algorithm is the CART algorithm. This uses
@@ -252,34 +276,34 @@ The Gini index is then:
 $$G = \sum_{i=0}^{1} (p_{m i} (1 - p_{m i})) = 2 p_{m 1} (1 - p_{m 1}).$$
 This Gini index gives us a metric of how good each split is. A higher
 Gini-index means that region $R_m$ contains a higher proportion of one class,
-which means we have managed to find criterion which hopefully accurately is
-able to classify observations of the classes. The Cart algorithm is one way of
-optimizing with regards to this gini-factor. This algorithm splits the data
-into two subsets by doing a split on a single feature $k$ and a threshold $t_k$
-\cite[s.~The CART algorithm for Classification]{lecturesweek46}. This is done
-by searching for the $(k, t_{k})$ which minimizes the cost:
-$$C(k, t_k) = \frac{m_{left}}{m} G_{left} + \frac{m_right}{m} G_{right}$$
+which means we have managed to find a criterion which splits the classes apart
+(which essentially is the end goal).  The Cart algorithm is one way of
+optimizing with regards to this gini-factor. This algorithm splits the data into
+two subsets by doing a split on a single feature $k$ and a threshold $t_k$
+\cite[s.~The CART algorithm for Classification]{lecturesweek46}. This is done by
+searching for the $(k, t_{k})$ which minimizes the cost:
+$$C(k, t_k) = \frac{m_{left}}{m} G_{left} + \frac{m_{right}}{m} G_{right}$$
 , where $m_{left}$ is the amount of observations in the left region $m_{right}$
 is the amount of observations in the right region, $m$ is the amount of
 observations in the region we are doing the split on, and $G_{left}$ and
 $G_{right}$ is the Gini in left and right subregion. A lower value of $C(k,
-	t_k)$ essentially means that the overall split results in more pure regions.
-Finding this exact $(k, t_k)$ may involve searching through all the features
-and then for each feature find the $t_k$ by searching through a lot of
-thresholds and then choosing the optimal pair $(k, t_k)$.
+	t_k)$ essentially means that the overall split results in regions more pure
+(i.e. less mixing of classes).  Finding this exact $(k, t_k)$ may involve
+searching through all the features and then for each feature find the $t_k$
+by searching through a lot of thresholds and then choosing the optimal pair
+$(k, t_k)$.
 
 \subsubsection{Gradient Boosting}
 While normal classification trees will be able to fit the training data well,
 they often will lead to overfitted trees if we fit the training-data too well,
 and many of the techniques to combat overfitting will often lead to trees not
-giving that good performance. Predictions on new data often will not be very
-good because of this. However, they will often be able to pick up some
-underlying patterns in the data, more so than just making random predictions
-anyway. This enables its use as a weak learner for a boosting setting. In
-gradient boosting we combine many weak learners, adding them together to create
-a good learner. For gradient boosting, assume we have a cost-function function
-$C(f) = \sum_{i=0}^{n-1} L(y_i, f(x_i))$, where $f$ is our classifier. We then
-have the following algorithm \cite[s.~Gradient Boosting,
+giving that good performance on new data anyway. However, they will often be
+able to pick up some underlying patterns in the data, more so than just making
+random predictions anyway. This enables its use as a weak learner for a boosting
+setting. In gradient boosting we combine many weak learners, adding them
+together to create a good learner. For gradient boosting, assume we have a
+cost-function function $C(f) = \sum_{i=0}^{n-1} L(y_i, f(x_i))$, where $f$ is
+our classifier. We then have the following algorithm \cite[s.~Gradient Boosting,
 	algorithm]{lecturesweek46}:
 \begin{itemize}
 	\item Initialize our estimate $f_0(x)$ (this will be our classification tree)
@@ -312,32 +336,46 @@ but that the model with second degree polynomial features performing a lot
 better. Figure \ref{lrconfusionmats} and \ref{lrpolyconfusionmat} shows
 the confusion matrices for the models without polynomial features and with
 polynomial features respectively. We see that for the polynomial feature model
-this gave , which is overall quite good, but perhaps not as good as what we
-would wish for as this means around $\frac{249}{70903+249} \approx 0.35\%$ of
-non-fraud cases are detected as fraud, while $\frac{148}{70858 + 148} \approx
-	0.21\%$ of actual fraud cases are not detected as such. Furthermore figure
-\ref{lrroccurves} shows a ROC-curve for the models not using polynomial
-features. Here we see that the ROC-curve is quite good, so we could adjust the
-classification-boundary to minimize the false positives without getting too
-many true negatives and vice versa. If we were to look at the ROC-curve for the
-polynomial model this would be near perfect, which allows for the same
-possibility of adjusting the classification boundary here as well.
+this gave a much better performance than the plain-featured models, with this
+overall giving quite good predictions. We get that $\frac{249}{70903+249}
+	\approx 0.35\%$ of non-fraud cases are detected as fraud (fpr), while
+$\frac{148}{70858 + 148} \approx 0.21\%$ of actual fraud cases are not detected
+as such (fnr). Furthermore figure \ref{lrroccurves} shows a ROC-curve for the models
+not using polynomial features. Here we see that the ROC-curve is quite good, so
+we could adjust the classification-boundary to minimize the false positives
+without getting too many true negatives and vice versa. If we were to look at
+the ROC-curve for the polynomial model this would be near perfect, which allows
+for the same possibility of adjusting the classification boundary here as well.
+
+
+\begin{table}
+	\centering
+	\begin{tabular}{| c | c |}
+		Model                                     & Test-accuracy \\
+		Plain features, $l_1$-regularization      & 0.9653        \\
+		Plain features, $l_2$-regularization      & 0.9655        \\
+		Polynomial-features, $l_2$-regularization & 0.9972
+	\end{tabular}
+	\caption{The accuracy scores of the three different logistic regression
+		models we have fitted, evaluated on the test-data.}
+	\label{lrresults}
+\end{table}
 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{lr_confusion_mat}
-	\caption{Shows the confusion matrices for a logistic-regression with
-		$l_1$ and $l_2$ regularization, with the regularization-parameter
-		determined through cross-validation.}
+	\caption{Shows the confusion matrices for a logistic-regression with $l_1$
+		and $l_2$ regularization, without using polynomial features, and with the
+		regularization-parameter determined through cross-validation.}
 	\label{lrconfusionmats}
 \end{figure}
 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{lr_roc_curve}
-	\caption{Shows the ROC-curve for a logistic-regression with
-		$l_1$ and $l_2$ regularization, with the regularization-parameter
-		determined through cross-validation.}
+	\caption{Shows the ROC-curve for a logistic-regression with $l_1$ and $l_2$
+		regularization, without using polynomial features, and with the
+		regularization-parameter determined through cross-validation.}
 	\label{lrroccurves}
 \end{figure}
 
@@ -358,35 +396,42 @@ training-data ran on a single epoch over some smaller training-dataset. Here we
 see that the different methods give essentially the same results. The
 optimization method here therefore doesn't seem to matter all that much for the
 performance on new data. Which optimizer we choose will therefore not matter
-too much. To see more about how the accuracy variaes depending on the
+too much. To see more about how the accuracy varies depending on the
 learning-rate and regularization-parameters, see figure \ref{nntestacchm}. For
-the results afterwards we therefore have just moved picked RMSProp as our
-method of choice forwards. Looking at the results this may seem odd as this
-didn't give the absolute highest accuracy for our results, but keep in mind
-that tensorflow is not built with complete determinism in mind, so the results
-will vary from each time you run the program, and on another occasion this
-performed the best. After choosing this model we explored the different
-activation functions. Table \ref{nnactivres} shows the accuracy on the
-test-data for the different models. Here we see a more substantial difference,
-where relu did seem to perform the best by a little margin. Our model then
-becomes a RMSProp with relu activation functions, with the optimal
-regularization parameter occurring at $\lambda = 10^{-5}$ and the best
-learning-rate being $\eta = 10^{-\frac{5}{2}}$. Having found this we also try
-some different layer-sizes for the neural network. Table \ref{nnsizeres} shows
-the metrics on the test-data for the different sizes of hidden layers. Here we
-see that the bigger networks do seem to give better results. Figure
-\ref{nnconfusionmat} shows the confusion matrix for the final model. Here we
-see that we get $46$ false positives and $5$ true negatives, which is a lot
-better than the logistic regression model.
+the results afterwards we have picked RMSProp as our method of choice forwards.
+Looking at the results this may seem odd as this didn't give the absolute
+highest accuracy for our results, but keep in mind that tensorflow is not built
+with complete determinism in mind, so the results will vary from each time you
+run the program, and on another occasion this performed the best. We also see
+from the heatmaps that overall the RMSProp and Adam seemed to give better
+performance for a wider variety of learning-rates and regularization parameters.
+
+After choosing the optimizer we explored the different activation functions. Table
+\ref{nnactivres} shows the accuracy on the test-data for the different models.
+Here we see a more substantial difference, where relu did seem to perform the
+best by a little margin. Our model then becomes a RMSProp with relu activation
+functions, with the optimal regularization parameter occurring at $\lambda =
+	10^{-6}$ and the best learning-rate being $\eta = 10^{-\frac{5}{2}}$. Having
+found this we also try some different layer-sizes for the neural network. Table
+\ref{nnsizeres} shows the metrics on the test-data for the different sizes of
+hidden layers. Here we see that some of the bigger networks do seem to give
+better results. However these models will be a lot more computationally
+expensive to train, which severely would limit the amount of epoch we could give
+it. Therefore for the final model we keep using the model with $2$ hidden layers
+each of $100$ neurons, as this also seemed to give quite good results. Figure
+\ref{nnconfusionmat} shows the confusion matrix for the final model.  Here we
+see that we get $75$ false positives and $195$ true negatives, which overall is
+a bit better than the logistic model, but the amount of true negatives actually
+went up, which is also not ideal.
 
 \begin{table}
 	\centering
 	\begin{tabular}{| c | c |}
 		Optimization method & Test-accuracy \\
-		AdaGrad             & 0.98345       \\
-		Adam                & 0.98265       \\
-		RMSProp             & 0.9824        \\
-		SGD                 & 0.98335
+		AdaGrad             & 0.9810        \\
+		Adam                & 0.9802        \\
+		RMSProp             & 0.9791        \\
+		SGD                 & 0.9779
 	\end{tabular}
 	\caption{The test-accuracies after training various neural networks
 		using $10 000$ datapoints trained on $1$ epoch, where we for each
@@ -395,8 +440,7 @@ better than the logistic regression model.
 \end{table}
 
 \begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{nn_test_accuracy_hm}
+	\centerline{\includegraphics[scale=0.7]{nn_test_accuracy_hm}}
 	\caption{Shows heatmaps for the test-accuracies for the different
 		models, detailing how the performance varies depending on the
 		learning-rate and regularization parameter.}
@@ -407,11 +451,11 @@ better than the logistic regression model.
 	\centering
 	\begin{tabular}{| c | c |}
 		Activation function & Test-accuracy \\
-		relu                & 0.9842        \\
-		sigmoid             & 0.9659        \\
-		swish               & 0.98055       \\
-		tanh                & 0.97105       \\
-		elu                 & 0.9724
+		relu                & 0.9789        \\
+		sigmoid             & 0.9656        \\
+		swish               & 0.9772        \\
+		tanh                & 0.9685        \\
+		elu                 & 0.9731
 	\end{tabular}
 	\caption{The test-accuracies after training various neural networks on
 		$10 000$ datapoints using $1$ epoch, where we for each activation
@@ -422,17 +466,17 @@ better than the logistic regression model.
 	\centering
 	\begin{tabular}{| c | c |}
 		Hidden layer sizes        & Test-accuracy \\
-		(10)                      & 0.9721        \\
-		(10, 10, 10)              & 0.97          \\
-		(100, 100)                & 0.9845        \\
-		(50, 50)                  & 0.9795        \\
-		(100, 100, 100, 100)      & 0.98345       \\
-		(10, 10, 10, 10)          & 0.972         \\
-		(100, 100, 100, 100, 100) & 0.98215       \\
-		(1000, 100, 10)           & 0.97935       \\
-		(1000, 1000)              & 0.9792        \\
-		(1000, 1000, 1000)        & 0.97815       \\
-		(40, 100, 30)             & 0.97825
+		(10)                      & 0.9605        \\
+		(10, 10, 10)              & 0.9649        \\
+		(100, 100)                & 0.9781        \\
+		(50, 50)                  & 0.9749        \\
+		(100, 100, 100, 100)      & 0.9820        \\
+		(10, 10, 10, 10)          & 0.9676        \\
+		(100, 100, 100, 100, 100) & 0.9812        \\
+		(1000, 100, 10)           & 0.9814        \\
+		(1000, 1000)              & 0.9815        \\
+		(1000, 1000, 1000)        & 0.9820        \\
+		(40, 100, 30)             & 0.9789
 	\end{tabular}
 	\caption{The test-accuracies after training various neural networks on
 		$10 000$ datapoints using $1$ epoch, where we for each layer
@@ -458,19 +502,22 @@ training and test data we get the amount of estimators giving the best results
 being $360$ (giving an accuracy of $0.9945$ with the default max leaves), and
 the best value of max-leaves being $6$ (yielding an accuracy of $0.9955$ with
 the $360$ estimators). Figure \ref{xgbconfusionmat} shows the final confusion
-matrix. We see that we are able to classify all the fraud-cases as fraud, while
-also only getting $21$ false positives. Figure \ref{xgbimportance} shows the
-importance-plot of each of the features. We can here see that a lot of the
-features which appears to have differing distributions for the fraud and
+matrix. We see that we are able to classify all but $2$ of the fraud-cases as
+fraud, while this time getting $108$ false positives. Figure \ref{xgbimportance}
+shows the importance-plot of each of the features. We can here see that a lot of
+the features which appears to have differing distributions for the fraud and
 non-fraud (looking at figure \ref{databoxplot}) cases appear to be some of the
-most important, which is not particularly surprising. Finally for a
-visualization of one of the weak classifiers, see figure \ref{xgbtreeplot}.
+most important, which is not particularly surprising. Also perhaps interestingly
+\textit{Amount} doesn't seem to be included in the model, which does check out
+with its distribution we saw from figure \ref{databoxplot}, but still is a
+little bit surprising nonetheless. Finally for a visualization of one of the
+weak classifiers, see figure \ref{xgbtreeplot}.
 
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{xgb_final_confusion_mat}
 	\caption{Shows the confusion matrix for a XGBoost gradient boosting
-		model with $360$ estimators and $6$ as the max-leaves.}
+		model with $240$ estimators and $7$ as the max-leaves.}
 	\label{xgbconfusionmat}
 \end{figure}
 \begin{figure}
@@ -491,20 +538,21 @@ After exploring various models and tweaking their respective hyperparameters we
 then trained final models on all the training-data and evaluated the
 performance on all the test-data. Table \ref{finalmodelscomparison} shows the
 final accuracies of our models. As we can see, the gradient boosted trees gave
-the best results for the final model. Not only that, looking at the confusion
-matrices, this was also the only model which with a $0.5$ classification
-threshold was able to classify all the fraud cases as fraud. Keep in mind if we
-want to make sure that more or less all of the fraud cases are detected as
-fraud, this is probably possible to more or less get on the neural network
-model as well due by lowering the probability required for us to classify as
-fraud.
+the best results for the overall accuracy. Looking at the confusion matrices
+this was also by far the best model for predicting the fraud-cases as actual
+fraud, while the neural network actually did better for predicting the non-fraud
+cases as non-fraud. Keep in mind that for all the models if we want to make sure
+that more or less all of the fraud cases are detected as fraud, this is probably
+possible to more or less get on the neural network and logistic regression
+models as well by lowering the probability required for us to classify as fraud,
+but this would introduce more non-fraud cases detected as fraud as well.
 \begin{table}
 	\centering
 	\begin{tabular}{| c | c |}
 		Model                         & Test-accuracy \\
 		Logistic regression (sklearn) & 0.9972        \\
-		Neural network (tensorflow)   & 0.9986        \\
-		Gradient boosting (XGBoost)   & 0.9994
+		Neural network (tensorflow)   & 0.9981        \\
+		Gradient boosting (XGBoost)   & 0.9992
 	\end{tabular}
 	\caption{The accuracy scores on the test-data for our final models.}
 	\label{finalmodelscomparison}
@@ -516,7 +564,16 @@ fact that such models can become very computationally expensive. We for example
 saw that some of the bigger models seemed to perform better in the neural
 network case, so exploring bigger sized neural nets could change this outcome,
 though such a model could take potentially hours to train properly even on
-powerful hardware, which is why I have chosen to not do this here.
+powerful hardware, which is why I have chosen to not do this here. Another
+central shortcut we have used was when we determined the optimal hyperparamters.
+For selecting these, we trained a network allowing only one epoch, but this
+rests on the assumption that the methods doing the best after one epoch also
+does the best allowing for more epochs. This does not necessarily need to be the
+case, meaning that some of the optimal hyperparameters that were found need not
+to be optimal for the final model when we allow for more epochs. Here it would
+be better to allow for at least a couple more epochs so that the models get
+closer to convergence, this way the optimal hyperparameters may also be more
+reliable.
 
 \section{Conclusion}
 
