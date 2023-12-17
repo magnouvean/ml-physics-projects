@@ -14,7 +14,7 @@ you are in this directory use the following command:
 python3 {{name-of-file}}
 ```
 The following are programs meant to be ran:
-- datainfo.py (only for a figure in the report)
+- datainfo.py (only for a figure/table in the report)
 - lr_creditcard.py
 - nn_creditcard.py
 - swish_function_plot.py (only for a figure in the report)
