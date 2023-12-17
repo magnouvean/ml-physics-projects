@@ -62,26 +62,30 @@ logistic regression, then we will go back to neural networks as we found that
 they performed very well in project 2 \cite{githubrepoproject2} and finally
 we'll look at a decision tree, more specifically a gradient boosted
 decision-tree.
+
+According to prior studies, the various tree-based methods seem
+get the best results, with especially gradient boosting and random forest
+classifiers performing very well, certainly a lot better than a plain logistic
+regression model \cite[s.~Model Performance Conclusions]{kaggle100paccuracy}.
+One motivation behind using gradient-boosting methods here as well is to see if
+we can gain an even better classifier by tweaking some of the hyperparameters.
+They also are often a natural choice in binary classification scenarios due to
+their often good performance here.  A justification for introducing a logistic
+regression model here is that logistic regression is easily extensible by
+creating new features, and we will see if doing some feature engineering will
+make the logistic regression model better, perhaps even to the point where it is
+competitive with tree-based methods. Using neural networks is also a natural
+choice in a lot of different scenarios, binary classification included as we saw
+in project 2, and perhaps especially in this case as we have a lot of data here.
 \\
 
-A motivation behind using logistic regression is that it is quite a simple model
-which works well given that a more or less linear decision-boundary makes sense
-\cite[s.~4.1]{hastie2009elements}. Additionally it is easy to extend logistic
-regression models by adding more features. Neural networks is a good choice for
-a lot of problems, with them being very general and often perform well when we
-have a lot of data, which we do in this case.  Boosting trees we have chosen to
-bring in here because they very often perform good in classification-problems.
-Additionally they are more intuitive than the neural network approach, and less
-computationally expensive.
-\\
+We will start this report with the method, where we introduce more details in
+some of the models we will use, and go through the data a bit closer.
+Thereafter, we'll look at how the three different models perform, and from there
+conclude which of the three models performs the best for this data and try to
+put into perspective just how good they perform, and if it is good enough.
 
-We'll start this report with the method, where we introduce some of the models
-we'll use, and go through the data a bit closer. Thereafter, we'll look at how
-the three different models perform, and from there conclude which of the three
-models performs the best for this data and try to put into perspective just how
-good they perform, and if it is good enough.
-
-\section{Methods}
+\section{Method}
 \subsection{The credit card fraud data}
 \label{methoddata}
 At the heart of all our experimentation is the credit-card fraud detection
@@ -534,18 +538,19 @@ weak classifiers, see figure \ref{xgbtreeplot}.
 \end{figure}
 
 \section{Analysis}
-After exploring various models and tweaking their respective hyperparameters we
-then trained final models on all the training-data and evaluated the
-performance on all the test-data. Table \ref{finalmodelscomparison} shows the
-final accuracies of our models. As we can see, the gradient boosted trees gave
-the best results for the overall accuracy. Looking at the confusion matrices
-this was also by far the best model for predicting the fraud-cases as actual
-fraud, while the neural network actually did better for predicting the non-fraud
-cases as non-fraud. Keep in mind that for all the models if we want to make sure
-that more or less all of the fraud cases are detected as fraud, this is probably
-possible to more or less get on the neural network and logistic regression
-models as well by lowering the probability required for us to classify as fraud,
-but this would introduce more non-fraud cases detected as fraud as well.
+After exploring the three different models and tweaking their respective
+hyperparameters we then trained final models on all the training-data and
+evaluated the performance on all the test-data. Table
+\ref{finalmodelscomparison} and \ref{finalmodelscomparisonfnrtpr} summarizes
+some key metrics from our final models. As we can see from this and the other
+results presented, the gradient boosted trees gave the best results for the
+overall accuracy.  The gradient boosted tree was especially good at classifying
+the fraud-cases at a $0.5$ decision threshold.  Keep in mind that also for the neural network and  the
+models if we want to make sure that more or less all of the fraud cases are
+detected as fraud, this is probably possible to more or less get on the neural
+network and logistic regression models as well by lowering the probability
+required for us to classify as fraud, but this would introduce more non-fraud
+cases detected as fraud as well.
 \begin{table}
 	\centering
 	\begin{tabular}{| c | c |}
@@ -557,25 +562,63 @@ but this would introduce more non-fraud cases detected as fraud as well.
 	\caption{The accuracy scores on the test-data for our final models.}
 	\label{finalmodelscomparison}
 \end{table}
+\begin{table}
+	\centering
+	\begin{tabular}{| c | c | c |}
+		Model                         & true-negative rate & false-positive rate \\
+		Logistic regression (sklearn) & 0.                 & 0.                  \\
+		Neural network (tensorflow)   & 0.                 & 0.                  \\
+		Gradient boosting (XGBoost)   & 0.                 & 0.
+	\end{tabular}
+	\caption{The true-positive and false-negative rates gathered from on the test-data for our final models.}
+	\label{finalmodelscomparisonfnrtpr}
+\end{table}
 
-One thing to keep in mind here though was that we have had to take some
-shortcuts here, especially when it comes to neural networks, mostly due to the
-fact that such models can become very computationally expensive. We for example
-saw that some of the bigger models seemed to perform better in the neural
-network case, so exploring bigger sized neural nets could change this outcome,
-though such a model could take potentially hours to train properly even on
-powerful hardware, which is why I have chosen to not do this here. Another
-central shortcut we have used was when we determined the optimal hyperparamters.
-For selecting these, we trained a network allowing only one epoch, but this
-rests on the assumption that the methods doing the best after one epoch also
-does the best allowing for more epochs. This does not necessarily need to be the
-case, meaning that some of the optimal hyperparameters that were found need not
-to be optimal for the final model when we allow for more epochs. Here it would
-be better to allow for at least a couple more epochs so that the models get
-closer to convergence, this way the optimal hyperparameters may also be more
-reliable.
+One thing to keep in mind was that we have had to take some shortcuts here,
+especially when it comes to neural networks, mostly due to the fact that such
+models can become very computationally expensive. We for example saw that some
+of the bigger models seemed to perform better in the neural network case, so
+exploring bigger sized neural nets could change this outcome, though such a
+model could take potentially hours to train properly even on powerful hardware,
+which is why I have chosen to not do this here. Another central shortcut we have
+used was when we determined the optimal hyperparamters.  For selecting these, we
+trained a network allowing only one epoch, but this rests on the assumption that
+the methods doing the best after one epoch also does the best allowing for more
+epochs. This does not necessarily need to be the case, meaning that some of the
+optimal hyperparameters that were found need not to be optimal for the final
+model when we allow for more epochs. Here it would be better to allow for at
+least a couple more epochs so that the models get closer to convergence, this
+way the optimal hyperparameters may also be more reliable.
 
 \section{Conclusion}
+We see that the logistic regression model did come out the worst at $\approx
+	99.7\%$, marginally beaten by the neural network at $99.8\%$, which again was
+marginally beaten by gradient boosting at $99.9\%$. For the gradient boosting we
+got the optimal model having $240$ estimators and $7$ as the maximum amount of
+leaves.  For the neural network we saw that the choice of optimization-method
+did not greatly effect results, but that the choice of activation function
+having a greater effect, with the relu seemingly being the optimal choice here.
+As for the optimal size of the network we saw some tendency that the bigger
+networks may perform better, but we had to cut some corners here due to
+limitations in computational power, hence our conclusions here does not
+necessarily hold for even bigger networks. Additionally we saw a large gain by
+adding polynomial features of second order.
+
+With this in mind some natural steps forwards would be to allow for considerably
+bigger neural nets, somewhere along the lines of $2$ to $4$ hidden layers each
+with $1000$ nodes. It would also be interesting to do more advanced engineering,
+as we could see that just adding polynomial features of second order did give us
+quite a boost in accuracy. We could for example explore higher order polynomial
+features or even non-polynomial transformation like for example
+log-transformation of features and so on. Perhaps even taking a. Polynomial
+features of second order with no forward or backward elimination is quite a
+basic way of doing feature-engineering, so there probably is even more gain to
+have here by utilizing more advanced techniques, especially seeing how big the
+jump we got in accuracy for this simple case. Both neural networks and logistic
+regression may with the right features and a bigger model size be able to equal,
+or maybe even outperform the gradient boosting method, but it is going to take
+more advanced feature-engineering than $2$nd order polynomial features and
+$2$-layered neural networks with $100$ nodes in each hidden layer.
 
 \section{Appendix}
 
