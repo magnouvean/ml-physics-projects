@@ -12,8 +12,9 @@ X_train, y_train, X_test, y_test = load_data_creditcard(val_split=False)
 
 # We will try both l1 and l2 (lasso and ridge) type penalties, and start
 # without any polynomial features.
-clf_l1 = LogisticRegressionCV(penalty="l1", solver="saga")
-clf_l2 = LogisticRegressionCV(penalty="l2")
+lmbdas = 10**np.linspace(0, 8, 9)
+clf_l1 = LogisticRegressionCV(Cs=lmbdas, penalty="l1", solver="saga")
+clf_l2 = LogisticRegressionCV(Cs=lmbdas, penalty="l2")
 
 clf_l1.fit(X_train, y_train)
 clf_l2.fit(X_train, y_train)
@@ -65,7 +66,7 @@ X_train = sc.fit_transform(poly.fit_transform(X_train))
 X_test = sc.transform(poly.transform(X_test))
 
 # We only use l2 regularization now
-clf_poly = LogisticRegressionCV(penalty="l2")
+clf_poly = LogisticRegressionCV(Cs=lmbdas, penalty="l2")
 clf_poly.fit(X_train, y_train)
 
 # Predict and give accuracy
@@ -82,3 +83,4 @@ plt.savefig("../figures/lr_poly_confusion_mat.png", dpi=196)
 # And a ROC-curve for our polynomial model
 RocCurveDisplay.from_predictions(y_test, y_test_pred_proba)
 plt.savefig("../figures/lr_poly_roc_curve.png", dpi=196)
+print(f"\n\nBest regularization parameter: {1/clf_poly.C_[0]}")

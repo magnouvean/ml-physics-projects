@@ -10,11 +10,14 @@ dtype: int64
 ## lr_creditcard.py
 ```
 Logistic regression (CV) with L1 regularization
-Accuracy: 0.9652569675994316
+Accuracy: 0.9653413807172301
 Logistic regression (CV) with L2 regularization
-Accuracy: 0.9654539315409615
+Accuracy: 0.9654117249820622
 Logistic regression (CV) with polynomial features
-Accuracy: 0.9972073326861661
+Accuracy: 0.9972917458039646
+
+
+Best regularization parameter: 1e-07
 ```
 
 ## nn_creditcard.py
